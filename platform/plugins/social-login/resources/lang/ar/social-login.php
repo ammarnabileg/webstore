@@ -82,4 +82,5 @@ return [
     'invalid_x_token' => 'رمز X (Twitter) غير صالح',
     'no_email_or_x_id' => 'لا يمكن تسجيل الدخول، لم يتم تقديم بريد إلكتروني أو معرف X!',
     'x_token_invalid' => 'الرمز المميز X (Twitter) غير صالح',
+    'account_exists_login_with_password' => 'يوجد حساب مسجّل بهذا البريد الإلكتروني. سجّل الدخول بالبريد وكلمة المرور.',
 ];

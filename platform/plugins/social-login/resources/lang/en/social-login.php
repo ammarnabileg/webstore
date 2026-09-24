@@ -82,4 +82,5 @@ return [
     'invalid_x_token' => 'Invalid X (Twitter) token',
     'no_email_or_x_id' => 'Cannot login, no email or X ID provided!',
     'x_token_invalid' => 'X (Twitter) token invalid',
+    'account_exists_login_with_password' => 'An account with this email already exists. Log in with your email and password.',
 ];

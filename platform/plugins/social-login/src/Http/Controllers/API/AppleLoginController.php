@@ -100,6 +100,19 @@ class AppleLoginController extends BaseApiController
 
             $socialLoginUser = $this->socialLoginService->findUserByProvider('apple', $appleId);
 
+
+            if (! $this->socialLoginService->mayLinkExistingAccount($account, $socialLoginUser, filter_var($appleUserData['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN))) {
+
+                return $this->httpResponse()
+
+                    ->setError()
+
+                    ->setMessage(trans('plugins/social-login::social-login.account_exists_login_with_password'))
+
+                    ->toApiResponse();
+
+            }
+
             if ($socialLoginUser && ! $account) {
                 $account = $socialLoginUser->user;
             }

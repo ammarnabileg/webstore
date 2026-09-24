@@ -106,6 +106,13 @@ class FacebookLoginController extends BaseApiController
             $account = $this->socialLoginService->findUserByEmail($email, $model::class);
             $socialLoginUser = $this->socialLoginService->findUserByProvider('facebook', $facebookId);
 
+            if (! $this->socialLoginService->mayLinkExistingAccount($account, $socialLoginUser, true)) {
+                return $this->httpResponse()
+                    ->setError()
+                    ->setMessage(trans('plugins/social-login::social-login.account_exists_login_with_password'))
+                    ->toApiResponse();
+            }
+
             if ($socialLoginUser && ! $account) {
                 $account = $socialLoginUser->user;
             }

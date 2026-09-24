@@ -82,18 +82,7 @@ class WhatsAppAuthController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Invalid or expired OTP'], 400);
         }
 
-        // Find or create customer
-        $customer = Customer::where('phone', $phone)->first();
-
-        if (!$customer) {
-            $customer = Customer::create([
-                'name' => 'User ' . substr($phone, -4),
-                'email' => $phone . '@whatsapp.local', // Placeholder email as Botble requires it
-                'phone' => $phone,
-                'password' => bcrypt(Str::random(16)),
-                'status' => 'activated',
-            ]);
-        }
+        $customer = $this->findOrCreateVerifiedCustomer($phone);
 
         $needsOnboarding = str_ends_with($customer->email, '@whatsapp.local');
 
@@ -155,17 +144,7 @@ class WhatsAppAuthController extends Controller
             return redirect()->route('customer.login')->with('error_msg', 'الرابط السحري غير صالح أو منتهي الصلاحية');
         }
 
-        $customer = Customer::where('phone', $phone)->first();
-
-        if (!$customer) {
-            $customer = Customer::create([
-                'name' => 'User ' . substr($phone, -4),
-                'email' => $phone . '@whatsapp.local',
-                'phone' => $phone,
-                'password' => bcrypt(Str::random(16)),
-                'status' => 'activated',
-            ]);
-        }
+        $customer = $this->findOrCreateVerifiedCustomer($phone);
         
         $needsOnboarding = str_ends_with($customer->email, '@whatsapp.local');
 
@@ -248,8 +227,8 @@ class WhatsAppAuthController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Invalid or expired OTP'], 400);
         }
 
-        // Check if customer exists
-        $customer = Customer::where('phone', $phone)->first();
+        // Only accounts that proved ownership of this number count as "already registered".
+        $customer = Customer::where('phone', $phone)->whereNotNull('phone_verified_at')->first();
 
         if ($customer) {
             return response()->json(['status' => 'error', 'message' => 'رقم الهاتف مسجل مسبقاً'], 400);
@@ -272,6 +251,7 @@ class WhatsAppAuthController extends Controller
             'password' => bcrypt($request->input('password')),
             'status' => 'activated',
         ]);
+        $customer->forceFill(['phone_verified_at' => now()])->save();
 
         Auth::guard('customer')->login($customer, true);
 
@@ -280,6 +260,34 @@ class WhatsAppAuthController extends Controller
             'message' => 'تم التسجيل بنجاح',
             'redirect' => route('customer.overview')
         ]);
+    }
+
+    /**
+     * WhatsApp login only enters an account whose phone number was itself proven by an OTP or
+     * magic link. The phone on normal accounts is free text: matching on it would let anyone
+     * put a victim's number on their own account and receive the victim's WhatsApp login.
+     */
+    private function findOrCreateVerifiedCustomer(string $phone): Customer
+    {
+        $customer = Customer::where('phone', $phone)->whereNotNull('phone_verified_at')->first()
+            // Accounts created by this flow earlier (placeholder email) were only reachable via OTP.
+            ?? Customer::where('email', $phone . '@whatsapp.local')->first();
+
+        if (! $customer) {
+            $customer = Customer::create([
+                'name' => 'User ' . substr($phone, -4),
+                'email' => $phone . '@whatsapp.local', // Placeholder email as Botble requires it
+                'phone' => $phone,
+                'password' => bcrypt(Str::random(16)),
+                'status' => 'activated',
+            ]);
+        }
+
+        if (! $customer->phone_verified_at) {
+            $customer->forceFill(['phone_verified_at' => now(), 'phone' => $phone])->save();
+        }
+
+        return $customer;
     }
 
     private function issueOtp(string $phone): string

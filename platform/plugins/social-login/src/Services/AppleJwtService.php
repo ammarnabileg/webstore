@@ -46,6 +46,13 @@ class AppleJwtService
                 throw new Exception('Invalid token issuer');
             }
 
+            // Validate audience: the token must have been issued for this site's Apple client id,
+            // not for any other app that uses Sign in with Apple.
+            $clientId = \Botble\SocialLogin\Facades\SocialService::setting('apple_app_id');
+            if (! $clientId || ! in_array($clientId, (array) ($tokenData['aud'] ?? []), true)) {
+                throw new Exception('Invalid token audience');
+            }
+
             // Validate expiration
             if ($tokenData['exp'] < time()) {
                 throw new Exception('Token has expired');

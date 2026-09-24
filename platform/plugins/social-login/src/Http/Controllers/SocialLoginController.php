@@ -149,6 +149,16 @@ class SocialLoginController extends BaseController
 
         $socialLoginUser = $this->socialLoginService->findUserByProvider($provider, $oAuth->getId());
 
+        $emailVerified = $this->socialLoginService->oauthEmailIsVerified($provider, (array) ($oAuth->user ?? []));
+
+        if (! $this->socialLoginService->mayLinkExistingAccount($account, $socialLoginUser, $emailVerified)) {
+            return $this
+                ->httpResponse()
+                ->setError()
+                ->setNextUrl(value($providerData['login_url']))
+                ->setMessage(trans('plugins/social-login::social-login.account_exists_login_with_password'));
+        }
+
         if ($socialLoginUser && $account && $socialLoginUser->getKey() !== $account->getKey()) {
             $this->socialLoginService->updateSocialLogin($socialLoginUser, $provider, [
                 'user_id' => $account->getKey(),
