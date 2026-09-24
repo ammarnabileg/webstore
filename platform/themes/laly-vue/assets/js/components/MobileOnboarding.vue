@@ -96,11 +96,11 @@
 </template>
 
 <script setup>
+import { __ } from '../utils/i18n';
 import { ref, onMounted, inject, defineEmits } from 'vue';
 
 const emit = defineEmits(['finished']);
 const botbleData = window?.BotbleData || {};
-const __ = inject('__') || botbleData?.i18n || ((key) => key);
 
 const onboardingData = botbleData?.onboarding || {
   slide1: { title: 'تسوق بسهولة', desc: 'اكتشف آلاف المنتجات بأسعار تنافسية وتجربة تسوق لا مثيل لها.', icon: 'ti ti-shopping-cart' },

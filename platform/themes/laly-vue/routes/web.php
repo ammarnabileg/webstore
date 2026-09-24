@@ -78,6 +78,26 @@ Theme::registerRoutes(function (): void {
                 $filters['categories'] = is_array($categoryInput) ? $categoryInput : explode(',', $categoryInput);
             }
 
+            // Collection / tag filters (ids, comma-separated or array). collection_id is used by shortcodes.
+            foreach (['collections' => 'collections', 'collection_id' => 'collections', 'tags' => 'tags'] as $input => $filterKey) {
+                if ($request->filled($input)) {
+                    $value = $request->input($input);
+                    $ids = array_values(array_filter(array_map('intval', is_array($value) ? $value : explode(',', (string) $value))));
+                    $filters[$filterKey] = array_values(array_unique(array_merge($filters[$filterKey] ?? [], $ids)));
+                }
+            }
+
+            // Sorting
+            $sorts = [
+                'newest' => ['ec_products.created_at' => 'DESC'],
+                'price_asc' => ['ec_products.price' => 'ASC'],
+                'price_desc' => ['ec_products.price' => 'DESC'],
+                'popular' => ['ec_products.views' => 'DESC'],
+            ];
+            if (isset($sorts[$request->input('sort')])) {
+                $params['order_by'] = $sorts[$request->input('sort')];
+            }
+
             // Attribute Filter
             if ($request->filled('attributes')) {
                 $attrsInput = $request->input('attributes');
@@ -89,30 +109,23 @@ Theme::registerRoutes(function (): void {
 
             $data = [];
             foreach ($products as $product) {
-                $data[] = [
-                    'id' => $product->id,
-                    'name' => html_entity_decode($product->name),
-                    'slug' => $product->slug,
-                    'image' => RvMedia::getImageUrl($product->image, 'medium', false, RvMedia::getDefaultImage()),
-                    'price' => $product->price,
-                    'price_format' => format_price($product->price),
-                    'front_sale_price' => $product->front_sale_price,
-                    'front_sale_price_format' => format_price($product->front_sale_price),
-                    'is_out_of_stock' => $product->isOutOfStock(),
-                    'labels' => $product->productLabels->map(function ($label) {
-                        return ['id' => $label->id, 'name' => $label->name, 'color' => $label->color];
-                    }),
+                $data[] = laly_vue_product_card($product) + [
                     'tags' => $product->tags->map(function ($tag) {
                         return ['id' => $tag->id, 'name' => $tag->name];
                     }),
                     'collections' => $product->productCollections->map(function ($col) {
                         return ['id' => $col->id, 'name' => $col->name];
                     }),
-                    'accepts_taly' => $product->getMetaData('accepts_taly', true) == 1,
-                    'accepts_deema' => $product->getMetaData('accepts_deema', true) == 1,
                 ];
             }
-            return response()->json(['data' => $data]);
+            $meta = method_exists($products, 'currentPage') ? [
+                'current_page' => $products->currentPage(),
+                'last_page' => $products->lastPage(),
+                'per_page' => $products->perPage(),
+                'total' => $products->total(),
+            ] : null;
+
+            return response()->json(['data' => $data, 'meta' => $meta]);
         });
 
         // Get single product by slug
@@ -127,35 +140,64 @@ Theme::registerRoutes(function (): void {
             }
 
             return response()->json([
-                'data' => [
-                    'id' => $product->id,
-                    'name' => html_entity_decode($product->name),
-                    'slug' => $product->slug,
-                    'image' => RvMedia::getImageUrl($product->image, 'medium', false, RvMedia::getDefaultImage()),
+                'data' => laly_vue_product_card($product) + [
                     'images' => array_map(function ($img) {
                         return RvMedia::getImageUrl($img, null, false, RvMedia::getDefaultImage());
                     }, is_array($product->images) ? $product->images : []),
-                    'price' => $product->price,
-                    'price_format' => format_price($product->price),
-                    'front_sale_price' => $product->front_sale_price,
-                    'front_sale_price_format' => format_price($product->front_sale_price),
-                    'is_out_of_stock' => $product->isOutOfStock(),
-                    'stock_status' => (string) $product->stock_status,
                     'description' => BaseHelper::clean($product->description),
                     'content' => BaseHelper::clean($product->content),
-                    'labels' => $product->productLabels->map(function ($label) {
-                        return ['id' => $label->id, 'name' => $label->name, 'color' => $label->color];
-                    }),
                     'tags' => $product->tags->map(function ($tag) {
                         return ['id' => $tag->id, 'name' => $tag->name];
                     }),
                     'collections' => $product->productCollections->map(function ($col) {
                         return ['id' => $col->id, 'name' => $col->name];
                     }),
-                    'accepts_taly' => $product->getMetaData('accepts_taly', true) == 1,
-                    'accepts_deema' => $product->getMetaData('accepts_deema', true) == 1,
-                ]
+                ],
             ]);
+        });
+
+        $findPublishedProductBySlug = function (string $slug) {
+            $slugModel = SlugHelper::getSlug($slug, SlugHelper::getPrefix(\Botble\Ecommerce\Models\Product::class), \Botble\Ecommerce\Models\Product::class);
+
+            return $slugModel
+                ? \Botble\Ecommerce\Models\Product::query()
+                    ->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
+                    ->find($slugModel->reference_id)
+                : null;
+        };
+
+        Route::get('products/{slug}/related', function (string $slug) use ($findPublishedProductBySlug) {
+            $product = $findPublishedProductBySlug($slug);
+            if (!$product) {
+                return response()->json(['data' => []]);
+            }
+
+            $related = get_related_products($product, 8) ?? collect();
+
+            return response()->json(['data' => collect($related)->map(fn ($item) => laly_vue_product_card($item))->values()]);
+        });
+
+        Route::get('products/{slug}/reviews', function (string $slug) use ($findPublishedProductBySlug) {
+            $product = $findPublishedProductBySlug($slug);
+            if (!$product || !\Botble\Ecommerce\Facades\EcommerceHelper::isReviewEnabled()) {
+                return response()->json(['data' => []]);
+            }
+
+            $reviews = \Botble\Ecommerce\Models\Review::query()
+                ->with('user')
+                ->where('product_id', $product->id)
+                ->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
+                ->latest()
+                ->limit(20)
+                ->get();
+
+            return response()->json(['data' => $reviews->map(fn ($review) => [
+                'id' => $review->id,
+                'customer_name' => $review->user_name ?: $review->customer_name,
+                'star' => (int) $review->star,
+                'comment' => $review->comment,
+                'created_at' => $review->created_at?->toDateString(),
+            ])->values()]);
         });
 
         // Get slider by key
@@ -192,25 +234,7 @@ Theme::registerRoutes(function (): void {
         Route::get('home-collections', function () {
             $data = [];
             
-            $formatProduct = function ($product) {
-                return [
-                    'id' => $product->id,
-                    'name' => html_entity_decode($product->name),
-                    'slug' => $product->slug,
-                    'image' => RvMedia::getImageUrl($product->image, 'medium', false, RvMedia::getDefaultImage()),
-                    'price' => $product->price,
-                    'price_format' => format_price($product->price),
-                    'front_sale_price' => $product->front_sale_price,
-                    'front_sale_price_format' => format_price($product->front_sale_price),
-                    'is_out_of_stock' => method_exists($product, 'isOutOfStock') ? $product->isOutOfStock() : false,
-                    'stock_status' => (string) $product->stock_status,
-                    'labels' => $product->productLabels ? $product->productLabels->map(function ($label) {
-                        return ['id' => $label->id, 'name' => $label->name, 'color' => $label->color];
-                    }) : [],
-                    'accepts_taly' => $product->getMetaData('accepts_taly', true) == 1,
-                    'accepts_deema' => $product->getMetaData('accepts_deema', true) == 1,
-                ];
-            };
+            $formatProduct = fn ($product) => laly_vue_product_card($product);
 
             $baseQuery = \Botble\Ecommerce\Models\Product::query()
                 ->where('status', 'published')

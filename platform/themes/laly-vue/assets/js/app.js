@@ -7,9 +7,9 @@ import { __ } from './utils/i18n';
 const app = createApp(AppLayout);
 
 app.config.globalProperties.__ = __;
+app.provide('__', __);
 
 app.use(createPinia());
 app.use(router);
 
 app.mount('#app');
-console.log("APP_JS_ENTRY_FILE_TEST");

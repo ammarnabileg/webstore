@@ -6,8 +6,8 @@
           <i class="ti ti-tag" style="font-size:12px;"></i> {{ label.name }}
         </span>
       </div>
-      <span v-if="product.front_sale_price" class="off">{{ __('sale') || 'خصم' }}</span>
-      <img :src="product.image || botbleData?.placeholderImage || 'https://via.placeholder.com/150'" :alt="product.name" loading="lazy" />
+      <span v-if="product.is_on_sale" class="off">{{ __('sale') || 'خصم' }}</span>
+      <img :src="product.image || botbleData?.placeholderImage" :alt="product.name" loading="lazy" />
       
       <!-- Wishlist / Quickview floating actions -->
       <div class="pcard-actions">
@@ -21,9 +21,11 @@
     </div>
     
     <div class="rrow">
-      <span class="stars"><i class="ti ti-star-filled" style="font-size:13px; color:var(--stars);"></i></span>
-      <b>{{ product.reviews_avg || '5.0' }}</b>
-      <span class="rc">({{ product.reviews_count || 12 }})</span>
+      <template v-if="product.reviews_count > 0">
+        <span class="stars"><i class="ti ti-star-filled" style="font-size:13px; color:var(--stars);"></i></span>
+        <b>{{ Number(product.reviews_avg).toFixed(1) }}</b>
+        <span class="rc">({{ product.reviews_count }})</span>
+      </template>
       
       <span v-if="product.stock_status === 'out_of_stock'" class="stk" style="color:var(--danger)">
         <i style="background:var(--danger);box-shadow:0 0 0 3px rgba(239, 68, 68, 0.2)"></i>{{ __('out_of_stock') || 'نفذت الكمية' }}
@@ -42,7 +44,7 @@
       <span class="price">
         {{ product.front_sale_price_format || product.price_format || product.price }}
       </span>
-      <span v-if="product.front_sale_price_format" class="old">{{ product.price_format }}</span>
+      <span v-if="product.is_on_sale" class="old">{{ product.price_format }}</span>
     </div>
     
     <div class="bnpl" v-if="product.accepts_taly || product.accepts_deema">
@@ -78,6 +80,7 @@
 </template>
 
 <script setup>
+import { __ } from '../utils/i18n';
 import { inject } from 'vue';
 import { useEcommerceStore } from '../stores/ecommerce';
 
@@ -90,7 +93,6 @@ const props = defineProps({
 
 const store = useEcommerceStore();
 const botbleData = window?.BotbleData || {};
-const __ = inject('__') || botbleData?.i18n || ((key) => key);
 
 const addToCart = async (productId) => {
     const success = await store.addToCart(productId, 1);

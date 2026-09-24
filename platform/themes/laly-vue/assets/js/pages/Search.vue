@@ -48,6 +48,7 @@
 </template>
 
 <script setup>
+import { __ } from '../utils/i18n';
 import { ref, watch, inject } from 'vue';
 import { useRoute } from 'vue-router';
 import { useEcommerceStore } from '../stores/ecommerce';
@@ -57,7 +58,6 @@ const route = useRoute();
 const store = useEcommerceStore();
 const query = ref(route.query.q || '');
 const botbleData = window?.BotbleData || {};
-const __ = inject('__') || botbleData?.i18n || ((key) => key);
 
 const openQuickView = async (slug) => {
     store.currentProduct = null;

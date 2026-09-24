@@ -23,6 +23,7 @@
 </template>
 
 <script setup>
+import { __ } from '../../utils/i18n';
 import { ref, onMounted, inject } from 'vue';
 import api from '../../services/api';
 
@@ -33,7 +34,6 @@ const props = defineProps({
   }
 });
 
-const __ = inject('__') || window?.BotbleData?.i18n || ((key) => key);
 const slides = ref([]);
 const loading = ref(true);
 

@@ -10,8 +10,8 @@
       <div v-else-if="product" class="qvm-content">
         <!-- Product Image -->
         <div class="qvm-img-wrap">
-          <img :src="product.image || botbleData?.placeholderImage || 'https://via.placeholder.com/400'" :alt="product.name" class="qvm-img" />
-          <div v-if="product.front_sale_price" class="pcard-badge sale-badge" style="position:absolute; top:15px; right:15px;">{{ __('sale') || 'خصم' }}</div>
+          <img :src="product.image || botbleData?.placeholderImage" :alt="product.name" class="qvm-img" />
+          <div v-if="product.is_on_sale" class="pcard-badge sale-badge" style="position:absolute; top:15px; right:15px;">{{ __('sale') || 'خصم' }}</div>
         </div>
         
         <!-- Product Details -->
@@ -25,7 +25,7 @@
           
           <div class="qvm-price">
             <span class="current-price">{{ product.front_sale_price_format || product.price_format || product.price }}</span>
-            <span v-if="product.front_sale_price_format" class="old-price">{{ product.price_format }}</span>
+            <span v-if="product.is_on_sale" class="old-price">{{ product.price_format }}</span>
           </div>
           
           <div class="qvm-stock" :class="{'in-stock': product.stock_status === 'in_stock' || !product.stock_status, 'out-of-stock': product.stock_status === 'out_of_stock', 'backorder': product.stock_status === 'on_backorder'}">
@@ -67,22 +67,22 @@
 </template>
 
 <script setup>
+import { __ } from '../utils/i18n';
 import { ref, computed, inject } from 'vue';
 import { useEcommerceStore } from '../stores/ecommerce';
 
 const store = useEcommerceStore();
 const botbleData = window?.BotbleData || {};
-const __ = inject('__') || botbleData?.i18n || ((key) => key);
 
 const qty = ref(1);
 
 const isOpen = computed(() => store.quickViewOpen);
-const loading = computed(() => store.loading);
-const product = computed(() => store.currentProduct);
+const loading = computed(() => store.quickViewLoading);
+const product = computed(() => store.quickViewProduct);
 
 const closeModal = () => {
     store.quickViewOpen = false;
-    setTimeout(() => { store.currentProduct = null; }, 300); // Clear after animation
+    setTimeout(() => { store.quickViewProduct = null; }, 300); // Clear after animation
     qty.value = 1;
 };
 

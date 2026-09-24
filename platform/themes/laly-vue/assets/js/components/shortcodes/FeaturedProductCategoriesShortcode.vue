@@ -21,6 +21,7 @@
 </template>
 
 <script setup>
+import { __ } from '../../utils/i18n';
 import { inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { useEcommerceStore } from '../../stores/ecommerce';
@@ -34,7 +35,6 @@ const props = defineProps({
 
 const store = useEcommerceStore();
 const router = useRouter();
-const __ = inject('__') || window?.BotbleData?.i18n || ((key) => key);
 
 const goToCategory = (cat) => {
   router.push(`/products?category=${cat.id}`);

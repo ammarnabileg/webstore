@@ -28,12 +28,12 @@
           <div class="pl-text">{{ __('wishlist') || 'المفضلة' }}</div>
           <i class="ti ti-chevron-left pl-arrow" :class="{ 'ti-chevron-right': !botbleData.is_rtl }"></i>
         </router-link>
-        <a v-if="customer" href="/customer/orders" class="pl-item" style="text-decoration: none; color: inherit;">
+        <a v-if="customer" :href="botbleData.ordersUrl" class="pl-item" style="text-decoration: none; color: inherit;">
           <div class="pl-icon"><i class="ti ti-truck"></i></div>
           <div class="pl-text">{{ __('my_orders') || 'طلباتي' }}</div>
           <i class="ti ti-chevron-left pl-arrow" :class="{ 'ti-chevron-right': !botbleData.is_rtl }"></i>
         </a>
-        <a v-if="customer" href="/customer/edit-account" class="pl-item" style="text-decoration: none; color: inherit;">
+        <a v-if="customer" :href="botbleData.accountUrl" class="pl-item" style="text-decoration: none; color: inherit;">
           <div class="pl-icon"><i class="ti ti-settings"></i></div>
           <div class="pl-text">{{ __('settings') || 'الإعدادات' }}</div>
           <i class="ti ti-chevron-left pl-arrow" :class="{ 'ti-chevron-right': !botbleData.is_rtl }"></i>
@@ -52,9 +52,6 @@
           <div style="font-size: 13px; font-weight: 600; color: var(--primary);">{{ otherLanguage.name }}</div>
         </div>
 
-        <form v-if="customer" method="POST" :action="botbleData.logoutUrl" style="margin: 0;">
-          <!-- Since it's a native logout we need CSRF token, but for now we can just redirect to the logout route or use a GET via a form. Usually Laravel logout is POST. Wait, Botble has GET logout? Actually Botble's customer logout is GET typically, or we can use an a tag. Let's use a tag first -->
-        </form>
         <a v-if="customer" :href="botbleData.logoutUrl" class="pl-item" style="text-decoration: none; color: #dc3545;">
           <div class="pl-icon" style="color: #dc3545; background: #ffebee;"><i class="ti ti-logout"></i></div>
           <div class="pl-text">{{ __('logout') || 'تسجيل الخروج' }}</div>
@@ -67,10 +64,10 @@
 </template>
 
 <script setup>
+import { __ } from '../utils/i18n';
 import { ref, onMounted, computed, inject } from 'vue';
 
 const botbleData = window?.BotbleData || {};
-const __ = inject('__') || botbleData?.i18n || ((key) => key);
 const customer = botbleData.customer;
 
 const isDark = ref(false);

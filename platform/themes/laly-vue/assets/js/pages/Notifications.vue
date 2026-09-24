@@ -123,6 +123,7 @@
 </template>
 
 <script setup>
+import api from '../services/api';
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -150,9 +151,8 @@ const checkIOS = () => {
 const fetchNotifications = async () => {
   isLoading.value = true;
   try {
-    const response = await fetch('/ajax/vue/notifications');
-    const data = await response.json();
-    notifications.value = data.data || [];
+    const response = await api.get('/notifications');
+    notifications.value = response.data?.data || [];
   } catch (error) {
     console.error('Error fetching notifications:', error);
   } finally {

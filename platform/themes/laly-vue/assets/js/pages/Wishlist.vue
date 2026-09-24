@@ -18,7 +18,7 @@
       <div v-else class="empty-state" style="text-align: center; padding: 50px 20px;">
         <i class="ti ti-heart-broken" style="font-size: 60px; color: #ddd; margin-bottom: 20px; display: block;"></i>
         <h3 style="margin-bottom: 10px;">{{ __('wishlist_empty') || 'قائمة المفضلة فارغة!' }}</h3>
-        <p style="color: #666; margin-bottom: 20px;">لم تقم بإضافة أي منتجات للمفضلة بعد.</p>
+        <p style="color: #666; margin-bottom: 20px;">{{ __('wishlist_empty_sub') }}</p>
         <button class="btn btn-primary" @click="$router.push('/products')" style="padding: 12px 25px; border-radius: 25px; background: var(--primary); color: white; border: none; cursor: pointer;">
           {{ __('shop_now') || 'تسوّق الآن' }}
         </button>
@@ -30,13 +30,13 @@
 </template>
 
 <script setup>
+import { __ } from '../utils/i18n';
 import { inject } from 'vue';
 import { useEcommerceStore } from '../stores/ecommerce';
 import ProductCard from '../components/ProductCard.vue';
 
 const store = useEcommerceStore();
 const botbleData = window?.BotbleData || {};
-const __ = inject('__') || botbleData?.i18n || ((key) => key);
 </script>
 
 <style scoped>

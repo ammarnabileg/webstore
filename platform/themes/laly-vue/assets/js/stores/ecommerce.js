@@ -4,6 +4,8 @@ import api from '../services/api';
 export const useEcommerceStore = defineStore('ecommerce', {
     state: () => ({
         products: [],
+        productsMeta: null,
+        loadingMore: false,
         categories: [],
         cart: null,
         cartCount: 0,
@@ -15,6 +17,9 @@ export const useEcommerceStore = defineStore('ecommerce', {
         loading: false,
         notifications: [],
         quickViewOpen: false,
+        // Kept separate from currentProduct so opening quick view never replaces the product page.
+        quickViewProduct: null,
+        quickViewLoading: false,
     }),
     getters: {
         rootCategories: (state) => state.categories.filter(c => !c.parent_id),
@@ -30,15 +35,22 @@ export const useEcommerceStore = defineStore('ecommerce', {
                 console.error('Error fetching filters:', err);
             }
         },
-        async fetchProducts(params = {}) {
-            this.loading = true;
+        async fetchProducts(params = {}, { append = false } = {}) {
+            if (append) {
+                this.loadingMore = true;
+            } else {
+                this.loading = true;
+            }
             try {
                 const response = await api.get('/products', { params });
-                this.products = response.data.data || [];
+                const items = response.data.data || [];
+                this.products = append ? [...this.products, ...items] : items;
+                this.productsMeta = response.data.meta || null;
             } catch (err) {
                 console.error('Error fetching products:', err);
             } finally {
                 this.loading = false;
+                this.loadingMore = false;
             }
         },
         async fetchCategories() {
@@ -62,7 +74,16 @@ export const useEcommerceStore = defineStore('ecommerce', {
         },
         async openQuickView(slug) {
             this.quickViewOpen = true;
-            await this.fetchProductBySlug(slug);
+            this.quickViewLoading = true;
+            this.quickViewProduct = null;
+            try {
+                const response = await api.get(`/products/${slug}`);
+                this.quickViewProduct = response.data.data || null;
+            } catch (err) {
+                console.error('Error fetching quick view product:', err);
+            } finally {
+                this.quickViewLoading = false;
+            }
         },
         async searchProducts(query) {
             this.loading = true;

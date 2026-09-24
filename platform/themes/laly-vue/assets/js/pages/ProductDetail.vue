@@ -5,7 +5,7 @@
       <button class="back-btn" @click="$router.back()">
         <i class="ti ti-arrow-right" :class="{ 'ti-arrow-left': !botbleData?.is_rtl }"></i>
       </button>
-      <div class="header-title">تفاصيل المنتج</div>
+      <div class="header-title">{{ __('product_details') }}</div>
       <button class="cart-btn" @click="$router.push('/cart')">
         <i class="ti ti-shopping-cart"></i>
       </button>
@@ -27,7 +27,7 @@
             </div>
             
             <div class="main-image">
-              <img :src="activeImage || product.image || botbleData?.placeholderImage || 'https://via.placeholder.com/400'" :alt="product.name" />
+              <img :src="activeImage || product.image || botbleData?.placeholderImage" :alt="product.name" />
             </div>
             
             <div class="gallery" v-if="allImages.length > 1">
@@ -50,7 +50,7 @@
                 <h1 class="product-title">{{ product.name }}</h1>
                 <div class="product-price">
                   <span class="current-price">{{ product.front_sale_price_format || product.price_format || product.price }}</span>
-                  <span class="old-price" v-if="product.front_sale_price_format">{{ product.price_format }}</span>
+                  <span class="old-price" v-if="product.is_on_sale">{{ product.price_format }}</span>
                 </div>
               </div>
               <button class="wishlist-btn" :class="{'active': store.wishlist.find(i => i.id === product.id)}" @click="store.toggleWishlist(product)">
@@ -70,7 +70,7 @@
             <div class="product-meta">
               <span class="stock-status" :class="{'in-stock': product.stock_status === 'in_stock' || !product.stock_status, 'out-of-stock': product.stock_status === 'out_of_stock', 'backorder': product.stock_status === 'on_backorder'}">
                 <i :class="product.stock_status === 'out_of_stock' ? 'ti ti-x' : (product.stock_status === 'on_backorder' ? 'ti ti-clock' : 'ti ti-check')"></i> 
-                {{ product.stock_status === 'out_of_stock' ? 'نفذت الكمية' : (product.stock_status === 'on_backorder' ? 'طلب مسبق' : 'متوفر') }}
+                {{ product.stock_status === 'out_of_stock' ? __('out_of_stock') : (product.stock_status === 'on_backorder' ? __('pre_order') : __('in_stock')) }}
               </span>
               <span class="category" v-if="product.collections?.length">{{ product.collections[0].name }}</span>
             </div>
@@ -87,12 +87,12 @@
               
               <div class="action-buttons">
                 <button class="btn-add-cart" @click="addToCart" :disabled="product.stock_status === 'out_of_stock'">
-                  <template v-if="product.stock_status === 'out_of_stock'">غير متوفر</template>
-                  <template v-else-if="product.stock_status === 'on_backorder'">طلب مسبق</template>
-                  <template v-else>أضف إلى السلة</template>
+                  <template v-if="product.stock_status === 'out_of_stock'">{{ __('out_of_stock') }}</template>
+                  <template v-else-if="product.stock_status === 'on_backorder'">{{ __('pre_order') }}</template>
+                  <template v-else>{{ __('add_to_cart') }}</template>
                 </button>
                 <button class="btn-buy-now" @click="buyNow" :disabled="product.stock_status === 'out_of_stock'">
-                  شراء الآن
+                  {{ __('buy_now') }}
                 </button>
               </div>
             </div>
@@ -103,7 +103,7 @@
         <div class="suha-details-section">
           <!-- Quick Specs List -->
           <div class="content-block" v-if="product.attributes && product.attributes.length">
-            <h3 class="block-title">المواصفات السريعة</h3>
+            <h3 class="block-title">{{ __('quick_specs') }}</h3>
             <ul class="specs-list">
               <li v-for="attr in product.attributes" :key="attr.id">
                 <i class="ti ti-check text-primary"></i>
@@ -115,7 +115,7 @@
 
           <!-- Full HTML Content (Overview / Tech Specs Table) -->
           <div class="content-block" v-if="product.content">
-            <h3 class="block-title">التفاصيل</h3>
+            <h3 class="block-title">{{ __('details') }}</h3>
             <div class="html-content" v-html="product.content"></div>
           </div>
           
@@ -125,7 +125,7 @@
             <div class="reviews-list">
               <div v-for="review in reviews" :key="review.id" class="review-item">
                 <div class="review-header">
-                  <span class="reviewer-name">{{ review.customer_name || review.user_name || 'مستخدم' }}</span>
+                  <span class="reviewer-name">{{ review.customer_name || __('customer') }}</span>
                   <div class="review-stars">
                     <i v-for="s in 5" :key="s" class="ti" :class="s <= review.star ? 'ti-star-filled' : 'ti-star'"></i>
                   </div>
@@ -148,8 +148,8 @@
 
       <div v-else class="empty-state">
         <i class="ti ti-package-off"></i>
-        <p>المنتج غير متوفر حالياً.</p>
-        <button @click="$router.push('/products')" class="btn-primary">العودة للمنتجات</button>
+        <p>{{ __('product_unavailable') }}</p>
+        <button @click="$router.push('/products')" class="btn-primary">{{ __('back_to_products') }}</button>
       </div>
       
       <div style="height: 100px;"></div>
@@ -158,6 +158,7 @@
 </template>
 
 <script setup>
+import { __ } from '../utils/i18n';
 import { ref, onMounted, computed, watch, inject } from 'vue';
 import { useRoute } from 'vue-router';
 import { useEcommerceStore } from '../stores/ecommerce';
@@ -168,7 +169,6 @@ import api from '../services/api';
 const route = useRoute();
 const store = useEcommerceStore();
 const botbleData = window?.BotbleData || {};
-const __ = inject('__') || botbleData?.i18n || ((key) => key);
 
 const qty = ref(1);
 const product = computed(() => store.currentProduct);
@@ -187,7 +187,6 @@ const allImages = computed(() => {
 });
 
 onMounted(() => {
-    console.log('SUHA_DESIGN_ACTIVE_V1');
     fetchProduct();
 });
 
@@ -197,12 +196,13 @@ watch(() => route.params.slug, (newSlug) => {
 
 const fetchExtras = async (slug) => {
     try {
-        const [relatedRes, reviewsRes] = await Promise.all([
+        // allSettled: one failing request must not hide the other section.
+        const [relatedRes, reviewsRes] = await Promise.allSettled([
             api.get(`/products/${slug}/related`),
             api.get(`/products/${slug}/reviews`)
         ]);
-        relatedProducts.value = relatedRes.data?.data || [];
-        reviews.value = reviewsRes.data?.data || [];
+        relatedProducts.value = relatedRes.status === 'fulfilled' ? (relatedRes.value.data?.data || []) : [];
+        reviews.value = reviewsRes.status === 'fulfilled' ? (reviewsRes.value.data?.data || []) : [];
     } catch (e) {
         console.error('Error fetching extras:', e);
     }
@@ -213,7 +213,7 @@ const fetchProduct = () => {
         store.fetchProductBySlug(route.params.slug).then(() => {
             activeImage.value = store.currentProduct?.image || '';
             
-            const SITE_NAME = window.themeOptions?.site_title || 'Laly Kuwait';
+            const SITE_NAME = window.BotbleData?.site_title || 'Laly Kuwait';
             if (store.currentProduct?.name) {
                 document.title = `${store.currentProduct.name} - ${SITE_NAME}`;
             }

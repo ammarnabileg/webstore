@@ -13,10 +13,10 @@
       </div>
       
       <div v-if="isIOS" class="pwa-instructions ios-instructions">
-        <p>لتثبيت التطبيق على الآيفون:</p>
+        <p>{{ __('ios_install_title') }}</p>
         <ol>
-          <li>اضغط على زر المشاركة <i class="ti ti-share-2" style="font-size: 18px; margin: 0 4px;"></i> أسفل الشاشة</li>
-          <li>اختر <strong>"Add to Home Screen"</strong> <i class="ti ti-square-plus" style="font-size: 18px; margin: 0 4px;"></i></li>
+          <li><i class="ti ti-share-2" style="font-size: 18px; margin: 0 4px;"></i> {{ __('ios_install_step1') }}</li>
+          <li><i class="ti ti-square-plus" style="font-size: 18px; margin: 0 4px;"></i> {{ __('ios_install_step2') }}</li>
         </ol>
       </div>
       
@@ -28,10 +28,10 @@
 </template>
 
 <script setup>
+import { __ } from '../utils/i18n';
 import { ref, onMounted, inject } from 'vue';
 
 const botbleData = window?.BotbleData || {};
-const __ = inject('__') || botbleData?.i18n || ((key) => key);
 
 const isVisible = ref(false);
 const isIOS = ref(false);

@@ -10,7 +10,6 @@ import Profile from '../pages/Profile.vue';
 import Wishlist from '../pages/Wishlist.vue';
 import Notifications from '../pages/Notifications.vue';
 import SystemWizard from '../pages/SystemWizard.vue';
-import NotFound from '../pages/NotFound.vue';
 import CmsPage from '../pages/CmsPage.vue';
 
 import Auth from '../pages/Auth.vue';
@@ -64,7 +63,7 @@ const router = createRouter({
     }
 });
 
-const SITE_NAME = window.themeOptions?.site_title || 'Laly Kuwait';
+const SITE_NAME = window.BotbleData?.site_title || 'Laly Kuwait';
 
 router.afterEach((to) => {
     let routeName = to.name;

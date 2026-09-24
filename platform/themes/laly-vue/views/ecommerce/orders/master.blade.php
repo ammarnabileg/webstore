@@ -53,7 +53,7 @@
         {!! Html::style('vendor/core/plugins/ecommerce/css/front-theme-rtl.css?v=' . $assetsVersion) !!}
     @endif
     
-    {!! Html::style(Theme::asset()->url('css/checkout.css')) !!}
+    {!! Html::style(Theme::asset()->url('css/checkout.css') . '?v=' . (@filemtime(platform_path('themes/laly-vue/public/css/checkout.css')) ?: '1')) !!}
 
     {!! Html::style('vendor/core/core/base/libraries/toastr/toastr.min.css?v=' . $assetsVersion) !!}
 

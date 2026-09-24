@@ -191,15 +191,15 @@
                     <form @submit.prevent="completeProfile">
                         <div class="form-group mb-3 text-start">
                             <label class="mb-1 text-muted">{{ __('الاسم') }} <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control form-control-lg" v-model="profileForm.name" required style="border-radius: 12px; height: 50px;" placeholder="اسمك الكريم">
+                            <input type="text" class="form-control form-control-lg" v-model="profileForm.name" required style="border-radius: 12px; height: 50px;" :placeholder="__('your_name')">
                         </div>
                         <div class="form-group mb-3 text-start">
                             <label class="mb-1 text-muted">{{ __('البريد الإلكتروني (اختياري)') }}</label>
-                            <input type="email" class="form-control form-control-lg" v-model="profileForm.email" style="border-radius: 12px; height: 50px;" placeholder="للتواصل أو تسجيل الدخول لاحقاً">
+                            <input type="email" class="form-control form-control-lg" v-model="profileForm.email" style="border-radius: 12px; height: 50px;" :placeholder="__('email_for_contact')">
                         </div>
                         <div class="form-group mb-3 text-start">
                             <label class="mb-1 text-muted">{{ __('كلمة المرور (اختياري)') }}</label>
-                            <input type="password" class="form-control form-control-lg" v-model="profileForm.password" style="border-radius: 12px; height: 50px;" placeholder="للدخول بدون واتساب لاحقاً">
+                            <input type="password" class="form-control form-control-lg" v-model="profileForm.password" style="border-radius: 12px; height: 50px;" :placeholder="__('password_for_login')">
                         </div>
                         <div class="form-group mb-4 text-start" v-if="profileForm.password">
                             <label class="mb-1 text-muted">{{ __('تأكيد كلمة المرور') }}</label>
@@ -223,10 +223,10 @@
 </template>
 
 <script setup>
+import { __ } from '../utils/i18n';
 import { ref, inject, reactive, onMounted } from 'vue';
 import axios from 'axios';
 
-const __ = inject('__') || window?.BotbleData?.i18n || ((key) => key);
 const botbleData = window?.BotbleData || {};
 
 const urlParams = new URLSearchParams(window.location.search);

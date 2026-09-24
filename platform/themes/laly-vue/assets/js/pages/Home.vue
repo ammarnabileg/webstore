@@ -233,7 +233,7 @@ import SkeletonLoader from '../components/SkeletonLoader.vue';
 const store = useEcommerceStore();
 const router = useRouter();
 const siteTitle = (window.BotbleData && window.BotbleData.site_title) ? window.BotbleData.site_title : 'Laly Kuwait';
-const siteLogo = (window.BotbleData && window.BotbleData.logo) ? window.BotbleData.logo : '/themes/laly/images/logo.png';
+const siteLogo = window.BotbleData?.logo || '';
 const homeSliders = (window.BotbleData && window.BotbleData.homeSliders) ? window.BotbleData.homeSliders : [];
 const homeBanners = (window.BotbleData && window.BotbleData.homeBanners) ? window.BotbleData.homeBanners : [];
 const isRtl = (window.BotbleData && window.BotbleData.is_rtl !== undefined) ? window.BotbleData.is_rtl : true;
@@ -318,7 +318,7 @@ const loadHomeCollections = async () => {
 onMounted(async () => {
     // Fetch CMS Homepage content
     try {
-        const response = await api.get('/ajax/vue/homepage');
+        const response = await api.get('/homepage');
         if (response.data && response.data.data && response.data.data.content) {
             pageBlocks.value = parseShortcodes(response.data.data.content);
         }

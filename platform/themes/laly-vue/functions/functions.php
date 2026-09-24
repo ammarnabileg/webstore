@@ -4,12 +4,7 @@ register_page_template([
     'default' => 'Default',
 ]);
 
-add_filter('ecommerce_checkout_header', function ($html) {
-    $cssUrl = Theme::asset()->url('css/checkout.css');
-    return $html . '<link rel="stylesheet" href="' . $cssUrl . '?v=' . time() . '">';
-}, 120);
 
-Log::info('Laly-vue functions.php loaded');
 
 require_once __DIR__ . '/bnpl-meta-boxes.php';
 
@@ -269,3 +264,38 @@ add_filter('social_login_providers', function ($providers) {
     return $providers;
 }, 120);
 
+
+if (! function_exists('laly_vue_product_card')) {
+    /**
+     * Product fields shared by every storefront list (listing, search, home sections).
+     * Sale/stock/rating flags are computed here so the Vue cards never have to guess.
+     */
+    function laly_vue_product_card($product): array
+    {
+        $price = (float) $product->price;
+        $finalPrice = (float) $product->front_sale_price;
+        $isOutOfStock = method_exists($product, 'isOutOfStock') ? $product->isOutOfStock() : false;
+
+        return [
+            'id' => $product->id,
+            'name' => html_entity_decode($product->name),
+            'slug' => $product->slug,
+            'image' => RvMedia::getImageUrl($product->image, 'medium', false, RvMedia::getDefaultImage()),
+            'price' => $product->price,
+            'price_format' => format_price($product->price),
+            'front_sale_price' => $product->front_sale_price,
+            'front_sale_price_format' => format_price($product->front_sale_price),
+            // front_sale_price is always the final price; it is a discount only when lower than price.
+            'is_on_sale' => $finalPrice > 0 && $finalPrice < $price,
+            'is_out_of_stock' => $isOutOfStock,
+            'stock_status' => $isOutOfStock ? 'out_of_stock' : (string) $product->stock_status,
+            'reviews_avg' => round((float) $product->reviews_avg, 1),
+            'reviews_count' => (int) $product->reviews_count,
+            'labels' => $product->productLabels
+                ? $product->productLabels->map(fn ($label) => ['id' => $label->id, 'name' => $label->name, 'color' => $label->color])
+                : [],
+            'accepts_taly' => $product->getMetaData('accepts_taly', true) == 1,
+            'accepts_deema' => $product->getMetaData('accepts_deema', true) == 1,
+        ];
+    }
+}

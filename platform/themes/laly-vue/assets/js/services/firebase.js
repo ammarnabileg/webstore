@@ -3,7 +3,6 @@ let messaging = null;
 export const initFirebase = async (config) => {
     try {
         if (!config || !config.apiKey) {
-            console.warn('[Firebase] Configuration missing, skipping initialization.');
             return null;
         }
 
@@ -22,7 +21,6 @@ export const initFirebase = async (config) => {
         }
 
         onMessage(messaging, (payload) => {
-            console.log('[Firebase] Received foreground message ', payload);
             const title = payload.notification?.title || payload.data?.title || 'إشعار جديد';
             const body = payload.notification?.body || payload.data?.body || '';
             const url = payload.fcmOptions?.link || payload.data?.url || '/';

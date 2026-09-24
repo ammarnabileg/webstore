@@ -33,6 +33,7 @@
 </template>
 
 <script setup>
+import { __ } from '../../utils/i18n';
 import { ref, onMounted, inject } from 'vue';
 import api from '../../services/api';
 import ProductCard from '../ProductCard.vue';
@@ -46,7 +47,6 @@ const props = defineProps({
 
 defineEmits(['quickview']);
 
-const __ = inject('__') || window?.BotbleData?.i18n || ((key) => key);
 const collections = ref([]);
 const activeCollection = ref(null);
 const products = ref([]);

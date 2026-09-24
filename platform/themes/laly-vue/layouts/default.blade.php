@@ -101,6 +101,9 @@
             email: @json(theme_option('email')),
             customer: @json($customerData),
             loginUrl: @json(route('customer.login')),
+            logoutUrl: @json(route('customer.logout')),
+            ordersUrl: @json(route('customer.orders')),
+            accountUrl: @json(route('customer.edit-account')),
             checkoutUrl: @json(route('public.checkout.information', \Botble\Ecommerce\Facades\OrderHelper::getOrderSessionToken())),
             isPhoneLoginEnabled: @json(\Botble\Ecommerce\Facades\EcommerceHelper::isLoginUsingPhone()),
             isPhoneRequired: @json(\Botble\Ecommerce\Facades\EcommerceHelper::isLoginUsingPhone() || get_ecommerce_setting('make_customer_phone_number_required', false)),
@@ -149,6 +152,5 @@
 <body>
     {!! Theme::content() !!}
     {!! Theme::footer() !!}
-    <script src="{{ Theme::asset()->url('js/app.js') }}?v={{ time() }}"></script>
 </body>
 </html>

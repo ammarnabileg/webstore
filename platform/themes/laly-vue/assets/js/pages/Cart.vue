@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <div class="nbar">
-      <div class="nbar-title">السلة</div>
+      <div class="nbar-title">{{ __('cart') }}</div>
     </div>
     
     <div class="scroll" style="padding: 16px;">
@@ -11,16 +11,16 @@
 
       <div v-else-if="store.cartCount === 0" class="empty-cart">
         <div class="ec-icon"><i class="ti ti-shopping-cart-x"></i></div>
-        <h3>سلة المشتريات فارغة</h3>
-        <p>لم تقم بإضافة أي منتجات إلى السلة بعد.</p>
-        <button class="ec-btn" @click="$router.push('/products')">تصفح المنتجات</button>
+        <h3>{{ __('cart_empty_title') }}</h3>
+        <p>{{ __('cart_empty_sub') }}</p>
+        <button class="ec-btn" @click="$router.push('/products')">{{ __('browse_products') }}</button>
       </div>
 
       <div v-else class="cart-wrapper">
         <div class="cart-items">
           <div class="cart-item" v-for="item in store.cart.items" :key="item.id">
             <div class="ci-img">
-              <img :src="item.product_image || botbleData?.placeholderImage || 'https://via.placeholder.com/80'" :alt="item.name">
+              <img :src="item.product_image || botbleData?.placeholderImage" :alt="item.name">
             </div>
             <div class="ci-info">
               <div class="ci-name">{{ item.name }}</div>
@@ -41,18 +41,18 @@
 
         <div class="cart-summary">
           <div class="cs-row">
-            <span>المجموع الفرعي</span>
+            <span>{{ __('sub_total') }}</span>
             <span>{{ store.cart.sub_total_format }}</span>
           </div>
           <div class="cs-row" v-if="store.cart.tax_amount > 0">
-            <span>الضريبة</span>
+            <span>{{ __('tax') }}</span>
             <span>{{ store.cart.tax_amount_format }}</span>
           </div>
           <div class="cs-row cs-total">
-            <span>الإجمالي</span>
+            <span>{{ __('cart_total') }}</span>
             <span>{{ store.cart.total_format }}</span>
           </div>
-          <button class="checkout-btn" @click="goToCheckout">إتمام الطلب</button>
+          <button class="checkout-btn" @click="goToCheckout">{{ __('checkout') }}</button>
         </div>
       </div>
       

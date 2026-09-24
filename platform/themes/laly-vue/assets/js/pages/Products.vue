@@ -16,18 +16,18 @@
       
       <div v-if="(store.loading || initializing) && store.products.length === 0" class="loading-state">
         <div class="spinner"></div>
-        <p>جاري التحميل...</p>
+        <p>{{ __('loading') }}</p>
       </div>
       
       <div v-else>
         <!-- Desktop Toolbar (visible only on desktop, or we can just make it responsive) -->
         <div class="desktop-toolbar" style="max-width: 1200px; margin: 0 auto 20px auto; display: flex; justify-content: flex-end; align-items: center; padding: 0 16px;">
           <div class="toolbar-actions desktop-only">
-            <button class="btn-icon" @click="viewMode = viewMode === 'grid' ? 'list' : 'grid'" :title="botbleData?.locale === 'ar' ? 'طريقة العرض' : 'View Mode'">
+            <button class="btn-icon" @click="viewMode = viewMode === 'grid' ? 'list' : 'grid'" :title="__('view_mode')">
               <i :class="viewMode === 'grid' ? 'ti ti-list' : 'ti ti-layout-grid'"></i>
             </button>
-            <button class="btn-icon" @click="showFilters = true" :title="botbleData?.locale === 'ar' ? 'الفلاتر' : 'Filters'">
-              <i class="ti ti-filter"></i> {{ botbleData?.locale === 'ar' ? 'الفلاتر' : 'Filters' }}
+            <button class="btn-icon" @click="showFilters = true" :title="__('filters')">
+              <i class="ti ti-filter"></i> {{ __('filters') }}
             </button>
           </div>
         </div>
@@ -38,6 +38,12 @@
             :key="product.id" 
             :product="product" 
           />
+        </div>
+
+        <div v-if="hasMore" class="load-more-wrap">
+          <button class="load-more-btn" :disabled="store.loadingMore" @click="loadMore">
+            {{ store.loadingMore ? __('loading') : __('load_more') }}
+          </button>
         </div>
 
         <div v-if="store.products.length === 0" class="empty-state" style="text-align: center; margin-top: 50px;">
@@ -113,7 +119,8 @@
 </template>
 
 <script setup>
-import { onMounted, watch, ref, inject } from 'vue';
+import { __ } from '../utils/i18n';
+import { onMounted, watch, ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useEcommerceStore } from '../stores/ecommerce';
 import ProductCard from '../components/ProductCard.vue';
@@ -128,7 +135,6 @@ const selectedCollections = ref([]);
 const selectedTags = ref([]);
 const initializing = ref(true);
 const botbleData = window?.BotbleData || {};
-const __ = inject('__') || botbleData?.i18n || ((key) => key);
 
 const getRouteCategoryIds = async () => {
     let catIds = [...selectedCategories.value];
@@ -137,6 +143,11 @@ const getRouteCategoryIds = async () => {
         await store.fetchCategories();
     }
     
+    // /products?category=<id> links come from home-page shortcodes.
+    if (catIds.length === 0 && route.query.category) {
+        catIds = String(route.query.category).split(',').map(Number).filter(Boolean);
+    }
+
     if (route.name === 'CategoryProducts' && route.params.slug && catIds.length === 0) {
         const cat = store.categories.find(c => c.slug === route.params.slug);
         if (cat) {
@@ -154,9 +165,24 @@ const getRouteCategoryIds = async () => {
     return catIds;
 };
 
+const PER_PAGE = 20;
+const currentParams = ref({});
+const hasMore = computed(() => {
+    const meta = store.productsMeta;
+    return !!meta && meta.current_page < meta.last_page;
+});
+
+const loadMore = async () => {
+    if (!hasMore.value || store.loadingMore) return;
+    await store.fetchProducts(
+        { ...currentParams.value, page: store.productsMeta.current_page + 1 },
+        { append: true }
+    );
+};
+
 const applyFilters = async () => {
     showFilters.value = false;
-    let params = { per_page: 20 };
+    let params = { per_page: PER_PAGE };
     
     let catIds = await getRouteCategoryIds();
     
@@ -174,6 +200,7 @@ const applyFilters = async () => {
         params.tags = selectedTags.value.join(',');
     }
     
+    currentParams.value = params;
     await store.fetchProducts(params);
     initializing.value = false;
 };
@@ -192,7 +219,7 @@ onMounted(() => {
     applyFilters();
 });
 
-watch(() => route.params.slug, () => {
+watch(() => [route.params.slug, route.query.category], () => {
     // Clear selection when navigating to a different category
     selectedCategories.value = [];
     selectedAttributes.value = [];
@@ -205,13 +232,6 @@ watch(() => selectedCategories.value, () => {
     refreshFilters();
 });
 
-const addToCart = async (id) => {
-    const success = await store.addToCart(id, 1);
-    if (success) {
-        // Optional: show a toast notification
-        console.log('Product added to cart!');
-    }
-};
 </script>
 
 <style scoped>
@@ -610,5 +630,24 @@ const addToCart = async (id) => {
   font-size: 16px;
   cursor: pointer;
   margin-top: 10px;
+}
+.load-more-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 16px 0 8px;
+}
+.load-more-btn {
+    min-width: 180px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: 1px solid var(--primary);
+    background: transparent;
+    color: var(--primary);
+    font-weight: 700;
+    cursor: pointer;
+}
+.load-more-btn:disabled {
+    opacity: .6;
+    cursor: default;
 }
 </style>
