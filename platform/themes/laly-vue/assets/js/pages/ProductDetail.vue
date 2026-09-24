@@ -2,11 +2,11 @@
   <div class="suha-page">
     <!-- Header -->
     <div class="suha-header">
-      <button class="back-btn" @click="$router.back()">
+      <button class="back-btn" @click="$router.back()" :aria-label="__('back')">
         <i class="ti ti-arrow-right" :class="{ 'ti-arrow-left': !botbleData?.is_rtl }"></i>
       </button>
       <div class="header-title">{{ __('product_details') }}</div>
-      <button class="cart-btn" @click="$router.push('/cart')">
+      <button class="cart-btn" @click="$router.push('/cart')" :aria-label="__('cart')">
         <i class="ti ti-shopping-cart"></i>
       </button>
     </div>
@@ -38,7 +38,7 @@
                 :class="{ active: activeImage === img }"
                 @click="activeImage = img"
               >
-                <img :src="img" :alt="product.name + ' thumbnail'" />
+                <img loading="lazy" :src="img" :alt="product.name + ' thumbnail'" />
               </div>
             </div>
           </div>
@@ -82,7 +82,7 @@
               <div class="qty-selector">
                 <button @click="qty > 1 ? qty-- : null"><i class="ti ti-minus"></i></button>
                 <input type="number" v-model="qty" min="1" readonly />
-                <button @click="qty++"><i class="ti ti-plus"></i></button>
+                <button @click="qty++" :aria-label="__('increase_qty')"><i class="ti ti-plus"></i></button>
               </div>
               
               <div class="action-buttons">
@@ -314,13 +314,12 @@ const buyNow = async () => {
 .badges {
   position: absolute;
   top: 20px;
-  right: 20px;
+  inset-inline-start: 20px;
   display: flex;
   flex-direction: column;
   gap: 5px;
   z-index: 2;
 }
-html[dir="rtl"] .badges { right: auto; left: 20px; }
 .badge {
   color: #fff;
   padding: 4px 10px;
@@ -423,8 +422,8 @@ html[dir="ltr"] .info-left { padding-left: 0; padding-right: 15px; }
   transition: all 0.3s ease;
 }
 .wishlist-btn.active, .wishlist-btn:hover {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
 }
 
 .product-meta {
@@ -508,8 +507,8 @@ html[dir="ltr"] .info-left { padding-left: 0; padding-right: 15px; }
   transition: all 0.3s;
 }
 .btn-add-cart {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
 }
 .btn-buy-now {
   background: var(--primary-dark); /* slightly darker shade of primary */
@@ -595,11 +594,8 @@ html[dir="ltr"] .info-left { padding-left: 0; padding-right: 15px; }
 :deep(.html-content table.specs-table th), :deep(.html-content table.specs-table td) {
   padding: 12px 15px;
   border-bottom: 1px solid var(--border);
-  text-align: right;
+  text-align: start;
   color: var(--text3);
-}
-html[dir="ltr"] :deep(.html-content table.specs-table th), html[dir="ltr"] :deep(.html-content table.specs-table td) {
-  text-align: left;
 }
 :deep(.html-content table.specs-table tr.section-header th) {
   background: var(--primary-light);
@@ -626,7 +622,7 @@ html[dir="ltr"] :deep(.html-content table.specs-table th), html[dir="ltr"] :deep
   :deep(.html-content table.specs-table td) {
     display: block;
     width: 100%;
-    text-align: right;
+    text-align: start;
   }
   :deep(.html-content table.specs-table tr) {
     margin-bottom: 10px;
@@ -658,8 +654,8 @@ html[dir="ltr"] :deep(.html-content table.specs-table th), html[dir="ltr"] :deep
   display: block;
 }
 .btn-primary {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
   border: none;
   padding: 12px 25px;
   border-radius: 8px;

@@ -8,7 +8,7 @@
       
       <div class="profile-header">
         <div class="ph-avatar">
-          <img v-if="customer?.avatar" :src="customer.avatar" alt="User Avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" />
+          <img loading="lazy" v-if="customer?.avatar" :src="customer.avatar" alt="User Avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" />
           <i v-else class="ti ti-user"></i>
         </div>
         <div class="ph-info">
@@ -52,8 +52,8 @@
           <div style="font-size: 13px; font-weight: 600; color: var(--primary);">{{ otherLanguage.name }}</div>
         </div>
 
-        <a v-if="customer" :href="botbleData.logoutUrl" class="pl-item" style="text-decoration: none; color: #dc3545;">
-          <div class="pl-icon" style="color: #dc3545; background: #ffebee;"><i class="ti ti-logout"></i></div>
+        <a v-if="customer" :href="botbleData.logoutUrl" class="pl-item" style="text-decoration: none; color: var(--sale);">
+          <div class="pl-icon" style="color: var(--sale); background: var(--surface-2);"><i class="ti ti-logout"></i></div>
           <div class="pl-text">{{ __('logout') || 'تسجيل الخروج' }}</div>
         </a>
       </div>
@@ -182,7 +182,7 @@ const toggleDarkMode = () => {
   transition: all 0.3s;
 }
 .toggle-switch.active {
-  background: var(--primary);
+  background: var(--primary-strong);
 }
 .toggle-knob {
   width: 20px;

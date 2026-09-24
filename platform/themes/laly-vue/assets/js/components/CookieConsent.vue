@@ -47,7 +47,7 @@ const acceptCookies = () => {
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: var(--surface, #fff);
+  background-color: var(--surface);
   padding: 16px;
   box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1);
   z-index: 999990;
@@ -66,8 +66,8 @@ const acceptCookies = () => {
 
 .cookie-icon {
   font-size: 28px;
-  color: var(--primary, #172B85);
-  background: var(--bg, #f5f5f5);
+  color: var(--primary);
+  background: var(--bg);
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -86,15 +86,15 @@ const acceptCookies = () => {
 .cookie-text p {
   margin: 0;
   font-size: 13px;
-  color: var(--text2, #666);
+  color: var(--text2);
   line-height: 1.4;
 }
 
 .btn-accept {
   width: 100%;
   padding: 12px;
-  background-color: var(--primary, #172B85);
-  color: #fff;
+  background-color: var(--primary-strong);
+  color: var(--on-primary);
   border: none;
   border-radius: 8px;
   font-size: 15px;

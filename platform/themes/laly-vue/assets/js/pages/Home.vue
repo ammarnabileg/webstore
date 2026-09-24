@@ -33,7 +33,7 @@
             >
               <picture>
                 <source :srcset="slider.image" media="(min-width: 768px)" />
-                <img :src="slider.mobile_image || slider.image" :alt="slider.title || ''" class="hero-img" />
+                <img loading="lazy" :src="slider.mobile_image || slider.image" :alt="slider.title || ''" class="hero-img" />
               </picture>
             </div>
           </div>
@@ -106,7 +106,7 @@
             <router-link :to="`/product-categories/${cat.slug}`" class="cat-item animated-card" v-for="cat in store.featuredRootCategories" :key="cat.id" style="text-decoration: none; color: inherit;">
               <div class="cat-card-inner">
                 <div class="cat-img">
-                  <img v-if="cat.image" :src="cat.image" :alt="cat.name">
+                  <img loading="lazy" v-if="cat.image" :src="cat.image" :alt="cat.name">
                   <i v-else class="ti ti-category"></i>
                 </div>
                 <span class="cat-name">{{ cat.name }}</span>
@@ -129,7 +129,7 @@
         <div class="row gx-3">
           <div class="col-md-6 mb-3 mb-md-0" v-for="(banner, index) in homeBanners" :key="'banner-'+index" v-show="banner && banner.image">
              <a :href="(banner && banner.link) ? banner.link : 'javascript:void(0)'" class="banner-link banners-box">
-               <img :src="banner ? banner.image : ''" :alt="'Banner ' + (index + 1)" class="img-fluid banner-img">
+               <img loading="lazy" :src="banner ? banner.image : ''" :alt="'Banner ' + (index + 1)" class="img-fluid banner-img">
              </a>
           </div>
         </div>
@@ -473,7 +473,7 @@ const openQuickView = (slug) => {
 .hero-dot.active {
   width: 24px;
   border-radius: 4px;
-  background-color: #fff;
+  background-color: var(--surface);
 }
 .trust-item p {
   font-size: 9px;
@@ -527,8 +527,8 @@ const openQuickView = (slug) => {
   opacity: 0.8;
 }
 .cat-nav-btn:hover {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
   opacity: 1;
   border-color: var(--primary);
 }

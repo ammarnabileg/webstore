@@ -1,25 +1,26 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Cairo:wght@400;600;700&display=swap');
 
 :root {
-    --laly-primary: #865D4C;
+    /* Same palette as the storefront (assets/sass/app.scss tokens). This file has no Sass source. */
+    --laly-primary: #17738a;
     --laly-surface: rgba(255, 255, 255, 0.85);
-    --laly-surface-border: rgba(134, 93, 76, 0.15);
+    --laly-surface-border: #dbe6ea;
     --laly-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
     --laly-radius: 16px;
-    --laly-text: #2c3e50;
-    --laly-text-muted: #7f8c8d;
-    --laly-bg: #f8f9fa;
+    --laly-text: #10232b;
+    --laly-text-muted: #4a6570;
+    --laly-bg: #f6f9fa;
     --laly-glass-bg: rgba(255, 255, 255, 0.7);
     --laly-glass-border: rgba(255, 255, 255, 0.5);
-    --laly-glass-shadow: 0 8px 32px 0 rgba(134, 93, 76, 0.05);
+    --laly-glass-shadow: 0 8px 32px 0 rgba(23, 115, 138, 0.06);
 }
 
 body.checkout-page {
     font-family: 'Cairo', 'Outfit', sans-serif !important;
     background-color: var(--laly-bg) !important;
     background-image: 
-        radial-gradient(at 0% 0%, rgba(134, 93, 76, 0.05) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(134, 93, 76, 0.05) 0px, transparent 50%);
+        radial-gradient(at 0% 0%, rgba(23, 115, 138, 0.05) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(23, 115, 138, 0.05) 0px, transparent 50%);
     background-attachment: fixed;
     color: var(--laly-text);
 }
@@ -107,7 +108,7 @@ html[dir="ltr"] h5::after {
 
 .form-input-wrapper .form-control:focus {
     border-color: var(--laly-primary) !important;
-    box-shadow: 0 0 0 4px rgba(134, 93, 76, 0.1) !important;
+    box-shadow: 0 0 0 4px rgba(23, 115, 138, 0.1) !important;
     background: #fff !important;
 }
 
@@ -173,18 +174,18 @@ html[dir="ltr"] .form-input-wrapper label {
 .payment-checkout-form .list-group-item:hover,
 .checkout-payment-form .list-group-item:hover,
 .list_payment_method .list-group-item:hover {
-    border-color: rgba(134, 93, 76, 0.3);
+    border-color: rgba(23, 115, 138, 0.3);
     background: #fff;
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(134, 93, 76, 0.08);
+    box-shadow: 0 4px 15px rgba(23, 115, 138, 0.08);
 }
 
 .payment-checkout-form .list-group-item.active,
 .checkout-payment-form .list-group-item.active,
 .list_payment_method .list-group-item.active {
     border: 2px solid var(--laly-primary) !important;
-    background: rgba(134, 93, 76, 0.04) !important;
-    box-shadow: 0 4px 15px rgba(134, 93, 76, 0.1) !important;
+    background: rgba(23, 115, 138, 0.04) !important;
+    box-shadow: 0 4px 15px rgba(23, 115, 138, 0.1) !important;
 }
 
 /* Customizing the inner label for Payment Grid */
@@ -290,7 +291,7 @@ html[dir="ltr"] .form-input-wrapper label {
     position: absolute;
     top: -5px;
     right: -5px;
-    box-shadow: 0 2px 4px rgba(134, 93, 76, 0.3);
+    box-shadow: 0 2px 4px rgba(23, 115, 138, 0.3);
 }
 
 /* Totals */
@@ -352,7 +353,7 @@ html[dir="ltr"] .form-input-wrapper label {
     font-weight: 700;
     color: #fff !important;
     width: 100%;
-    box-shadow: 0 8px 20px rgba(134, 93, 76, 0.25) !important;
+    box-shadow: 0 8px 20px rgba(23, 115, 138, 0.25) !important;
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
@@ -361,7 +362,7 @@ html[dir="ltr"] .form-input-wrapper label {
 }
 .btn-checkout:hover {
     transform: translateY(-3px);
-    box-shadow: 0 12px 25px rgba(134, 93, 76, 0.35) !important;
+    box-shadow: 0 12px 25px rgba(23, 115, 138, 0.35) !important;
     background: #724d3e !important;
 }
 
@@ -482,7 +483,7 @@ html[dir="ltr"] .form-input-wrapper label {
     .payment-checkout-form .list-group-item.active,
     .list_payment_method .list-group-item.active {
         border-color: var(--laly-primary) !important;
-        background: rgba(134, 93, 76, 0.05) !important;
+        background: rgba(23, 115, 138, 0.05) !important;
         box-shadow: none !important;
     }
     
@@ -540,8 +541,8 @@ html[dir="ltr"] .form-input-wrapper label {
     --laly-surface-border: rgba(255, 255, 255, 0.1);
     --laly-glass-border: rgba(255, 255, 255, 0.05);
     background-image: 
-        radial-gradient(at 0% 0%, rgba(134, 93, 76, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(134, 93, 76, 0.15) 0px, transparent 50%);
+        radial-gradient(at 0% 0%, rgba(23, 115, 138, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(23, 115, 138, 0.15) 0px, transparent 50%);
 }
 
 [data-theme="dark"] .form-input-wrapper .form-control {
@@ -563,7 +564,7 @@ html[dir="ltr"] .form-input-wrapper label {
 }
 
 [data-theme="dark"] .payment-checkout-form .list-group-item.active {
-    background: rgba(134, 93, 76, 0.15) !important;
+    background: rgba(23, 115, 138, 0.15) !important;
 }
 
 [data-theme="dark"] .checkout-product-item,

@@ -1,14 +1,14 @@
 <template>
   <div class="page">
     <div class="nbar">
-      <button class="nbar-back" @click="$router.back()"><i class="ti ti-arrow-right" :class="{ 'ti-arrow-left': !botbleData?.is_rtl }"></i></button>
+      <button class="nbar-back" @click="$router.back()" :aria-label="__('back')"><i class="ti ti-arrow-right" :class="{ 'ti-arrow-left': !botbleData?.is_rtl }"></i></button>
       <div class="nbar-title">{{ __('products') || 'المنتجات' }}</div>
       <div class="nbar-actions">
         <button @click="viewMode = viewMode === 'grid' ? 'list' : 'grid'">
           <i :class="viewMode === 'grid' ? 'ti ti-list' : 'ti ti-layout-grid'"></i>
         </button>
-        <button @click="showFilters = true"><i class="ti ti-filter"></i></button>
-        <button @click="$router.push('/search')"><i class="ti ti-search"></i></button>
+        <button @click="showFilters = true" :aria-label="__('filters')"><i class="ti ti-filter"></i></button>
+        <button @click="$router.push('/search')" :aria-label="__('search')"><i class="ti ti-search"></i></button>
       </div>
     </div>
     
@@ -48,7 +48,7 @@
 
         <div v-if="store.products.length === 0" class="empty-state" style="text-align: center; margin-top: 50px;">
           <img v-if="botbleData?.logo" :src="botbleData.logo" alt="Logo" style="max-height: 60px; margin-bottom: 20px; opacity: 0.6;" />
-          <i v-else class="ti ti-package-off" style="font-size: 40px; color: #ccc;"></i>
+          <i v-else class="ti ti-package-off" style="font-size: 40px; color: var(--line);"></i>
           <p>{{ __('no_products') || 'لا توجد منتجات حالياً' }}</p>
         </div>
       </div>
@@ -61,7 +61,7 @@
     <div class="filter-drawer" :class="{ 'open': showFilters, 'rtl': botbleData?.is_rtl }">
       <div class="drawer-header">
         <h3>{{ __('filters') || 'الفلاتر' }}</h3>
-        <button class="close-btn" @click="showFilters = false"><i class="ti ti-x"></i></button>
+        <button class="close-btn" @click="showFilters = false" :aria-label="__('close')"><i class="ti ti-x"></i></button>
       </div>
       <div class="drawer-body">
         <!-- Categories Filter -->
@@ -92,7 +92,7 @@
           <div class="filter-options" style="display:flex; flex-wrap:wrap; gap:10px;">
             <label v-for="attr in filterSet.attributes" :key="attr.id" class="filter-label" style="display:inline-flex; align-items:center; gap: 5px;">
               <input type="checkbox" :value="attr.id" v-model="selectedAttributes">
-              <span v-if="attr.color" :style="{ backgroundColor: attr.color, width: '24px', height: '24px', borderRadius: '50%', display: 'inline-block', border: '1px solid #ddd' }" :title="attr.title"></span>
+              <span v-if="attr.color" :style="{ backgroundColor: attr.color, width: '24px', height: '24px', borderRadius: '50%', display: 'inline-block', border: '1px solid var(--line)' }" :title="attr.title"></span>
               <span v-else>{{ attr.title }}</span>
             </label>
           </div>
@@ -238,15 +238,15 @@ watch(() => selectedCategories.value, () => {
 .filter-btn {
   padding: 8px 16px;
   border-radius: 20px;
-  border: 1px solid #ddd;
-  background: #fff;
+  border: 1px solid var(--line);
+  background: var(--surface);
   white-space: nowrap;
   font-family: inherit;
   cursor: pointer;
 }
 .filter-btn.active {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
   border-color: var(--primary);
 }
 
@@ -294,11 +294,11 @@ watch(() => selectedCategories.value, () => {
   align-items: center;
   justify-content: center;
   height: 200px;
-  color: #666;
+  color: var(--ink-2);
 }
 .spinner {
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #172B85;
+  border: 3px solid var(--line);
+  border-top: 3px solid var(--primary-strong);
   border-radius: 50%;
   width: 30px;
   height: 30px;
@@ -311,7 +311,7 @@ watch(() => selectedCategories.value, () => {
 }
 .old-price {
   text-decoration: line-through;
-  color: #999;
+  color: var(--ink-2);
   font-size: 12px;
   margin-left: 5px;
 }
@@ -424,7 +424,7 @@ watch(() => selectedCategories.value, () => {
   width: 35px;
   height: 35px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--surface);
   border: none;
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   display: flex;
@@ -436,8 +436,8 @@ watch(() => selectedCategories.value, () => {
   transition: all 0.2s;
 }
 .pcard-floating-actions button:hover {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
 }
 .pcard-floating-actions button.active {
   color: var(--danger);
@@ -461,8 +461,8 @@ watch(() => selectedCategories.value, () => {
   transition: all 0.2s;
 }
 .tag-chip.active {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
   border-color: var(--primary);
 }
 
@@ -521,8 +521,8 @@ watch(() => selectedCategories.value, () => {
 .qv-price { font-size: 22px; font-weight: bold; color: var(--primary); margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
 .qv-desc { font-size: 14px; color: var(--text2); line-height: 1.6; margin-bottom: 20px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .qv-add-btn {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
   border: none;
   width: 100%;
   padding: 12px;
@@ -622,8 +622,8 @@ watch(() => selectedCategories.value, () => {
 .apply-filters-btn {
   width: 100%;
   padding: 12px;
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
   border: none;
   border-radius: 8px;
   font-weight: 700;

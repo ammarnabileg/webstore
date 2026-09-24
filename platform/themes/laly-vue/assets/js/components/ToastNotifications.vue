@@ -14,7 +14,7 @@
             <i v-else class="ti ti-info-circle"></i>
           </div>
           <div class="toast-content">{{ notification.message }}</div>
-          <button class="toast-close" @click="store.removeNotification(notification.id)">
+          <button class="toast-close" @click="store.removeNotification(notification.id)" :aria-label="__('close')">
             <i class="ti ti-x"></i>
           </button>
         </div>
@@ -121,26 +121,26 @@ html[dir="rtl"] .toast-content-wrapper {
 }
 
 .toast-success .toast-icon {
-  background: linear-gradient(135deg, #28a745, #20c997);
+  background: linear-gradient(135deg, var(--success), #20c997);
 }
 .toast-error .toast-icon {
-  background: linear-gradient(135deg, #dc3545, #f8d7da);
+  background: linear-gradient(135deg, var(--sale), #f8d7da);
 }
 .toast-info .toast-icon {
-  background: linear-gradient(135deg, #172B85, #5A73EB);
+  background: linear-gradient(135deg, var(--primary-strong), var(--primary));
 }
 
 .toast-content {
   flex: 1;
   font-size: 14px;
   font-weight: 600;
-  color: #333;
+  color: var(--ink);
 }
 
 .toast-close {
   background: rgba(0,0,0,0.05);
   border: none;
-  color: #666;
+  color: var(--ink-2);
   cursor: pointer;
   width: 28px;
   height: 28px;
@@ -153,7 +153,7 @@ html[dir="rtl"] .toast-content-wrapper {
 }
 .toast-close:hover {
   background: rgba(0,0,0,0.1);
-  color: #000;
+  color: var(--ink);
   transform: rotate(90deg);
 }
 
@@ -163,7 +163,7 @@ html[dir="rtl"] .toast-content-wrapper {
   bottom: 0;
   left: 0;
   height: 3px;
-  background: var(--primary, #172B85);
+  background: var(--primary-strong);
   width: 100%;
   animation: progress-shrink 3s linear forwards;
 }
@@ -173,9 +173,9 @@ html[dir="rtl"] .toast-progress {
   transform-origin: right;
 }
 
-.toast-success .toast-progress { background: #28a745; }
-.toast-error .toast-progress { background: #dc3545; }
-.toast-info .toast-progress { background: #172B85; }
+.toast-success .toast-progress { background: var(--success); }
+.toast-error .toast-progress { background: var(--sale); }
+.toast-info .toast-progress { background: var(--primary-strong); }
 
 @keyframes progress-shrink {
   0% { width: 100%; }

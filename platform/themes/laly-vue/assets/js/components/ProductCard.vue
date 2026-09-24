@@ -14,7 +14,7 @@
         <button class="action-btn" @click.stop="store.toggleWishlist(product)" :class="{'active': store.wishlist.find(i => i.id === product.id)}" :title="__('wishlist') || 'المفضلة'">
           <i class="ti ti-heart"></i>
         </button>
-        <button class="action-btn" @click.stop="store.openQuickView(product.slug)" :title="__('quick_view') || 'نظرة سريعة'">
+        <button class="action-btn" @click.stop="store.openQuickView(product.slug)" :title="__('quick_view') || 'نظرة سريعة'" :aria-label="__('quick_view')">
           <i class="ti ti-eye"></i>
         </button>
       </div>
@@ -60,7 +60,7 @@
            <small>/ {{ __('mo') || 'شهر' }}</small>
         </b>
       </div>
-      <div class="pay-t" style="background:#fff;border-radius:6px;padding:2px 4px;font-weight:800;font-size:10px;color:var(--primary)">
+      <div class="pay-t" style="background:var(--surface);border-radius:6px;padding:2px 4px;font-weight:800;font-size:10px;color:var(--primary)">
         {{ product.accepts_taly ? 'TALY' : 'DEEMA' }}
       </div>
     </div>
@@ -219,8 +219,8 @@ html[dir="rtl"] .pcard-actions {
   transition: all 0.2s;
 }
 .action-btn:hover, .action-btn.active {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
   border-color: var(--primary);
 }
 
@@ -330,8 +330,8 @@ html[dir="rtl"] .pcard-actions {
   margin-top: auto;
 }
 .pcard:hover .addbtn {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
   border-color: var(--primary);
 }
 .addbtn:active {

@@ -56,7 +56,7 @@
             v-model="searchQuery" 
             :placeholder="__('search_notifications') || 'ابحث في الإشعارات...'" 
           />
-          <button v-if="searchQuery" class="btn border-0 text-muted pe-3" @click="searchQuery = ''">
+          <button v-if="searchQuery" class="btn border-0 text-muted pe-3" @click="searchQuery = ''" :aria-label="__('close')">
             <i class="ti ti-x fs-6"></i>
           </button>
         </div>
@@ -112,7 +112,7 @@
             <p class="text-muted mb-0 fs-6 pe-md-4">{{ item.description }}</p>
           </div>
           <div class="notification-action flex-shrink-0 align-self-center">
-            <button class="btn btn-light rounded-circle p-3 text-primary action-btn d-flex align-items-center justify-content-center shadow-sm">
+            <button class="btn btn-light rounded-circle p-3 text-primary action-btn d-flex align-items-center justify-content-center shadow-sm" :aria-label="__('back')">
               <i class="ti ti-arrow-left fs-5" :class="{'ti-arrow-right': !isRtl}"></i>
             </button>
           </div>
@@ -229,11 +229,11 @@ const goToTarget = (url) => {
 
 /* Gradients & Colors */
 .bg-primary-gradient {
-  background: linear-gradient(135deg, var(--primary, #172B85), var(--primary-light, #5A73EB));
+  background: linear-gradient(135deg, var(--primary-strong), var(--primary));
 }
 .btn-primary-gradient {
-  background: linear-gradient(135deg, var(--primary, #172B85), var(--primary-light, #5A73EB));
-  color: #fff;
+  background: linear-gradient(135deg, var(--primary-strong), var(--primary));
+  color: var(--on-primary);
   border: none;
   transition: all 0.3s ease;
 }
@@ -243,8 +243,8 @@ const goToTarget = (url) => {
   color: #fff;
 }
 .count-badge {
-  background: linear-gradient(135deg, #f0f3ff, #e0e7ff);
-  color: var(--primary, #172B85);
+  background: var(--primary-soft);
+  color: var(--primary);
   border: 1px solid rgba(23, 43, 133, 0.1);
   font-weight: 700;
 }
@@ -270,7 +270,7 @@ const goToTarget = (url) => {
   border: 1px solid rgba(0, 0, 0, 0.04);
 }
 .filter-tab {
-  color: var(--text-color, #64748b);
+  color: var(--ink-2);
   border: none;
   background: transparent;
   transition: all 0.25s ease;
@@ -279,18 +279,18 @@ const goToTarget = (url) => {
   background: rgba(0, 0, 0, 0.03);
 }
 .filter-tab.active {
-  background: var(--primary, #172B85);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
   box-shadow: 0 4px 12px rgba(23, 43, 133, 0.2);
 }
 .input-group-custom {
-  background: var(--bg-color, #f8fafc);
+  background: var(--surface-2);
   border-color: rgba(0, 0, 0, 0.08) !important;
   transition: all 0.3s ease;
 }
 .input-group-custom:focus-within {
-  background: #fff;
-  border-color: var(--primary, #172B85) !important;
+  background: var(--surface);
+  border-color: var(--primary) !important;
   box-shadow: 0 0 0 4px rgba(23, 43, 133, 0.1);
 }
 
@@ -318,11 +318,11 @@ const goToTarget = (url) => {
   border-color: rgba(23, 43, 133, 0.15);
 }
 .notification-card:hover::before {
-  background: linear-gradient(90deg, var(--primary, #172B85), var(--primary-light, #5A73EB));
+  background: linear-gradient(90deg, var(--primary-strong), var(--primary));
 }
 .notification-card:hover .action-btn {
-  background: linear-gradient(135deg, var(--primary, #172B85), var(--primary-light, #5A73EB)) !important;
-  color: white !important;
+  background: linear-gradient(135deg, var(--primary-strong), var(--primary)) !important;
+  color: var(--on-primary) !important;
   transform: scale(1.1);
 }
 .notification-icon-wrapper {
@@ -347,7 +347,7 @@ const goToTarget = (url) => {
 .bg-success-subtle { background-color: rgba(16, 185, 129, 0.12) !important; }
 .text-success { color: #059669 !important; }
 .bg-primary-subtle { background-color: rgba(23, 43, 133, 0.1) !important; }
-.text-primary { color: var(--primary, #172B85) !important; }
+.text-primary { color: var(--primary) !important; }
 
 /* Micro-Animations */
 @keyframes float {

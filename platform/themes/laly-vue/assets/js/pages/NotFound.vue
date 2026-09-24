@@ -24,15 +24,15 @@ import { __ } from '../utils/i18n';
   margin: 16px 0 8px;
 }
 .not-found p {
-  color: var(--muted, #6b7280);
+  color: var(--ink-2);
   margin-bottom: 24px;
 }
 .not-found-btn {
   display: inline-block;
   padding: 12px 24px;
   border-radius: 12px;
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
   font-weight: 700;
   text-decoration: none;
 }

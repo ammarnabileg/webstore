@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <div class="nbar">
-      <button class="nbar-back" @click="$router.back()"><i class="ti ti-arrow-right" :class="{ 'ti-arrow-left': !botbleData?.is_rtl }"></i></button>
+      <button class="nbar-back" @click="$router.back()" :aria-label="__('back')"><i class="ti ti-arrow-right" :class="{ 'ti-arrow-left': !botbleData?.is_rtl }"></i></button>
       <div class="nbar-title">{{ pageData ? pageData.name : (loading ? __('loading') : __('page_not_found')) }}</div>
     </div>
     
@@ -89,7 +89,7 @@ watch(() => route.path, () => {
 
 <style scoped>
 .cms-content {
-  background: #fff;
+  background: var(--surface);
   border-radius: 15px;
   padding: 30px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.02);
@@ -99,13 +99,13 @@ watch(() => route.path, () => {
   margin-bottom: 20px;
   font-size: 24px;
   color: var(--primary);
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--line);
   padding-bottom: 15px;
 }
 .page-body {
   font-size: 15px;
   line-height: 1.8;
-  color: #444;
+  color: var(--ink);
 }
 .page-body :deep(img) {
   max-width: 100%;

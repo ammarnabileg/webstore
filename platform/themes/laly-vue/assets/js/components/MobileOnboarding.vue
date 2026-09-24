@@ -192,7 +192,7 @@ const finishOnboarding = () => {
 .mobile-onboarding {
   position: fixed;
   inset: 0;
-  background-color: var(--surface, #fff);
+  background-color: var(--surface);
   z-index: 999995;
   display: flex;
   flex-direction: column;
@@ -213,7 +213,7 @@ const finishOnboarding = () => {
   background: none;
   border: none;
   font-size: 16px;
-  color: var(--text2, #666);
+  color: var(--text2);
   z-index: 10;
 }
 [dir="ltr"] .btn-skip { right: auto; left: 20px; }
@@ -245,7 +245,7 @@ const finishOnboarding = () => {
 .slide-img {
   width: 150px;
   height: 150px;
-  background: var(--bg, #f5f5f5);
+  background: var(--bg);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -257,12 +257,12 @@ const finishOnboarding = () => {
   font-size: 24px;
   font-weight: bold;
   margin-bottom: 15px;
-  color: var(--text, #333);
+  color: var(--text);
 }
 
 .slide p {
   font-size: 15px;
-  color: var(--text2, #666);
+  color: var(--text2);
   line-height: 1.6;
 }
 
@@ -282,19 +282,19 @@ const finishOnboarding = () => {
   width: 10px;
   height: 10px;
   border-radius: 5px;
-  background-color: var(--border, #ddd);
+  background-color: var(--border);
   transition: all 0.3s;
 }
 .dot.active {
   width: 24px;
-  background-color: var(--primary, #172B85);
+  background-color: var(--primary-strong);
 }
 
 .btn-next {
   width: 100%;
   padding: 16px;
-  background-color: var(--primary, #172B85);
-  color: #fff;
+  background-color: var(--primary-strong);
+  color: var(--on-primary);
   border: none;
   border-radius: 12px;
   font-size: 16px;
@@ -312,7 +312,7 @@ const finishOnboarding = () => {
 .prefs-img {
   width: 100px;
   height: 100px;
-  background: var(--bg, #f5f5f5);
+  background: var(--bg);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -324,7 +324,7 @@ const finishOnboarding = () => {
   margin-bottom: 10px;
 }
 .prefs-header p {
-  color: var(--text2, #666);
+  color: var(--text2);
 }
 
 .prefs-options {
@@ -344,7 +344,7 @@ const finishOnboarding = () => {
 }
 .pref-card {
   flex: 1;
-  border: 2px solid var(--border, #eee);
+  border: 2px solid var(--border, var(--line));
   border-radius: 12px;
   padding: 20px 10px;
   display: flex;
@@ -356,18 +356,18 @@ const finishOnboarding = () => {
 }
 .pref-card i {
   font-size: 30px;
-  color: var(--text2, #666);
+  color: var(--text2);
 }
 .pref-card span {
   font-weight: bold;
   font-size: 15px;
 }
 .pref-card.active {
-  border-color: var(--primary, #172B85);
+  border-color: var(--primary);
   background-color: rgba(23, 43, 133, 0.05);
 }
 .pref-card.active i {
-  color: var(--primary, #172B85);
+  color: var(--primary);
 }
 
 .prefs-footer {
@@ -377,8 +377,8 @@ const finishOnboarding = () => {
 .btn-start {
   width: 100%;
   padding: 16px;
-  background-color: var(--primary, #172B85);
-  color: #fff;
+  background-color: var(--primary-strong);
+  color: var(--on-primary);
   border: none;
   border-radius: 12px;
   font-size: 18px;

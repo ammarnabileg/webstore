@@ -47,15 +47,15 @@ const hasAds = computed(() => adKeys.value.length > 0);
   flex: 1;
 }
 .ad-placeholder {
-  background: #f0f0f0;
+  background: var(--surface-2);
   border-radius: 10px;
   height: 150px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #999;
+  color: var(--ink-2);
   font-weight: 500;
-  border: 1px dashed #ccc;
+  border: 1px dashed var(--line);
 }
 @media (max-width: 767px) {
   .ads-grid {

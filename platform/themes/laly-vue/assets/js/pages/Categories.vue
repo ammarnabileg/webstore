@@ -3,7 +3,7 @@
     <div class="nbar">
       <div class="nbar-title">{{ __('categories') || 'الأقسام' }}</div>
       <div class="nbar-actions">
-        <button @click="$router.push('/search')"><i class="ti ti-search"></i></button>
+        <button @click="$router.push('/search')" :aria-label="__('search')"><i class="ti ti-search"></i></button>
       </div>
     </div>
     
@@ -18,7 +18,7 @@
           
           <a :href="mainCat.url || `/product-categories/${mainCat.slug}`" class="main-cat-header" style="text-decoration:none">
             <div class="mc-icon">
-              <img v-if="mainCat.image" :src="mainCat.image" :alt="mainCat.name">
+              <img loading="lazy" v-if="mainCat.image" :src="mainCat.image" :alt="mainCat.name">
               <i v-else class="ti ti-category"></i>
             </div>
             <h2>{{ mainCat.name }}</h2>
@@ -38,7 +38,7 @@
               <div class="children-grid" v-if="store.getChildren(subCat.id).length > 0">
                 <a :href="child.url || `/product-categories/${child.slug}`" v-for="child in store.getChildren(subCat.id)" :key="child.id" class="child-item" style="text-decoration:none">
                   <div class="child-img">
-                    <img v-if="child.image" :src="child.image" :alt="child.name">
+                    <img loading="lazy" v-if="child.image" :src="child.image" :alt="child.name">
                     <i v-else class="ti ti-tag"></i>
                   </div>
                   <span>{{ child.name }}</span>

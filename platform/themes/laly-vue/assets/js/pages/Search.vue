@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <div class="nbar">
-      <button class="nbar-back" @click="$router.back()" style="margin-inline-end: 10px;"><i class="ti ti-arrow-right" :class="{ 'ti-arrow-left': !botbleData?.is_rtl }"></i></button>
+      <button class="nbar-back" @click="$router.back()" style="margin-inline-end: 10px;" :aria-label="__('back')"><i class="ti ti-arrow-right" :class="{ 'ti-arrow-left': !botbleData?.is_rtl }"></i></button>
       <div class="search-input-wrapper">
         <input 
           type="text" 
@@ -10,10 +10,10 @@
           :placeholder="__('search_placeholder') || 'ابحث عن المنتجات...'" 
           autofocus 
         />
-        <button v-if="query" @click="query = ''; store.searchResults = []" class="clear-btn" style="margin-inline-end: 10px;">
+        <button v-if="query" @click="query = ''; store.searchResults = []" class="clear-btn" style="margin-inline-end: 10px;" :aria-label="__('close')">
           <i class="ti ti-x"></i>
         </button>
-        <button class="search-btn" @click="doSearch">
+        <button class="search-btn" @click="doSearch" :aria-label="__('search')">
           <i class="ti ti-search"></i>
         </button>
       </div>
@@ -34,7 +34,7 @@
       </div>
       
       <div v-else-if="query && !store.loading" class="empty-state">
-        <i class="ti ti-search" style="font-size: 40px; color: #ddd;"></i>
+        <i class="ti ti-search" style="font-size: 40px; color: var(--line);"></i>
         <p>{{ __('no_results') }}</p>
       </div>
       
@@ -97,7 +97,7 @@ if (query.value) {
 .search-input-wrapper {
   display: flex;
   align-items: center;
-  background: #f3f5f9;
+  background: var(--surface-2);
   border-radius: 50px;
   padding: 4px 4px 4px 15px;
   flex: 1;
@@ -122,9 +122,9 @@ if (query.value) {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--primary, #0d7c81);
+  background: var(--primary-strong);
   border: none;
-  color: #fff;
+  color: var(--on-primary);
   display: flex;
   align-items: center;
   justify-content: center;

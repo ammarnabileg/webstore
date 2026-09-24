@@ -3,6 +3,12 @@
 export const translations = {
     ar: {
         "home": "الرئيسية",
+        "back": "رجوع",
+        "close": "إغلاق",
+        "decrease_qty": "تقليل الكمية",
+        "increase_qty": "زيادة الكمية",
+        "menu": "القائمة",
+        "share": "مشاركة",
         "product_details": "تفاصيل المنتج",
         "buy_now": "شراء الآن",
         "quick_specs": "المواصفات السريعة",
@@ -127,6 +133,12 @@ export const translations = {
     },
     en: {
         "home": "Home",
+        "back": "Back",
+        "close": "Close",
+        "decrease_qty": "Decrease quantity",
+        "increase_qty": "Increase quantity",
+        "menu": "Menu",
+        "share": "Share",
         "product_details": "Product details",
         "buy_now": "Buy now",
         "quick_specs": "Quick specs",

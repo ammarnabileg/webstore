@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <div class="nbar">
-      <button class="nbar-back" @click="$router.back()"><i class="ti ti-arrow-right" :class="{ 'ti-arrow-left': !botbleData?.is_rtl }"></i></button>
+      <button class="nbar-back" @click="$router.back()" :aria-label="__('back')"><i class="ti ti-arrow-right" :class="{ 'ti-arrow-left': !botbleData?.is_rtl }"></i></button>
       <div class="nbar-title">{{ __('wishlist') || 'المفضلة' }}</div>
     </div>
     
@@ -16,10 +16,10 @@
       </div>
       
       <div v-else class="empty-state" style="text-align: center; padding: 50px 20px;">
-        <i class="ti ti-heart-broken" style="font-size: 60px; color: #ddd; margin-bottom: 20px; display: block;"></i>
+        <i class="ti ti-heart-broken" style="font-size: 60px; color: var(--line); margin-bottom: 20px; display: block;"></i>
         <h3 style="margin-bottom: 10px;">{{ __('wishlist_empty') || 'قائمة المفضلة فارغة!' }}</h3>
-        <p style="color: #666; margin-bottom: 20px;">{{ __('wishlist_empty_sub') }}</p>
-        <button class="btn btn-primary" @click="$router.push('/products')" style="padding: 12px 25px; border-radius: 25px; background: var(--primary); color: white; border: none; cursor: pointer;">
+        <p style="color: var(--ink-2); margin-bottom: 20px;">{{ __('wishlist_empty_sub') }}</p>
+        <button class="btn btn-primary" @click="$router.push('/products')" style="padding: 12px 25px; border-radius: 25px; background: var(--primary-strong); color: var(--on-primary); border: none; cursor: pointer;">
           {{ __('shop_now') || 'تسوّق الآن' }}
         </button>
       </div>
@@ -41,7 +41,7 @@ const botbleData = window?.BotbleData || {};
 
 <style scoped>
 .empty-state {
-  background: #fff;
+  background: var(--surface);
   border-radius: 15px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.02);
 }

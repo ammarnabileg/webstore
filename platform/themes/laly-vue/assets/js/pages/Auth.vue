@@ -20,7 +20,7 @@
                         <div class="form-group mb-3 text-start">
                             <label class="mb-1 text-muted">{{ __('البريد الإلكتروني أو رقم الهاتف') }}</label>
                             <div class="d-flex align-items-center form-control form-control-lg p-0" :style="isPhoneInput ? 'border-radius: 12px; height: 50px; overflow: hidden; direction: ltr;' : 'border-radius: 12px; height: 50px; padding-left: 1rem !important; padding-right: 1rem !important; overflow: hidden; direction: ltr;'">
-                                <span v-if="isPhoneInput" class="px-3 fw-bold" style="background-color: rgba(128,128,128,0.1); height: 100%; display: flex; align-items: center; border-right: 1px solid var(--border-color, #ced4da); white-space: nowrap; color: inherit;">🇰🇼 +965</span>
+                                <span v-if="isPhoneInput" class="px-3 fw-bold" style="background-color: rgba(128,128,128,0.1); height: 100%; display: flex; align-items: center; border-right: 1px solid var(--border-color, var(--line)); white-space: nowrap; color: inherit;">🇰🇼 +965</span>
                                 <input type="text" class="form-control form-control-lg border-0 shadow-none flex-grow-1 px-3 h-100 w-100" v-model="classicForm.email" @input="checkInputType" required style="background-color: transparent !important; color: inherit; outline: none;" :placeholder="__('Email or Phone')">
                             </div>
                         </div>
@@ -28,7 +28,7 @@
                             <label class="mb-1 text-muted">{{ __('كلمة المرور') }}</label>
                             <input type="password" class="form-control form-control-lg" v-model="classicForm.password" required style="border-radius: 12px; height: 50px;">
                         </div>
-                        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold mb-3 text-white" :disabled="loading" style="border-radius: 12px; height: 50px; background-color: var(--primary); border: none;">
+                        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold mb-3" :disabled="loading" style="border-radius: 12px; height: 50px; background-color: var(--primary-strong); color: var(--on-primary); border: none;">
                             <span v-if="!loading">{{ __('دخول') }}</span>
                             <span v-else>{{ __('جاري التحقق...') }}</span>
                         </button>
@@ -64,8 +64,8 @@
                 
                 <!-- Classic Register Form -->
                 <div v-if="step === 'classic_register'" class="text-center">
-                    <button @click="step = 'classic_login'" class="btn btn-link text-decoration-none text-muted position-absolute" style="top: 20px; right: 20px;">
-                        <i class="ti ti-arrow-right"></i> {{ __('عودة') }}
+                    <button @click="step = 'classic_login'" class="btn btn-link text-decoration-none text-muted position-absolute" style="top: 20px; inset-inline-start: 20px;">
+                        <i class="ti" :class="botbleData?.is_rtl === false ? 'ti-arrow-left' : 'ti-arrow-right'"></i> {{ __('عودة') }}
                     </button>
                     <h3 class="fw-bold mb-4">{{ __('إنشاء حساب جديد') }}</h3>
                     
@@ -81,7 +81,7 @@
                         <div class="form-group mb-3 text-start">
                             <label class="mb-1 text-muted">{{ __('رقم الهاتف') }} <span v-if="botbleData.isPhoneRequired" class="text-danger">*</span><span v-else>({{ __('اختياري') }})</span></label>
                             <div class="d-flex align-items-center form-control form-control-lg p-0" style="border-radius: 12px; height: 50px; overflow: hidden; direction: ltr;">
-                                <span class="px-3 fw-bold" style="background-color: rgba(128,128,128,0.1); height: 100%; display: flex; align-items: center; border-right: 1px solid var(--border-color, #ced4da); white-space: nowrap; color: inherit;">🇰🇼 +965</span>
+                                <span class="px-3 fw-bold" style="background-color: rgba(128,128,128,0.1); height: 100%; display: flex; align-items: center; border-right: 1px solid var(--border-color, var(--line)); white-space: nowrap; color: inherit;">🇰🇼 +965</span>
                                 <input type="text" class="form-control form-control-lg border-0 shadow-none flex-grow-1 px-3 h-100 w-100" v-model="registerForm.phone" :required="botbleData.isPhoneRequired" style="background-color: transparent !important; color: inherit; outline: none;" placeholder="12345678">
                             </div>
                         </div>
@@ -93,7 +93,7 @@
                             <label class="mb-1 text-muted">{{ __('تأكيد كلمة المرور') }} <span class="text-danger">*</span></label>
                             <input type="password" class="form-control form-control-lg" v-model="registerForm.password_confirmation" required style="border-radius: 12px; height: 50px;">
                         </div>
-                        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold mb-3 text-white" :disabled="loading" style="border-radius: 12px; height: 50px; background-color: var(--primary); border: none;">
+                        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold mb-3" :disabled="loading" style="border-radius: 12px; height: 50px; background-color: var(--primary-strong); color: var(--on-primary); border: none;">
                             <span v-if="!loading">{{ __('تسجيل') }}</span>
                             <span v-else>{{ __('جاري التسجيل...') }}</span>
                         </button>
@@ -106,8 +106,8 @@
 
                 <!-- Classic Register OTP Step -->
                 <div v-if="step === 'classic_register_otp'" class="text-center">
-                    <button @click="step = 'classic_register'" class="btn btn-link text-decoration-none text-muted position-absolute" style="top: 20px; right: 20px;">
-                        <i class="ti ti-arrow-right"></i> {{ __('عودة والتعديل') }}
+                    <button @click="step = 'classic_register'" class="btn btn-link text-decoration-none text-muted position-absolute" style="top: 20px; inset-inline-start: 20px;">
+                        <i class="ti" :class="botbleData?.is_rtl === false ? 'ti-arrow-left' : 'ti-arrow-right'"></i> {{ __('عودة والتعديل') }}
                     </button>
 
                     <div class="mb-4">
@@ -131,8 +131,8 @@
 
                 <!-- WhatsApp Phone Step -->
                 <div v-if="step === 'wa_phone'" class="text-center">
-                    <button @click="step = 'classic_login'" class="btn btn-link text-decoration-none text-muted position-absolute" style="top: 20px; right: 20px;">
-                        <i class="ti ti-arrow-right"></i> {{ __('عودة') }}
+                    <button @click="step = 'classic_login'" class="btn btn-link text-decoration-none text-muted position-absolute" style="top: 20px; inset-inline-start: 20px;">
+                        <i class="ti" :class="botbleData?.is_rtl === false ? 'ti-arrow-left' : 'ti-arrow-right'"></i> {{ __('عودة') }}
                     </button>
 
                     <i class="ti ti-brand-whatsapp mb-3" style="font-size: 60px; color: #25D366;"></i>
@@ -141,7 +141,7 @@
 
                     <div class="form-group mb-3">
                         <div class="d-flex align-items-center form-control form-control-lg p-0" style="border-radius: 12px; height: 50px; overflow: hidden; direction: ltr;">
-                            <span class="px-3 fw-bold" style="background-color: rgba(128,128,128,0.1); height: 100%; display: flex; align-items: center; border-right: 1px solid var(--border-color, #ced4da); white-space: nowrap; color: inherit;">🇰🇼 +965</span>
+                            <span class="px-3 fw-bold" style="background-color: rgba(128,128,128,0.1); height: 100%; display: flex; align-items: center; border-right: 1px solid var(--border-color, var(--line)); white-space: nowrap; color: inherit;">🇰🇼 +965</span>
                             <input type="text" class="form-control form-control-lg border-0 shadow-none flex-grow-1 px-3 h-100 w-100 fw-bold" v-model="phone" :placeholder="__('12345678')" style="background-color: transparent !important; color: inherit; outline: none;">
                         </div>
                     </div>
@@ -153,8 +153,8 @@
 
                 <!-- WhatsApp OTP Step -->
                 <div v-if="step === 'wa_otp'" class="text-center">
-                    <button @click="step = 'wa_phone'" class="btn btn-link text-decoration-none text-muted position-absolute" style="top: 20px; right: 20px;">
-                        <i class="ti ti-arrow-right"></i> {{ __('تعديل الرقم') }}
+                    <button @click="step = 'wa_phone'" class="btn btn-link text-decoration-none text-muted position-absolute" style="top: 20px; inset-inline-start: 20px;">
+                        <i class="ti" :class="botbleData?.is_rtl === false ? 'ti-arrow-left' : 'ti-arrow-right'"></i> {{ __('تعديل الرقم') }}
                     </button>
 
                     <div class="mb-4">
@@ -173,7 +173,7 @@
                         <span v-else>{{ __('جاري التحقق...') }}</span>
                     </button>
 
-                    <div class="alert alert-info mt-3 border-0" style="background-color: #e3f2fd; border-radius: 10px; font-size: 13px;">
+                    <div class="alert alert-info mt-3 border-0" style="background-color: var(--primary-soft); color: var(--ink); border-radius: 10px; font-size: 13px;">
                         <i class="ti ti-info-circle"></i> {{ __('يمكنك أيضاً فتح تطبيق الواتساب والضغط على الرابط السحري للدخول فوراً بدون كتابة الكود.') }}
                     </div>
                 </div>
@@ -205,7 +205,7 @@
                             <label class="mb-1 text-muted">{{ __('تأكيد كلمة المرور') }}</label>
                             <input type="password" class="form-control form-control-lg" v-model="profileForm.password_confirmation" required style="border-radius: 12px; height: 50px;">
                         </div>
-                        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold mb-3 text-white" :disabled="loading" style="border-radius: 12px; height: 50px; background-color: var(--primary); border: none;">
+                        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold mb-3" :disabled="loading" style="border-radius: 12px; height: 50px; background-color: var(--primary-strong); color: var(--on-primary); border: none;">
                             <span v-if="!loading">{{ __('حفظ ومتابعة التسوق') }}</span>
                             <span v-else>{{ __('جاري الحفظ...') }}</span>
                         </button>
@@ -241,7 +241,7 @@ const isPhoneInput = ref(false);
 const getSocialButtonStyle = (provider) => {
     switch (provider) {
         case 'google':
-            return 'border-radius: 12px; height: 50px; background-color: #fff; color: #757575; border: 1px solid #ddd;';
+            return 'border-radius: 12px; height: 50px; background-color: var(--surface); color: var(--ink-2); border: 1px solid var(--line);';
         case 'facebook':
             return 'border-radius: 12px; height: 50px; background-color: #1877F2; color: white; border: none;';
         case 'apple':

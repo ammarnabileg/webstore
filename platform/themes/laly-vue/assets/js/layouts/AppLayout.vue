@@ -21,12 +21,12 @@
       <div class="container-fluid">
         <div class="dh-top">
             <div class="dh-logo" @click="$router.push('/')">
-              <img :src="siteLogo" alt="">
+              <img :src="siteLogo" :alt="siteName">
             </div>
             
             <div class="dh-search" style="position: relative;">
               <input type="text" v-model="searchQuery" :placeholder="__('search_placeholder')" @keyup.enter="doSearch()" @input="onSearchInput" @focus="showLiveSearch = true" @blur="hideLiveSearchDelay" />
-              <button @click="doSearch()"><i class="ti ti-search"></i></button>
+              <button @click="doSearch()" :aria-label="__('search')"><i class="ti ti-search"></i></button>
               
               <!-- Live Search Dropdown - Tech Mega Search -->
               <div class="live-search-dropdown tech-search-dropdown" v-if="showLiveSearch && (searchQuery.length > 1)">
@@ -51,7 +51,7 @@
                   <!-- Products Panel -->
                   <div class="ls-products-panel">
                     <div class="ls-item" v-for="product in liveSearchResults" :key="product.id" @click.stop="goToProduct(product.slug)">
-                      <img :src="product.image || botbleData?.placeholderImage" :alt="product.name" />
+                      <img loading="lazy" :src="product.image || botbleData?.placeholderImage" :alt="product.name" />
                       <div class="ls-info">
                         <div class="ls-name">{{ product.name }}</div>
                         <div class="ls-specs" v-if="product.sku">SKU: {{ product.sku }}</div>
@@ -205,6 +205,7 @@ const route = useRoute();
 const store = useEcommerceStore();
 
 const siteLogo = window.BotbleData?.logo || '';
+const siteName = window.BotbleData?.site_title || '';
 const topbarLogo = window.BotbleData?.topbarLogo || siteLogo;
 const siteTitle = window.BotbleData?.site_title || 'Laly Kuwait';
 const hotline = window.BotbleData?.hotline || '';
@@ -405,8 +406,8 @@ const doSearch = () => {
   color: var(--text2);
 }
 .ls-badge:hover {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
   border-color: var(--primary);
 }
 .ls-products-panel {

@@ -14,11 +14,14 @@ import { ref, onMounted, defineEmits } from 'vue';
 
 const emit = defineEmits(['finished']);
 const isVisible = ref(false);
-const logoSrc = window.BotbleData?.logo || '/storage/logo.png';
+const logoSrc = window.BotbleData?.logo || '';
 
 onMounted(() => {
-  // Only show on mobile
-  if (window.innerWidth <= 768) {
+  // Only on mobile, and only once per browser session (it used to block every full page load).
+  let seen = false;
+  try { seen = sessionStorage.getItem('splashSeen_v1') === '1'; sessionStorage.setItem('splashSeen_v1', '1'); } catch (e) {}
+
+  if (window.innerWidth <= 768 && !seen) {
     isVisible.value = true;
     
     // Hide after 2 seconds and emit finished event
@@ -40,7 +43,7 @@ onMounted(() => {
 .splash-screen {
   position: fixed;
   inset: 0;
-  background-color: var(--surface, #ffffff);
+  background-color: var(--surface);
   z-index: 999999;
   display: flex;
   align-items: center;
@@ -64,8 +67,8 @@ onMounted(() => {
 .splash-spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid var(--border, #eee);
-  border-top: 3px solid var(--primary, #172B85);
+  border: 3px solid var(--border, var(--line));
+  border-top: 3px solid var(--primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
