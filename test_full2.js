@@ -1,0 +1,31 @@
+const https = require('https'); https.get('https://brilliant-kw.com/project-wizard', (res) => { let data = ''; res.on('data', c => data+=c); res.on('end', () => { const m = data.match(/<meta name="csrf-token" content="([^"]+)">/); if(!m) return console.log('No CSRF token'); const token = m[1]; const cookies = res.headers['set-cookie']; console.log('Token:', token); const req = https.request('https://brilliant-kw.com/ajax/vue/project-leads', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token, 'Cookie': cookies ? cookies.map(c=>c.split(';')[0]).join(';') : '' } }, (postRes) => { let pd = ''; postRes.on('data', c => pd+=c); postRes.on('end', () => console.log('POST:', postRes.statusCode, pd)); }); req.write(JSON.stringify({
+  place: 'home',
+  area: 'small',
+  floors: 1,
+  entrances: '1',
+  outdoor: false,
+  condition: 'finished',
+  goals: ['cams','wifi'],
+  devices: '1-5',
+  record_days: 14,
+  commercial: false,
+  internet: 'yes',
+  zoom: false,
+  budget: 'low',
+  brand: 'hikvision',
+  package: 'pro',
+  package_estimate: 150,
+  bom: [],
+  plan_attached: false,
+  plan_pins: [],
+  sketch: {
+    rooms: [{x:10, y:10, w:30, h:30, label:'????', zone:'in', floor:'g'}],
+    pins: [{t:'cam', x:15, y:15, zone:'in', floor:'g'}],
+    floors_drawn: ['g']
+  },
+  cams_indoor: 2,
+  cams_outdoor: 1,
+  sketch_generated: true,
+  name: 'aasssss',
+  phone: '54654564'
+})); req.end(); }); });

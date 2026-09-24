@@ -1,0 +1,10 @@
+{
+    "name": "KlickPay",
+    "namespace": "Botble\\Klickpay\\",
+    "provider": "Botble\\Klickpay\\Providers\\KlickpayServiceProvider",
+    "author": "Antigravity",
+    "url": "https://klickpay.com",
+    "version": "1.0.0",
+    "description": "KlickPay payment gateway integration for Botble CMS.",
+    "id": "klickpay"
+}

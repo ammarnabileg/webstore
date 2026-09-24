@@ -1,0 +1,11 @@
+{   
+    "id": "motionmedia/pwa",
+    "name": "PWA",
+    "namespace": "Botble\\PWA\\",
+    "provider": "Botble\\PWA\\Providers\\PWAServiceProvider",
+    "author": "Motion Media",
+    "url": "https://motionmedia.co.ke",
+    "version": "1.1.0",
+    "minimum_core_version": "7.3.0",
+    "description": "Progressive Web App plugin for Botble CMS - Makes your website installable and work offline"
+}

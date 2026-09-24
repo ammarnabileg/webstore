@@ -1,0 +1,10 @@
+{
+    "name": "System Wizard",
+    "id": "antigravity/system-wizard",
+    "namespace": "Botble\\SystemWizard\\",
+    "provider": "Botble\\SystemWizard\\Providers\\SystemWizardServiceProvider",
+    "author": "Antigravity",
+    "url": "https://botble.com",
+    "version": "1.0.0",
+    "description": "System Wizard for quoting CCTV & Network systems"
+}

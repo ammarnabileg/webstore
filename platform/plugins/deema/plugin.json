@@ -1,0 +1,13 @@
+{
+    "id": "deema",
+    "name": "Deema",
+    "namespace": "Botble\\Deema\\",
+    "provider": "Botble\\Deema\\Providers\\DeemaServiceProvider",
+    "author": "Ahmed Moh",
+    "version": "1.0.0",
+    "description": "Deema payment gateway integration for Botble CMS.",
+    "require": [
+        "payment",
+        "ecommerce"
+    ]
+}

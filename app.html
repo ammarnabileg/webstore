@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eco Myers — iOS App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+/* ═══════════════════════════════════════════════════
+   RESET + BASE
+═══════════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --primary:#0a7d90;--primary-dark:#085f6e;--primary-light:#e6f8f9;
+  --bg:#fff;--surface:#f5f5f7;--surface2:#ebebed;
+  --text:#111;--text2:#6e6e73;--text3:#8e8e93;
+  --border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.05);
+  --success:#22c55e;--success-bg:#e1f5ee;--success-text:#1c7a4a;
+  --warn:#f59e0b;--danger:#ff3b30;--stars:#ff9500;
+  --r6:6px;--r10:10px;--r12:12px;--r14:14px;--r20:20px;
+  --font:-apple-system,BlinkMacSystemFont,'SF Pro Text','Tajawal',sans-serif;
+  --font-display:-apple-system,BlinkMacSystemFont,'SF Pro Display','Tajawal',sans-serif;
+}
+body{font-family:'Tajawal',var(--font);background:#e8e8ed;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:24px 16px 40px;}
+img{display:block;max-width:100%;}
+button{cursor:pointer;font-family:inherit;border:none;background:transparent;}
+a{text-decoration:none;color:inherit;}
+
+/* ═══════════════════════════════════════════════════
+   PHONE SHELL
+═══════════════════════════════════════════════════ */
+.shell{
+  width:390px;flex-shrink:0;
+  background:#fff;border-radius:54px;
+  box-shadow:0 0 0 1.5px #b8b8b8,0 0 0 3px #ddd,0 32px 96px rgba(0,0,0,.22);
+  position:relative;overflow:hidden;
+}
+.shell::before{content:'';position:absolute;left:-3px;top:100px;width:3px;height:32px;background:#b0b0b0;border-radius:3px 0 0 3px;box-shadow:0 46px 0 #b0b0b0,0 92px 0 #b0b0b0;z-index:99;}
+.shell::after{content:'';position:absolute;right:-3px;top:145px;width:3px;height:66px;background:#b0b0b0;border-radius:0 3px 3px 0;z-index:99;}
+
+.screen{
+  border-radius:48px;overflow:hidden;
+  height:844px;display:flex;flex-direction:column;
+  background:#fff;position:relative;
+}
+
+/* Dynamic Island */
+.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:126px;height:36px;background:#000;border-radius:20px;z-index:40;}
+
+/* Status Bar */
+.sbar{height:48px;padding:15px 26px 0;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:#fff;position:relative;z-index:30;}
+.sbar-time{font-size:15px;font-weight:600;color:#000;letter-spacing:-.3px;}
+.sbar-icons{display:flex;align-items:center;gap:6px;}
+.sbar-icons svg{fill:#000;}
+
+/* Nav Bar */
+.nbar{
+  height:48px;padding:0 16px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:.5px solid var(--border);
+  position:relative;z-index:30;
+}
+.nbar-back{display:flex;align-items:center;gap:2px;color:var(--primary);font-size:16px;}
+.nbar-back i{font-size:22px;}
+.nbar-title{font-size:17px;font-weight:700;color:#000;letter-spacing:-.3px;font-family:var(--font-display);}
+.nbar-actions{display:flex;gap:8px;}
+.nbar-actions button{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--primary);}
+.nbar-actions button:active{background:var(--surface);}
+
+/* Scroll Area */
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+.scroll::-webkit-scrollbar{display:none;}
+
+/* Tab Bar (bottom) */
+.tabbar{
+  height:82px;
+  display:flex;align-items:flex-start;justify-content:space-around;
+  padding-top:10px;
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:.5px solid var(--border);
+  flex-shrink:0;z-index:30;
+}
+.tb-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:0 10px;min-width:56px;transition:opacity .15s;}
+.tb-item i{font-size:24px;color:var(--text3);transition:color .15s;}
+.tb-item span{font-size:10px;color:var(--text3);font-weight:500;transition:color .15s;}
+.tb-item.active i,.tb-item.active span{color:var(--primary);}
+.tb-badge{position:relative;}
+.tb-badge-dot{position:absolute;top:-2px;right:-4px;width:8px;height:8px;border-radius:50%;background:var(--danger);border:1.5px solid #fff;}
+
+/* Home Indicator */
+.home-ind{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:rgba(0,0,0,.18);z-index:50;}
+
+/* Toast */
+.toast{
+  position:absolute;top:58px;left:50%;transform:translateX(-50%) translateY(-8px);
+  background:rgba(0,0,0,.82);color:#fff;padding:9px 18px;border-radius:14px;
+  font-size:13px;font-weight:600;white-space:nowrap;
+  opacity:0;transition:all .25s;z-index:200;pointer-events:none;
+  backdrop-filter:blur(10px);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* Screen Pages */
+.page{display:none;flex-direction:column;height:100%;}
+.page.active{display:flex;}
+
+/* ═══════════════════════════════════════════════════
+   SHARED COMPONENTS
+═══════════════════════════════════════════════════ */
+.sec-title{font-size:19px;font-weight:800;color:#000;letter-spacing:-.4px;margin-bottom:14px;font-family:var(--font-display);}
+.card{background:#fff;border:.5px solid var(--border);border-radius:var(--r14);}
+.chip{display:inline-flex;align-items:center;padding:6px 14px;border-radius:var(--r10);border:1.5px solid var(--border2);background:#fff;color:#000;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .14s;}
+.chip.active{border-color:var(--primary);background:var(--primary-light);color:var(--primary);}
+.chip.out{opacity:.38;text-decoration:line-through;cursor:not-allowed;}
+.badge-sale{background:var(--danger);color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:var(--r6);}
+.badge-save{background:var(--success-bg);color:var(--success-text);font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r6);}
+.divider{height:.5px;background:var(--border2);margin:0 16px;}
+.stars{color:var(--stars);}
+.price-tag{font-size:17px;font-weight:700;color:var(--primary);}
+
+/* Product Card */
+.pcard{background:#fff;border:.5px solid var(--border);border-radius:var(--r14);overflow:hidden;cursor:pointer;transition:border-color .15s;}
+.pcard:active{border-color:var(--primary);}
+.pcard-img{aspect-ratio:1/1;background:var(--surface);display:flex;align-items:center;justify-content:center;overflow:hidden;padding:10px;}
+.pcard-img img{width:100%;height:100%;object-fit:contain;transition:transform .28s;}
+.pcard:active .pcard-img img{transform:scale(1.04);}
+.pcard-body{padding:10px 12px 12px;}
+.pcard-brand{font-size:10px;font-weight:600;color:var(--primary);letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px;}
+.pcard-name{font-size:13px;font-weight:600;color:#000;line-height:1.35;margin-bottom:5px;}
+.pcard-price{font-size:15px;font-weight:700;color:#000;margin-bottom:8px;}
+.pcard-price span{font-size:12px;color:var(--text3);text-decoration:line-through;margin-right:4px;font-weight:400;}
+.pcard-add{width:100%;height:32px;border-radius:var(--r6);background:var(--primary);color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px;transition:background .15s;}
+.pcard-add:active{background:var(--primary-dark);}
+
+/* Sticky CTA */
+.sticky-cta{
+  background:rgba(255,255,255,.94);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:.5px solid var(--border);padding:10px 16px 6px;
+  display:flex;gap:9px;align-items:center;flex-shrink:0;
+}
+.qty-box{display:flex;align-items:center;background:var(--surface);border-radius:var(--r10);overflow:hidden;flex-shrink:0;}
+.qty-box button{width:36px;height:44px;font-size:22px;font-weight:300;color:var(--primary);display:flex;align-items:center;justify-content:center;}
+.qty-box button:active{background:var(--primary-light);}
+.qty-box span{min-width:28px;text-align:center;font-size:16px;font-weight:700;color:#000;}
+.btn-cart{flex:1;height:44px;border-radius:var(--r12);background:var(--primary);color:#fff;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .15s;}
+.btn-cart:active{background:var(--primary-dark);}
+.btn-buy{width:44px;height:44px;border-radius:var(--r12);background:#000;color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;}
+
+/* Form inputs */
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:5px;}
+.field input,.field select,.field textarea{
+  width:100%;height:46px;padding:0 14px;
+  background:var(--surface);border:.5px solid transparent;border-radius:var(--r12);
+  font-size:15px;font-family:inherit;color:#000;
+  transition:border-color .15s;outline:none;
+}
+.field input:focus,.field select:focus{border-color:var(--primary);}
+.field textarea{height:90px;padding:12px 14px;resize:none;}
+
+/* Section block */
+.sblock{padding:16px 16px 0;}
+
+/* ═══════════════════════════════════════════════════
+   HOME SCREEN
+═══════════════════════════════════════════════════ */
+#screen-home .scroll{padding-bottom:16px;}
+
+.home-hero{
+  margin:14px 16px;border-radius:var(--r20);overflow:hidden;
+  background:linear-gradient(135deg,#0a7d90 0%,#05505e 100%);
+  padding:22px 20px;position:relative;min-height:150px;
+}
+.home-hero-tag{font-size:11px;font-weight:600;color:rgba(255,255,255,.7);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;}
+.home-hero-title{font-size:22px;font-weight:800;color:#fff;line-height:1.25;letter-spacing:-.4px;margin-bottom:4px;}
+.home-hero-sub{font-size:13px;color:rgba(255,255,255,.75);margin-bottom:16px;}
+.home-hero-btn{display:inline-flex;align-items:center;gap:6px;background:#fff;color:var(--primary);font-size:13px;font-weight:700;padding:8px 16px;border-radius:20px;}
+.hero-circle{position:absolute;right:-20px;bottom:-30px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.08);}
+.hero-circle2{position:absolute;right:20px;bottom:20px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.06);}
+
+.home-cats{padding:14px 16px 0;}
+.cats-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;}
+.cats-scroll::-webkit-scrollbar{display:none;}
+.cat-item{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;}
+.cat-circle{width:62px;height:62px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:26px;border:1.5px solid transparent;transition:all .15s;}
+.cat-item.active .cat-circle,.cat-circle:active{border-color:var(--primary);background:var(--primary-light);}
+.cat-label{font-size:11px;font-weight:500;color:var(--text2);white-space:nowrap;}
+
+.home-offers{margin:16px 16px 0;}
+.offers-row{display:flex;gap:10px;}
+.offer-card{flex:1;border-radius:var(--r12);padding:14px;display:flex;flex-direction:column;justify-content:space-between;min-height:90px;}
+.offer-card.teal{background:var(--primary-light);}
+.offer-card.dark{background:#111;}
+.offer-label{font-size:11px;font-weight:600;margin-bottom:4px;}
+.offer-card.teal .offer-label{color:var(--primary);}
+.offer-card.dark .offer-label{color:rgba(255,255,255,.6);}
+.offer-title{font-size:15px;font-weight:800;line-height:1.2;}
+.offer-card.teal .offer-title{color:#000;}
+.offer-card.dark .offer-title{color:#fff;}
+.offer-link{font-size:11px;font-weight:600;margin-top:6px;}
+.offer-card.teal .offer-link{color:var(--primary);}
+.offer-card.dark .offer-link{color:var(--stars);}
+
+.home-prods{padding:16px 16px 0;}
+.prods-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* ═══════════════════════════════════════════════════
+   PRODUCTS SCREEN
+═══════════════════════════════════════════════════ */
+#screen-products .scroll{padding-bottom:16px;}
+
+.search-bar-wrap{padding:10px 16px 0;}
+.search-bar{
+  display:flex;align-items:center;gap:5px;
+  background:#f3f5f9;border-radius:50px;
+  padding:4px 4px 4px 14px;height:44px;
+}
+.search-bar .search-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; flex-shrink: 0; }
+.search-bar .search-btn i { font-size: 18px; color: #fff; }
+.search-bar input{flex:1;border:none;outline:none;background:transparent;font-size:15px;font-family:inherit;color:#000;}
+.search-bar input::placeholder{color:var(--text3);}
+
+.filter-scroll{display:flex;gap:7px;padding:12px 16px 0;overflow-x:auto;}
+.filter-scroll::-webkit-scrollbar{display:none;}
+
+.sort-row{display:flex;justify-content:space-between;align-items:center;padding:10px 16px 0;}
+.sort-row span{font-size:13px;color:var(--text2);}
+.sort-btn{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--primary);font-weight:500;}
+
+/* ═══════════════════════════════════════════════════
+   PRODUCT DETAIL SCREEN
+═══════════════════════════════════════════════════ */
+.detail-imgs{position:relative;background:var(--surface);}
+.detail-main-img{width:100%;aspect-ratio:1/1;object-fit:contain;padding:20px;transition:opacity .18s;}
+.detail-main-img.fading{opacity:0;}
+.detail-badge-pos{position:absolute;top:12px;right:12px;}
+.detail-wish{position:absolute;top:12px;left:12px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text3);box-shadow:0 1px 5px rgba(0,0,0,.14);transition:color .15s;}
+.detail-wish.active{color:var(--danger);}
+.thumb-strip{display:flex;gap:7px;padding:0 16px 12px;overflow-x:auto;}
+.thumb-strip::-webkit-scrollbar{display:none;}
+.tthumb{width:54px;height:54px;border-radius:var(--r10);border:1.5px solid #e0e0e0;background:#fff;overflow:hidden;flex-shrink:0;cursor:pointer;padding:4px;transition:border-color .14s;}
+.tthumb img{width:100%;height:100%;object-fit:contain;}
+.tthumb.active{border:2px solid var(--primary);}
+.dots-row{position:absolute;bottom:70px;left:50%;transform:translateX(-50%);display:flex;gap:5px;pointer-events:none;}
+.dot{width:5px;height:5px;border-radius:3px;background:rgba(0,0,0,.2);transition:all .2s;}
+.dot.active{width:18px;background:var(--primary);}
+
+.detail-info{padding:14px 16px 0;}
+.detail-brand{font-size:11px;font-weight:700;color:var(--primary);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;}
+.detail-title{font-size:19px;font-weight:800;color:#000;line-height:1.3;letter-spacing:-.4px;margin-bottom:8px;font-family:var(--font-display);}
+.detail-rating{display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.detail-rating .score{font-size:13px;color:var(--primary);font-weight:600;}
+.detail-rating .cnt{font-size:13px;color:var(--text3);}
+
+.price-card{margin:0 16px 12px;background:var(--surface);border-radius:var(--r14);padding:12px 14px;}
+.price-row{display:flex;align-items:baseline;gap:9px;margin-bottom:3px;flex-wrap:wrap;}
+.price-now{font-size:26px;font-weight:800;color:#000;letter-spacing:-.5px;font-family:var(--font-display);}
+.price-old{font-size:14px;color:var(--text3);text-decoration:line-through;}
+.price-note{font-size:12px;color:var(--text3);}
+
+.stock-row{display:flex;align-items:center;gap:6px;font-size:12px;margin:0 16px 12px;}
+.sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.low .sdot{background:var(--warn);}
+.low .stxt{color:#92400e;font-weight:500;}
+.ins .sdot{background:var(--success);}
+.ins .stxt{color:var(--success-text);font-weight:500;}
+
+.var-block{padding:0 16px;margin-bottom:12px;}
+.var-label{font-size:13px;font-weight:600;color:#000;margin-bottom:8px;display:flex;justify-content:space-between;}
+.var-label span{color:var(--primary);font-weight:400;}
+.var-scroll{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px;}
+.var-scroll::-webkit-scrollbar{display:none;}
+
+.trust-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 16px 14px;}
+.trust-c{background:var(--surface);border-radius:var(--r12);padding:10px 12px;display:flex;align-items:center;gap:9px;}
+.trust-c i{font-size:20px;color:var(--primary);flex-shrink:0;}
+.trust-ctitle{font-size:12px;font-weight:600;color:#000;}
+.trust-csub{font-size:11px;color:var(--text3);}
+
+.specs-box{margin:0 16px 14px;border:.5px solid #e0e0e0;border-radius:var(--r14);overflow:hidden;}
+.srow{display:flex;justify-content:space-between;padding:10px 14px;border-bottom:.5px solid #f0f0f0;}
+.srow:last-of-type{border-bottom:none;}
+.skey{font-size:13px;color:var(--text3);}
+.sval{font-size:13px;font-weight:600;color:#000;text-align:left;max-width:58%;}
+.see-more{display:flex;align-items:center;justify-content:center;gap:4px;padding:10px 14px;font-size:14px;font-weight:500;color:var(--primary);cursor:pointer;border-top:.5px solid #f0f0f0;}
+
+.desc-block{margin:0 16px 14px;}
+.desc-title{font-size:15px;font-weight:700;color:#000;margin-bottom:6px;}
+.desc-txt{font-size:14px;color:#3a3a3c;line-height:1.65;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.desc-more{font-size:14px;color:var(--primary);font-weight:500;margin-top:4px;cursor:pointer;}
+
+.rev-section{margin:0 16px 14px;}
+.rev-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.rev-head span{font-size:15px;font-weight:700;color:#000;}
+.rev-head a{font-size:14px;color:var(--primary);}
+.rev-summary{display:flex;align-items:center;gap:14px;margin-bottom:12px;}
+.rev-big{font-size:44px;font-weight:800;color:#000;line-height:1;font-family:var(--font-display);}
+.rev-bars{flex:1;}
+.rbar-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.rbar-lbl{font-size:11px;color:var(--text3);min-width:12px;}
+.rbar-track{flex:1;height:4px;border-radius:2px;background:#e0e0e0;overflow:hidden;}
+.rbar-fill{height:100%;border-radius:2px;background:var(--stars);}
+.rbar-fill.red{background:var(--danger);}
+.rev-card{background:var(--surface);border-radius:var(--r14);padding:12px 14px;}
+.rev-chead{display:flex;justify-content:space-between;margin-bottom:4px;}
+.rev-name{font-size:13px;font-weight:700;color:#000;}
+.rev-date{font-size:12px;color:var(--text3);}
+.rev-body{font-size:13px;color:#3a3a3c;line-height:1.55;margin-top:5px;}
+
+/* ═══════════════════════════════════════════════════
+   CART SCREEN
+═══════════════════════════════════════════════════ */
+#screen-cart .scroll{padding:14px 16px 16px;}
+
+.cart-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:14px;text-align:center;padding:40px 24px;}
+.cart-empty i{font-size:64px;color:var(--surface2);}
+.cart-empty-title{font-size:18px;font-weight:700;color:#000;}
+.cart-empty-sub{font-size:14px;color:var(--text2);}
+.cart-empty-btn{margin-top:6px;padding:12px 28px;background:var(--primary);color:#fff;border-radius:var(--r12);font-size:15px;font-weight:600;}
+
+.cart-item{display:flex;gap:12px;background:#fff;border:.5px solid var(--border);border-radius:var(--r14);padding:12px;margin-bottom:10px;}
+.cart-img{width:72px;height:72px;border-radius:var(--r10);background:var(--surface);flex-shrink:0;overflow:hidden;padding:6px;}
+.cart-img img{width:100%;height:100%;object-fit:contain;}
+.cart-details{flex:1;}
+.cart-brand{font-size:10px;font-weight:600;color:var(--primary);letter-spacing:.06em;text-transform:uppercase;}
+.cart-name{font-size:13px;font-weight:600;color:#000;line-height:1.35;margin:2px 0 6px;}
+.cart-variant{font-size:11px;color:var(--text3);margin-bottom:8px;}
+.cart-bottom{display:flex;align-items:center;justify-content:space-between;}
+.cart-price{font-size:16px;font-weight:700;color:#000;}
+.cart-qty{display:flex;align-items:center;gap:0;background:var(--surface);border-radius:20px;overflow:hidden;}
+.cart-qty button{width:28px;height:28px;font-size:16px;color:var(--primary);display:flex;align-items:center;justify-content:center;}
+.cart-qty span{min-width:22px;text-align:center;font-size:13px;font-weight:700;color:#000;}
+.cart-del{color:var(--danger);font-size:18px;margin-top:2px;}
+
+.cart-summary{background:var(--surface);border-radius:var(--r14);padding:14px;margin-top:6px;}
+.summary-row{display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px;}
+.summary-row:last-child{margin-bottom:0;padding-top:8px;border-top:.5px solid var(--border);font-weight:700;font-size:15px;}
+.summary-row span:first-child{color:var(--text2);}
+.summary-row span:last-child{color:#000;}
+.summary-row.total span:last-child{color:var(--primary);font-size:18px;}
+
+.promo-row{display:flex;gap:8px;margin-bottom:14px;}
+.promo-row input{flex:1;height:44px;padding:0 14px;background:var(--surface);border:.5px solid transparent;border-radius:var(--r10);font-size:14px;font-family:inherit;outline:none;}
+.promo-row input:focus{border-color:var(--primary);}
+.promo-row button{height:44px;padding:0 16px;background:var(--primary);color:#fff;border-radius:var(--r10);font-size:14px;font-weight:600;white-space:nowrap;}
+
+.btn-checkout{width:100%;height:50px;border-radius:var(--r14);background:var(--primary);color:#fff;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;transition:background .15s;}
+.btn-checkout:active{background:var(--primary-dark);}
+
+/* ═══════════════════════════════════════════════════
+   CHECKOUT SCREEN
+═══════════════════════════════════════════════════ */
+#screen-checkout .scroll{padding:14px 0 20px;}
+
+.steps-bar{display:flex;align-items:center;padding:0 16px;margin-bottom:16px;}
+.step{display:flex;align-items:center;gap:6px;}
+.step-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+.step.done .step-num{background:var(--primary);color:#fff;}
+.step.active .step-num{background:var(--primary-light);color:var(--primary);border:1.5px solid var(--primary);}
+.step.idle .step-num{background:var(--surface);color:var(--text3);}
+.step-label{font-size:12px;font-weight:500;}
+.step.active .step-label{color:var(--primary);}
+.step.idle .step-label{color:var(--text3);}
+.step-line{flex:1;height:1.5px;background:var(--border);margin:0 6px;}
+.step-line.done{background:var(--primary);}
+
+.checkout-section{padding:0 16px 16px;border-bottom:.5px solid var(--border);margin-bottom:14px;}
+.checkout-section-title{font-size:15px;font-weight:700;color:#000;margin-bottom:12px;}
+
+.addr-card{background:var(--surface);border-radius:var(--r12);padding:12px 14px;display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;cursor:pointer;border:1.5px solid transparent;}
+.addr-card.selected{border-color:var(--primary);background:var(--primary-light);}
+.addr-card i{font-size:20px;color:var(--text3);margin-top:1px;}
+.addr-card.selected i{color:var(--primary);}
+.addr-name{font-size:14px;font-weight:600;color:#000;}
+.addr-line{font-size:13px;color:var(--text2);margin-top:2px;line-height:1.5;}
+
+.pay-option{background:var(--surface);border-radius:var(--r12);padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px;cursor:pointer;border:1.5px solid transparent;}
+.pay-option.selected{border-color:var(--primary);background:var(--primary-light);}
+.pay-icon{width:40px;height:28px;border-radius:var(--r6);background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 1px 4px rgba(0,0,0,.1);}
+.pay-name{font-size:14px;font-weight:600;color:#000;flex:1;}
+.pay-radio{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--text3);display:flex;align-items:center;justify-content:center;}
+.pay-option.selected .pay-radio{border-color:var(--primary);background:var(--primary);}
+.pay-option.selected .pay-radio::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff;}
+
+.order-mini{background:var(--surface);border-radius:var(--r12);padding:12px 14px;}
+.omini-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;}
+.omini-row span:first-child{color:var(--text2);}
+.omini-row.total{padding-top:8px;border-top:.5px solid var(--border);font-weight:700;font-size:15px;}
+.omini-row.total span:last-child{color:var(--primary);}
+
+/* ═══════════════════════════════════════════════════
+   SEARCH SCREEN
+═══════════════════════════════════════════════════ */
+#screen-search .scroll{padding:12px 16px 16px;}
+
+.search-big{display:flex;align-items:center;gap:5px;background:#f3f5f9;border-radius:50px;padding:4px 4px 4px 14px;height:50px;}
+.search-big input{flex:1;border:none;outline:none;background:transparent;font-size:16px;font-family:inherit;color:#000;}
+.search-big input::placeholder{color:var(--text3);}
+.search-big .clear{font-size:18px;color:var(--text3);cursor:pointer;padding: 0 10px;}
+.search-big .search-btn { width: 42px; height: 42px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; flex-shrink: 0; }
+.search-big .search-btn i { font-size: 20px; color: #fff; }
+.trending-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+.tag{padding:7px 14px;background:var(--surface);border-radius:20px;font-size:13px;color:var(--text2);cursor:pointer;transition:all .14s;}
+.tag:active{background:var(--primary-light);color:var(--primary);}
+
+.recent-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:.5px solid var(--border);}
+.recent-item i{font-size:18px;color:var(--text3);}
+.recent-item span{flex:1;font-size:14px;color:#000;}
+.recent-item .del{font-size:16px;color:var(--text3);}
+
+.search-results{margin-top:14px;}
+.search-results .prods-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* ═══════════════════════════════════════════════════
+   WISHLIST SCREEN
+═══════════════════════════════════════════════════ */
+#screen-wishlist .scroll{padding:14px 16px 16px;}
+
+.wish-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:14px;text-align:center;padding:40px 24px;}
+.wish-empty i{font-size:64px;color:var(--surface2);}
+
+.wish-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.wish-card{position:relative;}
+.wish-card .pcard{width:100%;}
+.wish-remove{position:absolute;top:8px;left:8px;z-index:5;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--danger);box-shadow:0 1px 4px rgba(0,0,0,.12);}
+
+/* ═══════════════════════════════════════════════════
+   PROFILE SCREEN
+═══════════════════════════════════════════════════ */
+#screen-profile .scroll{padding-bottom:16px;}
+
+.profile-hero{background:linear-gradient(160deg,var(--primary) 0%,var(--primary-dark) 100%);padding:24px 20px 30px;margin-bottom:-20px;}
+.profile-avatar{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff;margin-bottom:10px;border:2.5px solid rgba(255,255,255,.4);}
+.profile-name{font-size:20px;font-weight:800;color:#fff;letter-spacing:-.3px;}
+.profile-email{font-size:13px;color:rgba(255,255,255,.75);margin-top:2px;}
+.profile-stats{display:flex;gap:0;margin-top:16px;background:rgba(255,255,255,.12);border-radius:var(--r12);overflow:hidden;}
+.pstat{flex:1;padding:10px 0;text-align:center;border-right:.5px solid rgba(255,255,255,.2);}
+.pstat:last-child{border-right:none;}
+.pstat-num{font-size:18px;font-weight:800;color:#fff;}
+.pstat-lbl{font-size:10px;color:rgba(255,255,255,.7);margin-top:1px;}
+
+.profile-menu{background:#fff;border-radius:var(--r20);margin:0 16px;border:.5px solid var(--border);overflow:hidden;position:relative;z-index:2;}
+.pmenu-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:.5px solid var(--border);cursor:pointer;transition:background .14s;}
+.pmenu-item:last-child{border-bottom:none;}
+.pmenu-item:active{background:var(--surface);}
+.pmenu-icon{width:36px;height:36px;border-radius:var(--r10);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.pmenu-label{flex:1;font-size:15px;font-weight:500;color:#000;}
+.pmenu-sub{font-size:12px;color:var(--text3);margin-top:1px;}
+.pmenu-arrow{font-size:18px;color:var(--text3);}
+.pmenu-badge{font-size:11px;font-weight:600;background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:20px;}
+
+.logout-btn{margin:14px 16px 0;width:calc(100% - 32px);height:46px;border-radius:var(--r12);background:var(--surface);color:var(--danger);font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:7px;}
+
+/* ═══════════════════════════════════════════════════
+   ORDERS SCREEN
+═══════════════════════════════════════════════════ */
+#screen-orders .scroll{padding:14px 16px 16px;}
+
+.order-card{background:#fff;border:.5px solid var(--border);border-radius:var(--r14);padding:14px;margin-bottom:12px;cursor:pointer;}
+.order-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.order-id{font-size:13px;font-weight:700;color:#000;}
+.order-date{font-size:12px;color:var(--text3);margin-top:2px;}
+.order-status{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;}
+.os-delivered{background:#e1f5ee;color:var(--success-text);}
+.os-transit{background:#fff3cd;color:#92400e;}
+.os-processing{background:var(--primary-light);color:var(--primary);}
+.os-cancelled{background:#ffe4e4;color:var(--danger);}
+.order-items-preview{display:flex;gap:8px;margin-bottom:10px;}
+.oi-thumb{width:52px;height:52px;border-radius:var(--r10);background:var(--surface);overflow:hidden;padding:5px;flex-shrink:0;}
+.oi-thumb img{width:100%;height:100%;object-fit:contain;}
+.order-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:.5px solid var(--border);}
+.order-total{font-size:15px;font-weight:700;color:#000;}
+.order-action{font-size:13px;font-weight:600;color:var(--primary);}
+
+.order-track{background:var(--surface);border-radius:var(--r12);padding:12px 14px;margin-bottom:12px;}
+.track-step{display:flex;gap:10px;margin-bottom:10px;}
+.track-step:last-child{margin-bottom:0;}
+.track-dot-col{display:flex;flex-direction:column;align-items:center;}
+.track-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:2px;}
+.track-dot.done{background:var(--primary);}
+.track-dot.active{background:var(--primary);box-shadow:0 0 0 3px var(--primary-light);}
+.track-dot.idle{background:#e0e0e0;}
+.track-line{width:2px;flex:1;background:#e0e0e0;margin-top:3px;}
+.track-line.done{background:var(--primary);}
+.track-info{flex:1;padding-bottom:10px;}
+.track-title{font-size:13px;font-weight:600;color:#000;}
+.track-time{font-size:12px;color:var(--text3);margin-top:1px;}
+
+/* ═══════════════════════════════════════════════════
+   LOGIN SCREEN
+═══════════════════════════════════════════════════ */
+#screen-login .scroll{padding:24px 20px 30px;}
+.login-logo{text-align:center;margin-bottom:28px;}
+.login-logo-mark{width:64px;height:64px;border-radius:var(--r20);background:linear-gradient(135deg,var(--primary),var(--primary-dark));margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;font-weight:800;}
+.login-logo-name{font-size:22px;font-weight:800;color:#000;letter-spacing:-.4px;}
+.login-logo-sub{font-size:13px;color:var(--text2);margin-top:2px;}
+
+.tabs-login{display:flex;background:var(--surface);border-radius:var(--r12);padding:3px;margin-bottom:24px;}
+.tab-login-btn{flex:1;height:36px;border-radius:var(--r10);font-size:14px;font-weight:600;color:var(--text2);transition:all .15s;}
+.tab-login-btn.active{background:#fff;color:#000;box-shadow:0 1px 4px rgba(0,0,0,.1);}
+
+.btn-submit{width:100%;height:50px;border-radius:var(--r14);background:var(--primary);color:#fff;font-size:17px;font-weight:700;margin-top:6px;margin-bottom:14px;transition:background .15s;}
+.btn-submit:active{background:var(--primary-dark);}
+
+.or-divider{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.or-divider::before,.or-divider::after{content:'';flex:1;height:.5px;background:var(--border);}
+.or-divider span{font-size:12px;color:var(--text3);}
+
+.social-btns{display:flex;gap:10px;margin-bottom:20px;}
+.social-btn{flex:1;height:46px;border-radius:var(--r12);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:500;color:#000;}
+
+.login-terms{font-size:11px;color:var(--text3);text-align:center;line-height:1.6;}
+.login-terms a{color:var(--primary);}
+</style>
+</head>
+<body>
+
+<div class="shell">
+<div class="screen">
+
+  <!-- Dynamic Island -->
+  <div class="island" aria-hidden="true"></div>
+
+  <!-- Status Bar -->
+  <div class="sbar" aria-hidden="true">
+    <span class="sbar-time">9:41</span>
+    <div style="width:126px"></div>
+    <div class="sbar-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12"><rect x="0" y="4" width="3" height="8" rx="1"/><rect x="4.5" y="2.5" width="3" height="9.5" rx="1"/><rect x="9" y="1" width="3" height="11" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity=".28"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12"><circle cx="8" cy="10.5" r="1.4"/><path d="M4 7.2C5.2 5.8 6.5 5 8 5s2.8.8 4 2.2" stroke="#000" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M1.2 4.4C3 2.6 5.4 1.5 8 1.5s5 1.1 6.8 2.9" stroke="#000" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>
+      <svg width="25" height="12" viewBox="0 0 25 12"><rect x=".5" y=".5" width="21" height="11" rx="2.5" stroke="#000" stroke-width="1" fill="none"/><rect x="22" y="3.5" width="2.5" height="5" rx="1.2" fill="#000" opacity=".4"/><rect x="2" y="2" width="15" height="8" rx="1.5" fill="#000"/></svg>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ══════════════════════ HOME ══════════════════════ -->
+  <div class="page active" id="screen-home">
+    <div class="nbar">
+      <div class="nbar-title">Eco Myers</div>
+      <div class="nbar-actions">
+        <button onclick="nav('search')" aria-label="بحث"><i class="ti ti-search"></i></button>
+        <button onclick="nav('cart')" aria-label="السلة"><i class="ti ti-shopping-cart"></i></button>
+      </div>
+    </div>
+    <div class="scroll">
+      <!-- Hero Banner -->
+      <div class="home-hero">
+        <div class="home-hero-tag">عروض الأسبوع</div>
+        <div class="home-hero-title">تقنية WiFi 6E<br>أسرع شبكة</div>
+        <div class="home-hero-sub">خصومات تصل لـ 33% على الراوترات</div>
+        <div class="home-hero-btn" onclick="nav('products')">
+          <span>تسوّق الآن</span>
+          <i class="ti ti-arrow-left" style="font-size:14px;"></i>
+        </div>
+        <div class="hero-circle"></div>
+        <div class="hero-circle2"></div>
+      </div>
+
+      <!-- Categories -->
+      <div class="home-cats">
+        <div class="sec-title" style="font-size:17px;">الأقسام</div>
+        <div class="cats-scroll">
+          <div class="cat-item active" onclick="nav('products')">
+            <div class="cat-circle">📡</div>
+            <span class="cat-label">راوترات</span>
+          </div>
+          <div class="cat-item" onclick="nav('products')">
+            <div class="cat-circle">🖥️</div>
+            <span class="cat-label">لابتوب</span>
+          </div>
+          <div class="cat-item" onclick="nav('products')">
+            <div class="cat-circle">🎮</div>
+            <span class="cat-label">ألعاب</span>
+          </div>
+          <div class="cat-item" onclick="nav('products')">
+            <div class="cat-circle">🎧</div>
+            <span class="cat-label">صوتيات</span>
+          </div>
+          <div class="cat-item" onclick="nav('products')">
+            <div class="cat-circle">📱</div>
+            <span class="cat-label">موبايل</span>
+          </div>
+          <div class="cat-item" onclick="nav('products')">
+            <div class="cat-circle">⌚</div>
+            <span class="cat-label">ساعات</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Offer Cards -->
+      <div class="home-offers">
+        <div class="offers-row">
+          <div class="offer-card teal" onclick="nav('products')">
+            <div>
+              <div class="offer-label">🔥 فلاش ديل</div>
+              <div class="offer-title">راوتر<br>WiFi 6E</div>
+            </div>
+            <div class="offer-link">تسوّق ←</div>
+          </div>
+          <div class="offer-card dark" onclick="nav('products')">
+            <div>
+              <div class="offer-label">⭐ الأكثر مبيعاً</div>
+              <div class="offer-title">معدات<br>الألعاب</div>
+            </div>
+            <div class="offer-link">اكتشف ←</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Featured Products -->
+      <div class="home-prods">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div class="sec-title" style="margin:0;font-size:17px;">منتجات مميزة</div>
+          <span style="font-size:14px;color:var(--primary);cursor:pointer;" onclick="nav('products')">عرض الكل</span>
+        </div>
+        <div class="prods-grid" id="home-grid"></div>
+      </div>
+
+      <div style="height:16px;"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ PRODUCTS ══════════════════════ -->
+  <div class="page" id="screen-products">
+    <div class="nbar">
+      <div class="nbar-title">المنتجات</div>
+      <div class="nbar-actions">
+        <button onclick="nav('search')" aria-label="بحث"><i class="ti ti-search"></i></button>
+        <button aria-label="فلتر"><i class="ti ti-adjustments-horizontal"></i></button>
+      </div>
+    </div>
+    <div class="scroll">
+      <div class="search-bar-wrap">
+        <div class="search-bar">
+          <i class="ti ti-search"></i>
+          <input type="text" placeholder="ابحث عن منتج...">
+        </div>
+      </div>
+      <div class="filter-scroll">
+        <div class="chip active">الكل</div>
+        <div class="chip">راوترات</div>
+        <div class="chip">WiFi 6E</div>
+        <div class="chip">ألعاب</div>
+        <div class="chip">ASUS ROG</div>
+        <div class="chip">تخفيضات</div>
+      </div>
+      <div class="sort-row">
+        <span id="prod-count">12 منتج</span>
+        <div class="sort-btn"><i class="ti ti-arrows-sort" style="font-size:16px;"></i> ترتيب</div>
+      </div>
+      <div style="padding:12px 16px 0;">
+        <div class="prods-grid" id="all-grid"></div>
+      </div>
+      <div style="height:16px;"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ PRODUCT DETAIL ══════════════════════ -->
+  <div class="page" id="screen-detail">
+    <div class="nbar">
+      <button class="nbar-back" onclick="goBack()" aria-label="رجوع">
+        <i class="ti ti-chevron-left"></i>
+        <span style="font-size:16px;">رجوع</span>
+      </button>
+      <div style="width:70px"></div>
+      <div class="nbar-actions">
+        <button aria-label="مشاركة"><i class="ti ti-share"></i></button>
+        <button onclick="nav('cart')" aria-label="السلة"><i class="ti ti-shopping-cart"></i></button>
+      </div>
+    </div>
+    <div class="scroll">
+      <div class="detail-imgs">
+        <span class="detail-badge-pos badge-sale">-33%</span>
+        <button class="detail-wish" id="detailWish" onclick="toggleWish(this)">
+          <i class="ti ti-heart"></i>
+        </button>
+        <img id="detailMainImg" class="detail-main-img"
+          src="https://c1.neweggimages.com/productimage/nb640/33-320-526-S01.jpg" alt="المنتج">
+        <div class="dots-row" id="detailDots">
+          <div class="dot active"></div><div class="dot"></div>
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="thumb-strip" id="detailThumbs">
+          <button class="tthumb active" data-src="https://c1.neweggimages.com/productimage/nb640/33-320-526-S01.jpg" onclick="switchDetailImg(this,0)">
+            <img src="https://c1.neweggimages.com/ProductImageCompressAll60/33-320-526-S01.jpg" alt="">
+          </button>
+          <button class="tthumb" data-src="https://c1.neweggimages.com/productimage/nb640/33-320-526-06.jpg" onclick="switchDetailImg(this,1)">
+            <img src="https://c1.neweggimages.com/ProductImageCompressAll60/33-320-526-06.jpg" alt="">
+          </button>
+          <button class="tthumb" data-src="https://c1.neweggimages.com/productimage/nb640/33-320-526-07.jpg" onclick="switchDetailImg(this,2)">
+            <img src="https://c1.neweggimages.com/ProductImageCompressAll60/33-320-526-07.jpg" alt="">
+          </button>
+          <button class="tthumb" data-src="https://c1.neweggimages.com/productimage/nb640/33-320-526-08.jpg" onclick="switchDetailImg(this,3)">
+            <img src="https://c1.neweggimages.com/ProductImageCompressAll60/33-320-526-08.jpg" alt="">
+          </button>
+          <button class="tthumb" data-src="https://c1.neweggimages.com/productimage/nb640/33-320-526-01.jpg" onclick="switchDetailImg(this,4)">
+            <img src="https://c1.neweggimages.com/ProductImageCompressAll60/33-320-526-01.jpg" alt="">
+          </button>
+        </div>
+      </div>
+      <div class="detail-info">
+        <div class="detail-brand">ASUS ROG</div>
+        <h1 class="detail-title">ROG Rapture GT-AXE16000 WiFi 6E Gaming Router</h1>
+        <div class="detail-rating">
+          <span class="stars">★★★★☆</span>
+          <span class="score">4.2</span>
+          <span class="cnt">(24 تقييم)</span>
+        </div>
+      </div>
+      <div class="price-card">
+        <div class="price-row">
+          <span class="price-now">$299.99</span>
+          <span class="price-old">$449.99</span>
+          <span class="badge-save">وفّر $150</span>
+        </div>
+        <p class="price-note">شامل الضريبة · شحن مجاني 48 ساعة</p>
+      </div>
+      <div class="stock-row low">
+        <span class="sdot"></span>
+        <span class="stxt">كمية محدودة — متبقي 3 قطع</span>
+      </div>
+      <div class="var-block">
+        <div class="var-label">الفئة <span>Quad Band WiFi 6E ←</span></div>
+        <div class="var-scroll" id="varRow">
+          <button class="chip" onclick="selVar(this)">GT-BE98 PRO</button>
+          <button class="chip active" onclick="selVar(this)">GT-AXE16000</button>
+          <button class="chip" onclick="selVar(this)">GS-BE12000</button>
+          <button class="chip" onclick="selVar(this)">RT-BE86U</button>
+          <button class="chip out" disabled>RT-AX1800S</button>
+        </div>
+      </div>
+      <div class="trust-grid">
+        <div class="trust-c"><i class="ti ti-truck-delivery"></i><div><div class="trust-ctitle">شحن مجاني</div><div class="trust-csub">48 ساعة</div></div></div>
+        <div class="trust-c"><i class="ti ti-shield-lock"></i><div><div class="trust-ctitle">دفع آمن</div><div class="trust-csub">SSL مشفّر</div></div></div>
+        <div class="trust-c"><i class="ti ti-refresh"></i><div><div class="trust-ctitle">إرجاع مجاني</div><div class="trust-csub">30 يوم</div></div></div>
+        <div class="trust-c"><i class="ti ti-award"></i><div><div class="trust-ctitle">ضمان 3 سنوات</div><div class="trust-csub">ASUS Official</div></div></div>
+      </div>
+      <div class="specs-box">
+        <div class="srow"><span class="skey">السرعة</span><span class="sval">16,000 Mbps</span></div>
+        <div class="srow"><span class="skey">النطاقات</span><span class="sval">Quad-Band 6 GHz</span></div>
+        <div class="srow"><span class="skey">المنافذ</span><span class="sval">2×10G + 4×Gigabit</span></div>
+        <div class="srow"><span class="skey">المعالج</span><span class="sval">2.0 GHz Quad-Core</span></div>
+        <div class="srow"><span class="skey">الأمان</span><span class="sval">WPA3 + AiProtection</span></div>
+        <div class="see-more">عرض المواصفات الكاملة <i class="ti ti-chevron-left" style="transform:rotate(180deg);font-size:14px;"></i></div>
+      </div>
+      <div class="desc-block">
+        <div class="desc-title">عن المنتج</div>
+        <div class="desc-txt">أول راوتر Quad-Band WiFi 6E في العالم من ASUS ROG — يجمع نطاق 6 GHz الحصري مع سرعات تصل إلى 16,000 Mbps. منفذا 10G مزدوجان، تسريع ثلاثي المستويات للألعاب، وحماية مدى الحياة مع AiProtection.</div>
+        <div class="desc-more">المزيد ↓</div>
+      </div>
+      <div class="rev-section">
+        <div class="rev-head"><span>التقييمات</span><a href="#">عرض الكل</a></div>
+        <div class="rev-summary">
+          <div style="text-align:center;min-width:70px;">
+            <div class="rev-big">4.2</div>
+            <div class="stars" style="font-size:13px;margin:3px 0;">★★★★☆</div>
+            <div style="font-size:11px;color:var(--text3);">24 تقييم</div>
+          </div>
+          <div class="rev-bars">
+            <div class="rbar-row"><span class="rbar-lbl">5</span><div class="rbar-track"><div class="rbar-fill" style="width:62%"></div></div></div>
+            <div class="rbar-row"><span class="rbar-lbl">4</span><div class="rbar-track"><div class="rbar-fill" style="width:20%"></div></div></div>
+            <div class="rbar-row"><span class="rbar-lbl">3</span><div class="rbar-track"><div class="rbar-fill" style="width:10%"></div></div></div>
+            <div class="rbar-row"><span class="rbar-lbl">2</span><div class="rbar-track"><div class="rbar-fill red" style="width:8%"></div></div></div>
+            <div class="rbar-row"><span class="rbar-lbl">1</span><div class="rbar-track"><div class="rbar-fill red" style="width:0%"></div></div></div>
+          </div>
+        </div>
+        <div class="rev-card">
+          <div class="rev-chead"><span class="rev-name">Ahmed K.</span><span class="rev-date">مايو 2024</span></div>
+          <div class="stars" style="font-size:12px;margin:4px 0;">★★★★★</div>
+          <p class="rev-body">راوتر مذهل — السرعة والتغطية على مستوى آخر تماماً. نطاق 6GHz أحدث فرقاً حقيقياً في الألعاب.</p>
+        </div>
+      </div>
+      <div style="height:16px;"></div>
+    </div>
+    <div class="sticky-cta">
+      <div class="qty-box">
+        <button onclick="chQty(-1)">−</button>
+        <span id="qtyNum">1</span>
+        <button onclick="chQty(1)">+</button>
+      </div>
+      <button class="btn-cart" onclick="addToCart()">
+        <i class="ti ti-shopping-cart" style="font-size:18px;"></i> أضف للسلة
+      </button>
+      <button class="btn-buy" onclick="nav('checkout')"><i class="ti ti-bolt"></i></button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ CART ══════════════════════ -->
+  <div class="page" id="screen-cart">
+    <div class="nbar">
+      <div class="nbar-title">السلة</div>
+      <div class="nbar-actions">
+        <button aria-label="حذف الكل" style="font-size:14px;color:var(--danger);font-weight:600;">مسح</button>
+      </div>
+    </div>
+    <div class="scroll" id="cart-scroll">
+      <div id="cart-empty" class="cart-empty" style="display:none;">
+        <i class="ti ti-shopping-cart-off"></i>
+        <div class="cart-empty-title">السلة فارغة</div>
+        <div class="cart-empty-sub">ابدأ التسوق وأضف منتجاتك المفضلة</div>
+        <button class="cart-empty-btn" onclick="nav('products')">تسوّق الآن</button>
+      </div>
+      <div id="cart-items-wrap" style="padding:14px 16px 0;">
+        <div id="cart-items"></div>
+        <div class="promo-row" style="margin-top:4px;">
+          <input type="text" placeholder="كود الخصم">
+          <button>تطبيق</button>
+        </div>
+        <div class="cart-summary">
+          <div class="summary-row"><span>المنتجات</span><span id="cart-subtotal">$0.00</span></div>
+          <div class="summary-row"><span>الشحن</span><span style="color:var(--success-text);">مجاني</span></div>
+          <div class="summary-row total"><span>الإجمالي</span><span id="cart-total">$0.00</span></div>
+        </div>
+        <button class="btn-checkout" onclick="nav('checkout')">
+          <i class="ti ti-credit-card" style="font-size:18px;"></i>
+          إتمام الشراء
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ CHECKOUT ══════════════════════ -->
+  <div class="page" id="screen-checkout">
+    <div class="nbar">
+      <button class="nbar-back" onclick="goBack()">
+        <i class="ti ti-chevron-left"></i>
+        <span style="font-size:16px;">رجوع</span>
+      </button>
+      <div class="nbar-title">الدفع</div>
+      <div style="width:70px"></div>
+    </div>
+    <div class="scroll">
+      <!-- Steps -->
+      <div class="steps-bar" style="margin-top:14px;">
+        <div class="step done"><div class="step-num"><i class="ti ti-check" style="font-size:12px;"></i></div><span class="step-label">السلة</span></div>
+        <div class="step-line done"></div>
+        <div class="step active"><div class="step-num">2</div><span class="step-label">التوصيل</span></div>
+        <div class="step-line"></div>
+        <div class="step idle"><div class="step-num">3</div><span class="step-label">الدفع</span></div>
+        <div class="step-line"></div>
+        <div class="step idle"><div class="step-num">4</div><span class="step-label">تأكيد</span></div>
+      </div>
+
+      <!-- Delivery Address -->
+      <div class="checkout-section">
+        <div class="checkout-section-title">عنوان التوصيل</div>
+        <div class="addr-card selected" onclick="selAddr(this)">
+          <i class="ti ti-map-pin"></i>
+          <div>
+            <div class="addr-name">المنزل</div>
+            <div class="addr-line">الكويت، حولي، شارع الرقعي<br>بلوك 4، منزل رقم 22</div>
+          </div>
+        </div>
+        <div class="addr-card" onclick="selAddr(this)">
+          <i class="ti ti-building"></i>
+          <div>
+            <div class="addr-name">العمل</div>
+            <div class="addr-line">الكويت، العاصمة، برج المرور<br>الطابق 12</div>
+          </div>
+        </div>
+        <button style="width:100%;height:42px;border-radius:var(--r10);border:1.5px dashed var(--border);color:var(--primary);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:6px;">
+          <i class="ti ti-plus"></i> إضافة عنوان جديد
+        </button>
+      </div>
+
+      <!-- Payment -->
+      <div class="checkout-section">
+        <div class="checkout-section-title">طريقة الدفع</div>
+        <div class="pay-option selected" onclick="selPay(this)">
+          <div class="pay-icon">💳</div>
+          <span class="pay-name">بطاقة ائتمان/خصم</span>
+          <div class="pay-radio"></div>
+        </div>
+        <div class="pay-option" onclick="selPay(this)">
+          <div class="pay-icon">🍎</div>
+          <span class="pay-name">Apple Pay</span>
+          <div class="pay-radio"></div>
+        </div>
+        <div class="pay-option" onclick="selPay(this)">
+          <div class="pay-icon">💰</div>
+          <span class="pay-name">الدفع عند الاستلام</span>
+          <div class="pay-radio"></div>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div style="padding:0 16px 20px;">
+        <div class="checkout-section-title">ملخص الطلب</div>
+        <div class="order-mini">
+          <div class="omini-row"><span>ASUS GT-AXE16000 × 1</span><span>$299.99</span></div>
+          <div class="omini-row"><span>الشحن</span><span style="color:var(--success-text);">مجاني</span></div>
+          <div class="omini-row total"><span>الإجمالي</span><span>$299.99</span></div>
+        </div>
+        <button class="btn-checkout" onclick="placeOrder()" style="margin-top:16px;">
+          <i class="ti ti-lock" style="font-size:18px;"></i>
+          تأكيد الطلب
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ SEARCH ══════════════════════ -->
+  <div class="page" id="screen-search">
+    <div class="nbar">
+      <div class="nbar-title">البحث</div>
+    </div>
+    <div class="scroll">
+      <div class="search-big" style="margin-bottom:0;">
+        <input type="text" placeholder="ابحث عن منتج، ماركة..." id="searchInput" oninput="handleSearch(this.value)">
+        <span class="clear" onclick="clearSearch()" style="display:none;" id="searchClearBtn"><i class="ti ti-x"></i></span>
+        <button class="search-btn"><i class="ti ti-search"></i></button>
+      </div>
+
+      <div id="search-default">
+        <div style="margin-top:18px;">
+          <div style="font-size:15px;font-weight:700;color:#000;margin-bottom:10px;">الأكثر بحثاً</div>
+          <div class="trending-tags">
+            <div class="tag" onclick="doSearch('WiFi 6E')">WiFi 6E</div>
+            <div class="tag" onclick="doSearch('ASUS ROG')">ASUS ROG</div>
+            <div class="tag" onclick="doSearch('Gaming Router')">Gaming Router</div>
+            <div class="tag" onclick="doSearch('راوتر')">راوتر</div>
+            <div class="tag" onclick="doSearch('10G')">منفذ 10G</div>
+            <div class="tag" onclick="doSearch('Mesh')">Mesh</div>
+          </div>
+        </div>
+        <div style="margin-top:18px;">
+          <div style="font-size:15px;font-weight:700;color:#000;margin-bottom:2px;">عمليات بحث سابقة</div>
+          <div id="recent-searches">
+            <div class="recent-item"><i class="ti ti-clock"></i><span>ASUS GT-AXE16000</span><i class="ti ti-x del"></i></div>
+            <div class="recent-item"><i class="ti ti-clock"></i><span>راوتر ألعاب</span><i class="ti ti-x del"></i></div>
+            <div class="recent-item"><i class="ti ti-clock"></i><span>WiFi 6</span><i class="ti ti-x del"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="search-results" style="display:none;">
+        <div style="font-size:13px;color:var(--text2);margin:10px 0;" id="search-count"></div>
+        <div class="prods-grid" id="search-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ WISHLIST ══════════════════════ -->
+  <div class="page" id="screen-wishlist">
+    <div class="nbar">
+      <div class="nbar-title">المفضلة</div>
+      <div class="nbar-actions">
+        <button aria-label="مشاركة"><i class="ti ti-share"></i></button>
+      </div>
+    </div>
+    <div class="scroll" style="padding:14px 16px 16px;">
+      <div id="wish-empty" class="wish-empty" style="display:none;">
+        <i class="ti ti-heart-off"></i>
+        <div class="cart-empty-title">لا يوجد منتجات في المفضلة</div>
+        <div class="cart-empty-sub">أضف المنتجات التي تعجبك هنا</div>
+        <button class="cart-empty-btn" onclick="nav('products')">تصفّح المنتجات</button>
+      </div>
+      <div class="wish-grid" id="wish-grid"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ PROFILE ══════════════════════ -->
+  <div class="page" id="screen-profile">
+    <div class="nbar">
+      <div class="nbar-title">حسابي</div>
+      <div class="nbar-actions">
+        <button aria-label="الإعدادات"><i class="ti ti-settings"></i></button>
+      </div>
+    </div>
+    <div class="scroll">
+      <div class="profile-hero">
+        <div class="profile-avatar"><i class="ti ti-user" style="font-size:32px;"></i></div>
+        <div class="profile-name">أحمد الكندري</div>
+        <div class="profile-email">ahmed@ecomyers.com</div>
+        <div class="profile-stats">
+          <div class="pstat"><div class="pstat-num">12</div><div class="pstat-lbl">طلب</div></div>
+          <div class="pstat"><div class="pstat-num">5</div><div class="pstat-lbl">مفضلة</div></div>
+          <div class="pstat"><div class="pstat-num">3</div><div class="pstat-lbl">تقييم</div></div>
+          <div class="pstat"><div class="pstat-num">240</div><div class="pstat-lbl">نقطة</div></div>
+        </div>
+      </div>
+
+      <div style="height:28px;"></div>
+
+      <div class="profile-menu">
+        <div class="pmenu-item" onclick="nav('orders')">
+          <div class="pmenu-icon" style="background:#e6f8f9;"><i class="ti ti-package" style="color:var(--primary);"></i></div>
+          <div style="flex:1;"><div class="pmenu-label">طلباتي</div><div class="pmenu-sub">12 طلب مكتمل</div></div>
+          <i class="ti ti-chevron-left pmenu-arrow"></i>
+        </div>
+        <div class="pmenu-item" onclick="nav('wishlist')">
+          <div class="pmenu-icon" style="background:#ffe4e4;"><i class="ti ti-heart" style="color:var(--danger);"></i></div>
+          <div style="flex:1;"><div class="pmenu-label">المفضلة</div><div class="pmenu-sub">5 منتجات</div></div>
+          <i class="ti ti-chevron-left pmenu-arrow"></i>
+        </div>
+        <div class="pmenu-item">
+          <div class="pmenu-icon" style="background:#fff3cd;"><i class="ti ti-map-pin" style="color:#92400e;"></i></div>
+          <div style="flex:1;"><div class="pmenu-label">عناوين التوصيل</div><div class="pmenu-sub">2 عنوان محفوظ</div></div>
+          <i class="ti ti-chevron-left pmenu-arrow"></i>
+        </div>
+        <div class="pmenu-item">
+          <div class="pmenu-icon" style="background:#f0e6ff;"><i class="ti ti-credit-card" style="color:#7c3aed;"></i></div>
+          <div style="flex:1;"><div class="pmenu-label">طرق الدفع</div><div class="pmenu-sub">بطاقة مضافة</div></div>
+          <i class="ti ti-chevron-left pmenu-arrow"></i>
+        </div>
+        <div class="pmenu-item">
+          <div class="pmenu-icon" style="background:#e6f8f9;"><i class="ti ti-star" style="color:var(--stars);"></i></div>
+          <div style="flex:1;"><div class="pmenu-label">نقاط المكافآت</div></div>
+          <span class="pmenu-badge">240 نقطة</span>
+        </div>
+        <div class="pmenu-item">
+          <div class="pmenu-icon" style="background:var(--surface);"><i class="ti ti-bell" style="color:var(--text2);"></i></div>
+          <div style="flex:1;"><div class="pmenu-label">الإشعارات</div></div>
+          <i class="ti ti-chevron-left pmenu-arrow"></i>
+        </div>
+        <div class="pmenu-item">
+          <div class="pmenu-icon" style="background:var(--surface);"><i class="ti ti-help-circle" style="color:var(--text2);"></i></div>
+          <div style="flex:1;"><div class="pmenu-label">المساعدة والدعم</div></div>
+          <i class="ti ti-chevron-left pmenu-arrow"></i>
+        </div>
+      </div>
+
+      <button class="logout-btn" onclick="nav('login')">
+        <i class="ti ti-logout"></i> تسجيل الخروج
+      </button>
+      <div style="height:16px;"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ ORDERS ══════════════════════ -->
+  <div class="page" id="screen-orders">
+    <div class="nbar">
+      <button class="nbar-back" onclick="goBack()">
+        <i class="ti ti-chevron-left"></i>
+        <span style="font-size:16px;">رجوع</span>
+      </button>
+      <div class="nbar-title">طلباتي</div>
+      <div style="width:70px"></div>
+    </div>
+    <div class="scroll">
+      <!-- Filter chips -->
+      <div class="filter-scroll" style="padding-top:12px;">
+        <div class="chip active">الكل</div>
+        <div class="chip">تم التوصيل</div>
+        <div class="chip">قيد الشحن</div>
+        <div class="chip">قيد المعالجة</div>
+        <div class="chip">ملغي</div>
+      </div>
+
+      <div style="padding:12px 16px 0;">
+        <!-- Order 1 -->
+        <div class="order-card">
+          <div class="order-top">
+            <div><div class="order-id">#EM-2024-0892</div><div class="order-date">12 مايو 2024</div></div>
+            <span class="order-status os-delivered">تم التوصيل</span>
+          </div>
+          <div class="order-items-preview">
+            <div class="oi-thumb"><img src="https://c1.neweggimages.com/ProductImageCompressAll60/33-320-526-S01.jpg" alt=""></div>
+            <div style="flex:1;"><div style="font-size:13px;font-weight:600;color:#000;">ASUS GT-AXE16000</div><div style="font-size:12px;color:var(--text3);margin-top:2px;">1 منتج</div></div>
+          </div>
+          <div class="order-bottom">
+            <span class="order-total">$299.99</span>
+            <span class="order-action">إعادة الطلب</span>
+          </div>
+        </div>
+
+        <!-- Order 2 with tracking -->
+        <div class="order-card">
+          <div class="order-top">
+            <div><div class="order-id">#EM-2024-0901</div><div class="order-date">28 مايو 2024</div></div>
+            <span class="order-status os-transit">قيد الشحن</span>
+          </div>
+          <div class="order-track">
+            <div class="track-step">
+              <div class="track-dot-col"><div class="track-dot done"></div><div class="track-line done"></div></div>
+              <div class="track-info"><div class="track-title">تم تأكيد الطلب</div><div class="track-time">28 مايو · 10:30 ص</div></div>
+            </div>
+            <div class="track-step">
+              <div class="track-dot-col"><div class="track-dot done"></div><div class="track-line done"></div></div>
+              <div class="track-info"><div class="track-title">تم التحضير والتغليف</div><div class="track-time">28 مايو · 3:00 م</div></div>
+            </div>
+            <div class="track-step">
+              <div class="track-dot-col"><div class="track-dot active"></div><div class="track-line"></div></div>
+              <div class="track-info"><div class="track-title">في الطريق إليك</div><div class="track-time">يُتوقع اليوم · 6-8 م</div></div>
+            </div>
+            <div class="track-step">
+              <div class="track-dot-col"><div class="track-dot idle"></div></div>
+              <div class="track-info"><div class="track-title" style="color:var(--text3);">تم التوصيل</div></div>
+            </div>
+          </div>
+          <div class="order-bottom">
+            <span class="order-total">$349.99</span>
+            <span class="order-action">تتبع الطلب</span>
+          </div>
+        </div>
+
+        <!-- Order 3 -->
+        <div class="order-card">
+          <div class="order-top">
+            <div><div class="order-id">#EM-2024-0755</div><div class="order-date">3 أبريل 2024</div></div>
+            <span class="order-status os-cancelled">ملغي</span>
+          </div>
+          <div class="order-items-preview">
+            <div class="oi-thumb"><img src="https://c1.neweggimages.com/ProductImageCompressAll60/33-320-526-06.jpg" alt=""></div>
+            <div style="flex:1;"><div style="font-size:13px;font-weight:600;color:#000;">ASUS RT-BE96U</div><div style="font-size:12px;color:var(--text3);margin-top:2px;">1 منتج</div></div>
+          </div>
+          <div class="order-bottom">
+            <span class="order-total">$349.99</span>
+            <span class="order-action" style="color:var(--text3);">تم الإلغاء</span>
+          </div>
+        </div>
+      </div>
+      <div style="height:16px;"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ LOGIN ══════════════════════ -->
+  <div class="page" id="screen-login">
+    <div class="scroll">
+      <div class="login-logo">
+        <div class="login-logo-mark">E</div>
+        <div class="login-logo-name">Eco Myers</div>
+        <div class="login-logo-sub">متجرك الإلكتروني المفضل</div>
+      </div>
+
+      <div class="tabs-login" id="loginTabs">
+        <button class="tab-login-btn active" onclick="switchLoginTab(this,'login-form')">تسجيل الدخول</button>
+        <button class="tab-login-btn" onclick="switchLoginTab(this,'register-form')">إنشاء حساب</button>
+      </div>
+
+      <div id="login-form">
+        <div class="field"><label>رقم الجوال أو البريد الإلكتروني</label><input type="text" placeholder="أدخل بريدك الإلكتروني"></div>
+        <div class="field"><label>كلمة المرور</label><input type="password" placeholder="أدخل كلمة المرور"></div>
+        <div style="text-align:left;margin-bottom:16px;"><a style="font-size:13px;color:var(--primary);">نسيت كلمة المرور؟</a></div>
+        <button class="btn-submit" onclick="doLogin()">تسجيل الدخول</button>
+      </div>
+
+      <div id="register-form" style="display:none;">
+        <div class="field"><label>الاسم الكامل</label><input type="text" placeholder="أدخل اسمك الكامل"></div>
+        <div class="field"><label>البريد الإلكتروني</label><input type="email" placeholder="example@email.com"></div>
+        <div class="field"><label>رقم الجوال</label><input type="tel" placeholder="+965 XXXX XXXX"></div>
+        <div class="field"><label>كلمة المرور</label><input type="password" placeholder="8 أحرف على الأقل"></div>
+        <button class="btn-submit" onclick="doLogin()">إنشاء حساب</button>
+      </div>
+
+      <div class="or-divider"><span>أو</span></div>
+      <div class="social-btns">
+        <button class="social-btn">🍎 Apple</button>
+        <button class="social-btn">🔵 Google</button>
+      </div>
+      <p class="login-terms">بالاستمرار أنت توافق على <a>شروط الاستخدام</a> و<a>سياسة الخصوصية</a></p>
+      <div style="height:20px;"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ TAB BAR ══════════════════════ -->
+  <div class="tabbar" id="tabbar">
+    <div class="tb-item active" onclick="nav('home')" data-page="home">
+      <i class="ti ti-home"></i><span>الرئيسية</span>
+    </div>
+    <div class="tb-item" onclick="nav('products')" data-page="products">
+      <i class="ti ti-layout-grid"></i><span>المنتجات</span>
+    </div>
+    <div class="tb-item" onclick="nav('search')" data-page="search">
+      <i class="ti ti-search"></i><span>بحث</span>
+    </div>
+    <div class="tb-item" onclick="nav('wishlist')" data-page="wishlist">
+      <i class="ti ti-heart"></i><span>مفضلة</span>
+    </div>
+    <div class="tb-item tb-badge" onclick="nav('profile')" data-page="profile">
+      <i class="ti ti-user"></i><span>حسابي</span>
+      <div class="tb-badge-dot"></div>
+    </div>
+  </div>
+
+  <!-- Home Indicator -->
+  <div class="home-ind" aria-hidden="true"></div>
+
+</div><!-- /screen -->
+</div><!-- /shell -->
+
+<script>
+/* ═══════════════════════════════════════
+   PRODUCT DATA
+═══════════════════════════════════════ */
+const products = [
+  {id:1,brand:'ASUS ROG',name:'ROG Rapture GT-AXE16000 WiFi 6E',price:299.99,old:449.99,img:'https://c1.neweggimages.com/ProductImageCompressAll200/33-320-526-S01.jpg'},
+  {id:2,brand:'ASUS ROG',name:'ROG Rapture GT-BE98 PRO WiFi 7',price:599.99,old:699.99,img:'https://c1.neweggimages.com/ProductImageCompressAll200/33-320-526-06.jpg'},
+  {id:3,brand:'ASUS',name:'RT-BE96U WiFi 7 Dual-Band Router',price:349.99,old:399.99,img:'https://c1.neweggimages.com/ProductImageCompressAll200/33-320-526-07.jpg'},
+  {id:4,brand:'ASUS',name:'GS-BE12000 Gaming Router',price:279.99,old:319.99,img:'https://c1.neweggimages.com/ProductImageCompressAll200/33-320-526-08.jpg'},
+  {id:5,brand:'ASUS',name:'RT-BE88U WiFi 7 Dual-Band',price:249.99,old:289.99,img:'https://c1.neweggimages.com/ProductImageCompressAll200/33-320-526-S01.jpg'},
+  {id:6,brand:'ASUS ROG',name:'Rapture GT-AX11000 Pro',price:199.99,old:249.99,img:'https://c1.neweggimages.com/ProductImageCompressAll200/33-320-526-06.jpg'},
+];
+
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+const state = {
+  currentPage: 'home',
+  prevPage: null,
+  cart: [],
+  wishlist: [],
+  qty: 1,
+  wished: false,
+};
+
+/* ═══════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════ */
+const noTabbarPages = ['detail','checkout','orders','login'];
+const backablePages = ['detail','checkout','orders'];
+
+function nav(page) {
+  const prev = state.currentPage;
+  state.prevPage = prev;
+
+  // hide all pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('screen-' + page).classList.add('active');
+
+  // tabbar
+  const tabbar = document.getElementById('tabbar');
+  tabbar.style.display = noTabbarPages.includes(page) ? 'none' : 'flex';
+
+  // active tab
+  document.querySelectorAll('.tb-item').forEach(t => {
+    t.classList.toggle('active', t.dataset.page === page);
+  });
+
+  state.currentPage = page;
+
+  // page-specific init
+  if (page === 'cart') renderCart();
+  if (page === 'wishlist') renderWishlist();
+  if (page === 'home' || page === 'products') renderProducts();
+}
+
+function goBack() {
+  nav(state.prevPage || 'home');
+}
+
+/* ═══════════════════════════════════════
+   PRODUCT CARD HTML
+═══════════════════════════════════════ */
+function productCardHTML(p) {
+  const inWish = state.wishlist.some(w => w.id === p.id);
+  return `
+    <div class="pcard" onclick="openDetail(${p.id})">
+      <div class="pcard-img">
+        <img src="${p.img}" alt="${p.name}" loading="lazy">
+      </div>
+      <div class="pcard-body">
+        <div class="pcard-brand">${p.brand}</div>
+        <div class="pcard-name">${p.name}</div>
+        <div class="pcard-price"><span>$${p.old.toFixed(2)}</span>$${p.price.toFixed(2)}</div>
+        <button class="pcard-add" onclick="event.stopPropagation();quickAdd(${p.id})">
+          <i class="ti ti-shopping-cart" style="font-size:14px;"></i> أضف للسلة
+        </button>
+      </div>
+    </div>`;
+}
+
+function renderProducts() {
+  const homeGrid = document.getElementById('home-grid');
+  const allGrid = document.getElementById('all-grid');
+  if (homeGrid) homeGrid.innerHTML = products.slice(0,4).map(productCardHTML).join('');
+  if (allGrid) allGrid.innerHTML = products.map(productCardHTML).join('');
+}
+
+/* ═══════════════════════════════════════
+   PRODUCT DETAIL
+═══════════════════════════════════════ */
+function openDetail(id) {
+  state.currentProduct = products.find(p => p.id === id);
+  nav('detail');
+  state.qty = 1;
+  document.getElementById('qtyNum').textContent = 1;
+  const w = document.getElementById('detailWish');
+  const inWish = state.wishlist.some(x => x.id === id);
+  w.className = 'detail-wish' + (inWish ? ' active' : '');
+  w.innerHTML = `<i class="ti ti-heart${inWish ? '-filled' : ''}"></i>`;
+}
+
+function switchDetailImg(btn, idx) {
+  const main = document.getElementById('detailMainImg');
+  main.classList.add('fading');
+  setTimeout(() => { main.src = btn.dataset.src; main.classList.remove('fading'); }, 180);
+  document.querySelectorAll('.tthumb').forEach((t,i) => t.classList.toggle('active', i === idx));
+  document.querySelectorAll('.dot').forEach((d,i) => d.classList.toggle('active', i === idx));
+}
+
+function selVar(btn) {
+  document.querySelectorAll('#varRow .chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function chQty(d) {
+  state.qty = Math.max(1, Math.min(2, state.qty + d));
+  document.getElementById('qtyNum').textContent = state.qty;
+}
+
+function toggleWish(btn) {
+  const p = state.currentProduct;
+  if (!p) return;
+  const idx = state.wishlist.findIndex(x => x.id === p.id);
+  if (idx > -1) {
+    state.wishlist.splice(idx, 1);
+    btn.className = 'detail-wish';
+    btn.innerHTML = '<i class="ti ti-heart"></i>';
+    showToast('أُزيل من المفضلة');
+  } else {
+    state.wishlist.push(p);
+    btn.className = 'detail-wish active';
+    btn.innerHTML = '<i class="ti ti-heart-filled"></i>';
+    showToast('أُضيف للمفضلة ♡');
+  }
+}
+
+/* ═══════════════════════════════════════
+   CART
+═══════════════════════════════════════ */
+function addToCart() {
+  const p = state.currentProduct;
+  if (!p) return;
+  const existing = state.cart.find(c => c.id === p.id);
+  if (existing) existing.qty = Math.min(existing.qty + state.qty, 2);
+  else state.cart.push({...p, qty: state.qty});
+  showToast('تمت الإضافة للسلة ✓');
+}
+
+function quickAdd(id) {
+  const p = products.find(x => x.id === id);
+  const existing = state.cart.find(c => c.id === id);
+  if (existing) existing.qty = Math.min(existing.qty + 1, 2);
+  else state.cart.push({...p, qty: 1});
+  showToast('تمت الإضافة للسلة ✓');
+}
+
+function renderCart() {
+  const wrap = document.getElementById('cart-items-wrap');
+  const empty = document.getElementById('cart-empty');
+  const itemsDiv = document.getElementById('cart-items');
+  if (!state.cart.length) {
+    wrap.style.display = 'none';
+    empty.style.display = 'flex';
+    return;
+  }
+  wrap.style.display = 'block';
+  empty.style.display = 'none';
+  itemsDiv.innerHTML = state.cart.map((item, i) => `
+    <div class="cart-item">
+      <div class="cart-img"><img src="${item.img}" alt="${item.name}"></div>
+      <div class="cart-details">
+        <div class="cart-brand">${item.brand}</div>
+        <div class="cart-name">${item.name}</div>
+        <div class="cart-variant">النموذج: GT-AXE16000</div>
+        <div class="cart-bottom">
+          <span class="cart-price">$${(item.price * item.qty).toFixed(2)}</span>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="cart-qty">
+              <button onclick="updateCartQty(${i},-1)">−</button>
+              <span>${item.qty}</span>
+              <button onclick="updateCartQty(${i},1)">+</button>
+            </div>
+            <button class="cart-del" onclick="removeCart(${i})"><i class="ti ti-trash"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+  const subtotal = state.cart.reduce((s,c) => s + c.price * c.qty, 0);
+  document.getElementById('cart-subtotal').textContent = '$' + subtotal.toFixed(2);
+  document.getElementById('cart-total').textContent = '$' + subtotal.toFixed(2);
+}
+
+function updateCartQty(i, d) {
+  state.cart[i].qty = Math.max(1, Math.min(2, state.cart[i].qty + d));
+  renderCart();
+}
+function removeCart(i) {
+  state.cart.splice(i, 1);
+  renderCart();
+}
+
+/* ═══════════════════════════════════════
+   WISHLIST
+═══════════════════════════════════════ */
+function renderWishlist() {
+  const grid = document.getElementById('wish-grid');
+  const empty = document.getElementById('wish-empty');
+  if (!state.wishlist.length) {
+    grid.style.display = 'none';
+    empty.style.display = 'flex';
+    return;
+  }
+  grid.style.display = 'grid';
+  empty.style.display = 'none';
+  grid.innerHTML = state.wishlist.map((p,i) => `
+    <div class="wish-card">
+      <button class="wish-remove" onclick="removeWish(${i})"><i class="ti ti-x"></i></button>
+      <div class="pcard" onclick="openDetail(${p.id})">
+        <div class="pcard-img"><img src="${p.img}" alt="${p.name}"></div>
+        <div class="pcard-body">
+          <div class="pcard-brand">${p.brand}</div>
+          <div class="pcard-name">${p.name}</div>
+          <div class="pcard-price">$${p.price.toFixed(2)}</div>
+          <button class="pcard-add" onclick="event.stopPropagation();quickAdd(${p.id})">
+            <i class="ti ti-shopping-cart" style="font-size:14px;"></i> أضف
+          </button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function removeWish(i) {
+  state.wishlist.splice(i, 1);
+  renderWishlist();
+}
+
+/* ═══════════════════════════════════════
+   SEARCH
+═══════════════════════════════════════ */
+function handleSearch(val) {
+  const def = document.getElementById('search-default');
+  const res = document.getElementById('search-results');
+  const clearBtn = document.getElementById('searchClearBtn');
+  
+  if(val.length > 0) {
+      clearBtn.style.display = 'block';
+  } else {
+      clearBtn.style.display = 'none';
+  }
+  if (!val.trim()) { def.style.display = 'block'; res.style.display = 'none'; return; }
+  def.style.display = 'none'; res.style.display = 'block';
+  const filtered = products.filter(p =>
+    p.name.toLowerCase().includes(val.toLowerCase()) ||
+    p.brand.toLowerCase().includes(val.toLowerCase()));
+  document.getElementById('search-count').textContent = filtered.length + ' نتيجة';
+  document.getElementById('search-grid').innerHTML = filtered.map(productCardHTML).join('');
+}
+
+function doSearch(val) {
+  document.getElementById('searchInput').value = val;
+  handleSearch(val);
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  handleSearch('');
+}
+
+/* ═══════════════════════════════════════
+   CHECKOUT
+═══════════════════════════════════════ */
+function selAddr(el) {
+  document.querySelectorAll('.addr-card').forEach(a => a.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selPay(el) {
+  document.querySelectorAll('.pay-option').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function placeOrder() {
+  state.cart = [];
+  showToast('✓ تم تأكيد طلبك بنجاح!');
+  setTimeout(() => nav('orders'), 1200);
+}
+
+/* ═══════════════════════════════════════
+   LOGIN
+═══════════════════════════════════════ */
+function switchLoginTab(btn, formId) {
+  document.querySelectorAll('.tab-login-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('login-form').style.display = formId === 'login-form' ? 'block' : 'none';
+  document.getElementById('register-form').style.display = formId === 'register-form' ? 'block' : 'none';
+}
+function doLogin() { showToast('مرحباً بك في Eco Myers! 👋'); setTimeout(() => nav('home'), 1000); }
+
+/* ═══════════════════════════════════════
+   CHIP FILTERS
+═══════════════════════════════════════ */
+document.querySelectorAll('.filter-scroll').forEach(row => {
+  row.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      row.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+});
+
+/* ═══════════════════════════════════════
+   TOAST
+═══════════════════════════════════════ */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+renderProducts();
+</script>
+</body>
+</html>

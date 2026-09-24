@@ -1,0 +1,13 @@
+{
+    "name": "Taly",
+    "namespace": "Botble\\Taly\\",
+    "provider": "Botble\\Taly\\Providers\\TalyServiceProvider",
+    "author": "Antigravity",
+    "url": "https://taly.io",
+    "version": "1.0.0",
+    "description": "Taly payment gateway integration for Botble CMS.",
+    "id": "taly",
+    "require": [
+        "payment"
+    ]
+}

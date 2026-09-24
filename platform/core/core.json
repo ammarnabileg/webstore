@@ -1,0 +1,10 @@
+{
+    "productId": "CLEANED",
+    "source": "manual",
+    "apiUrl": "http://localhost",
+    "apiKey": "CLEANED",
+    "version": "1.41.5",
+    "marketplaceUrl": "http://localhost",
+    "marketplaceToken": "CLEANED",
+    "minimumPhpVersion": "8.2.0"
+}

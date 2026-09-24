@@ -1,0 +1,608 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Cairo:wght@400;600;700&display=swap');
+
+:root {
+    --laly-primary: #865D4C;
+    --laly-surface: rgba(255, 255, 255, 0.85);
+    --laly-surface-border: rgba(134, 93, 76, 0.15);
+    --laly-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+    --laly-radius: 16px;
+    --laly-text: #2c3e50;
+    --laly-text-muted: #7f8c8d;
+    --laly-bg: #f8f9fa;
+    --laly-glass-bg: rgba(255, 255, 255, 0.7);
+    --laly-glass-border: rgba(255, 255, 255, 0.5);
+    --laly-glass-shadow: 0 8px 32px 0 rgba(134, 93, 76, 0.05);
+}
+
+body.checkout-page {
+    font-family: 'Cairo', 'Outfit', sans-serif !important;
+    background-color: var(--laly-bg) !important;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(134, 93, 76, 0.05) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(134, 93, 76, 0.05) 0px, transparent 50%);
+    background-attachment: fixed;
+    color: var(--laly-text);
+}
+
+/* Glassmorphism Containers */
+.checkout-page .container {
+    max-width: 1100px !important;
+}
+
+.checkout-page .checkout-order-info,
+.checkout-page .form-checkout {
+    padding: 30px;
+    background: var(--laly-glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--laly-glass-border);
+    border-radius: var(--laly-radius);
+    box-shadow: var(--laly-glass-shadow);
+    margin-bottom: 20px;
+}
+
+/* Modern Logo */
+.checkout-logo {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.checkout-logo img {
+    max-height: 50px;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+    transition: transform 0.3s ease;
+}
+.checkout-logo img:hover {
+    transform: scale(1.05);
+}
+
+/* Section Titles */
+h5.checkout-payment-title,
+h5.checkout-shipping-information-title,
+h5.checkout-billing-information-title,
+h5.checkout-customer-information-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--laly-text);
+    margin-bottom: 20px;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+h5.checkout-payment-title::after,
+h5.checkout-shipping-information-title::after,
+h5.checkout-billing-information-title::after,
+h5.checkout-customer-information-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0; /* For RTL */
+    width: 40px;
+    height: 3px;
+    background: var(--laly-primary);
+    border-radius: 4px;
+}
+html[dir="ltr"] h5::after {
+    right: auto;
+    left: 0;
+}
+
+/* Floating Labels (Glassmorphism Inputs) */
+.form-group.form-input-wrapper,
+.form-input-wrapper {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.form-input-wrapper .form-control {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid var(--laly-surface-border) !important;
+    border-radius: 12px !important;
+    height: 56px;
+    padding: 22px 16px 6px 16px !important;
+    font-size: 15px;
+    color: var(--laly-text);
+    box-shadow: none !important;
+    transition: all 0.3s ease;
+}
+
+.form-input-wrapper .form-control:focus {
+    border-color: var(--laly-primary) !important;
+    box-shadow: 0 0 0 4px rgba(134, 93, 76, 0.1) !important;
+    background: #fff !important;
+}
+
+.form-input-wrapper label {
+    position: absolute;
+    top: 17px;
+    right: 16px; /* RTL */
+    font-size: 15px;
+    color: var(--laly-text-muted);
+    pointer-events: none;
+    transition: all 0.2s ease;
+    margin: 0;
+    padding: 0;
+}
+html[dir="ltr"] .form-input-wrapper label {
+    right: auto;
+    left: 16px;
+}
+
+.form-input-wrapper .form-control:focus ~ label,
+.form-input-wrapper .form-control:not(:placeholder-shown) ~ label,
+.form-input-wrapper .form-control.has-value ~ label {
+    top: 6px;
+    font-size: 11px;
+    color: var(--laly-primary);
+    font-weight: 600;
+}
+
+/* Select inputs specific adjustments */
+.form-input-wrapper select.form-control {
+    padding-top: 18px !important;
+    padding-bottom: 6px !important;
+}
+
+/* Shipping and Payment Methods Cards */
+.payment-checkout-form .list-group,
+.checkout-payment-form .list-group,
+.list_payment_method {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    background: transparent;
+    border: none;
+}
+
+.payment-checkout-form .list-group-item,
+.checkout-payment-form .list-group-item,
+.list_payment_method .list-group-item {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid var(--laly-surface-border);
+    border-radius: 14px !important;
+    padding: 15px;
+    margin-bottom: 0 !important;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.payment-checkout-form .list-group-item:hover,
+.checkout-payment-form .list-group-item:hover,
+.list_payment_method .list-group-item:hover {
+    border-color: rgba(134, 93, 76, 0.3);
+    background: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(134, 93, 76, 0.08);
+}
+
+.payment-checkout-form .list-group-item.active,
+.checkout-payment-form .list-group-item.active,
+.list_payment_method .list-group-item.active {
+    border: 2px solid var(--laly-primary) !important;
+    background: rgba(134, 93, 76, 0.04) !important;
+    box-shadow: 0 4px 15px rgba(134, 93, 76, 0.1) !important;
+}
+
+/* Customizing the inner label for Payment Grid */
+.payment-checkout-form .list-group-item label,
+.checkout-payment-form .list-group-item label,
+.list_payment_method .list-group-item label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 0;
+    padding: 0;
+}
+
+.payment-checkout-form .list-group-item label img,
+.checkout-payment-form .list-group-item label img,
+.list_payment_method .list-group-item label img {
+    max-height: 40px;
+    object-fit: contain;
+}
+
+/* Hide Botble's custom circles for magic-radio in the grid */
+.payment-checkout-form .list-group-item .magic-radio,
+.checkout-payment-form .list-group-item .magic-radio,
+.list_payment_method .list-group-item .magic-radio {
+    position: absolute;
+    opacity: 0;
+}
+.payment-checkout-form .list-group-item .magic-radio + label:before,
+.payment-checkout-form .list-group-item .magic-radio + label:after,
+.checkout-payment-form .list-group-item .magic-radio + label:before,
+.checkout-payment-form .list-group-item .magic-radio + label:after,
+.list_payment_method .list-group-item .magic-radio + label:before,
+.list_payment_method .list-group-item .magic-radio + label:after {
+    display: none;
+}
+
+/* Collapse Wrap styling inside the grid box */
+.payment-checkout-form .list-group-item .payment_collapse_wrap,
+.checkout-payment-form .list-group-item .payment_collapse_wrap,
+.list_payment_method .list-group-item .payment_collapse_wrap {
+    width: 100%;
+    text-align: start;
+    margin-top: 15px;
+    border-top: 1px solid var(--laly-surface-border);
+    padding-top: 15px;
+}
+
+/* Cart Summary (Right Column) */
+.checkout-order-info {
+    position: sticky;
+    top: 20px;
+}
+
+.cart-item-wrapper {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
+.checkout-product-item {
+    background: rgba(255,255,255,0.7);
+    border: 1px solid var(--laly-surface-border);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s ease;
+}
+.checkout-product-item:hover {
+    transform: scale(1.02);
+    background: #fff;
+}
+
+.checkout-product-item-image {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.checkout-product-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.checkout-product-item-image .checkout-quantity {
+    background: var(--laly-primary);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    box-shadow: 0 2px 4px rgba(134, 93, 76, 0.3);
+}
+
+/* Totals */
+.checkout-cart-summary {
+    background: rgba(255,255,255,0.7);
+    border-radius: 14px;
+    padding: 20px;
+    margin-top: 20px;
+    border: 1px solid var(--laly-surface-border);
+}
+.checkout-cart-summary hr {
+    opacity: 0.1;
+    border-color: var(--laly-primary);
+}
+.checkout-cart-summary p {
+    font-size: 15px;
+    color: var(--laly-text);
+    margin-bottom: 10px;
+}
+.payment-checkout-btn-step {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--laly-primary);
+}
+
+/* Coupon Form */
+.promo-code-form {
+    display: flex;
+    gap: 10px;
+}
+.promo-code-form .form-control {
+    border-radius: 12px !important;
+    height: 48px;
+    border: 1px solid var(--laly-surface-border);
+    box-shadow: none !important;
+}
+.promo-code-form .btn-apply {
+    height: 48px;
+    border-radius: 12px;
+    background: var(--laly-text);
+    color: #fff;
+    font-weight: 600;
+    padding: 0 20px;
+    border: none;
+    transition: all 0.3s ease;
+}
+.promo-code-form .btn-apply:hover {
+    background: var(--laly-primary);
+    transform: translateY(-2px);
+}
+
+/* Checkout Button */
+.btn-checkout {
+    background: var(--laly-primary) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    height: 54px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff !important;
+    width: 100%;
+    box-shadow: 0 8px 20px rgba(134, 93, 76, 0.25) !important;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+.btn-checkout:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(134, 93, 76, 0.35) !important;
+    background: #724d3e !important;
+}
+
+/* Responsive */
+/* Responsive - App-like Mobile UI */
+@media (max-width: 768px) {
+    body.checkout-page {
+        background-image: none !important;
+        background-color: #f5f6f8 !important; /* Clean light gray bg */
+    }
+    
+    .checkout-page .checkout-order-info,
+    .checkout-page .form-checkout {
+        padding: 0;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+    
+    .checkout-order-info {
+        position: static;
+        order: 1; /* Bring order summary to top on mobile */
+    }
+    .form-checkout {
+        order: 2;
+    }
+    
+    /* Make sections look like separate white cards */
+    .form-checkout > div {
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    
+    .checkout-cart-summary {
+        background: #fff !important;
+        border: none !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+        margin-top: 0;
+    }
+    
+    .row#main-checkout-product-info {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    /* Revert Payment Methods to clean vertical list on mobile */
+    .payment-checkout-form .list-group,
+    .checkout-payment-form .list-group,
+    .list_payment_method {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 10px;
+    }
+    
+    .payment-checkout-form .list-group-item,
+    .checkout-payment-form .list-group-item,
+    .list_payment_method .list-group-item {
+        background: #fff;
+        border: 1px solid #eaeaea !important;
+        border-radius: 10px !important;
+        padding: 15px 20px !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        flex-wrap: wrap;
+    }
+    
+    .payment-checkout-form .list-group-item label,
+    .checkout-payment-form .list-group-item label,
+    .list_payment_method .list-group-item label {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 15px !important;
+        width: 100%;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .payment-checkout-form .list-group-item label img,
+    .checkout-payment-form .list-group-item label img,
+    .list_payment_method .list-group-item label img {
+        max-height: 30px;
+        width: 40px;
+        object-fit: contain;
+    }
+    
+    /* Show Radio Buttons on the right for Payment Methods */
+    .payment-checkout-form .list-group-item .magic-radio,
+    .checkout-payment-form .list-group-item .magic-radio,
+    .list_payment_method .list-group-item .magic-radio {
+        position: relative !important;
+        opacity: 1 !important;
+        order: 3;
+        margin-left: auto; /* Push to the right */
+        width: 20px;
+        height: 20px;
+        accent-color: var(--laly-primary);
+    }
+    
+    /* Hide Botble custom circles on mobile so native radio shows */
+    .payment-checkout-form .list-group-item .magic-radio + label:before,
+    .payment-checkout-form .list-group-item .magic-radio + label:after,
+    .list_payment_method .list-group-item .magic-radio + label:before,
+    .list_payment_method .list-group-item .magic-radio + label:after {
+        display: none !important;
+    }
+    
+    .payment-checkout-form .list-group-item.active,
+    .list_payment_method .list-group-item.active {
+        border-color: var(--laly-primary) !important;
+        background: rgba(134, 93, 76, 0.05) !important;
+        box-shadow: none !important;
+    }
+    
+    /* Hide inline checkout button on mobile */
+    .btn-checkout:not(.mobile-checkout-btn) {
+        display: none !important;
+    }
+    
+    /* Modern Mobile Sticky Footer - Simplified */
+    .mobile-checkout-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: #fff;
+        backdrop-filter: none;
+        border-top: 1px solid #eaeaea;
+        padding: 15px 20px;
+        z-index: 999;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .mobile-checkout-footer__actions {
+        display: flex;
+        width: 100%;
+    }
+    .mobile-checkout-btn {
+        background: var(--laly-primary) !important;
+        color: #fff !important;
+        flex: 1;
+        height: 56px;
+        border-radius: 12px !important;
+        font-weight: 700;
+        font-size: 16px;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+    }
+    /* Hide the secondary buttons in footer to match the clean design (only Place Order) */
+    .mobile-checkout-footer__btn-secondary {
+        display: none !important;
+    }
+}
+
+/* Dark Mode Overrides */
+[data-theme="dark"] body.checkout-page {
+    --laly-bg: #121212;
+    --laly-text: #e0e0e0;
+    --laly-text-muted: #a0a0a0;
+    --laly-glass-bg: rgba(30, 30, 30, 0.7);
+    --laly-surface-border: rgba(255, 255, 255, 0.1);
+    --laly-glass-border: rgba(255, 255, 255, 0.05);
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(134, 93, 76, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(134, 93, 76, 0.15) 0px, transparent 50%);
+}
+
+[data-theme="dark"] .form-input-wrapper .form-control {
+    background: rgba(30, 30, 30, 0.9) !important;
+    color: var(--laly-text) !important;
+}
+
+[data-theme="dark"] .form-input-wrapper .form-control:focus {
+    background: #1e1e1e !important;
+}
+
+[data-theme="dark"] .payment-checkout-form .list-group-item {
+    background: rgba(40, 40, 40, 0.8);
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .payment-checkout-form .list-group-item:hover {
+    background: #2a2a2a;
+}
+
+[data-theme="dark"] .payment-checkout-form .list-group-item.active {
+    background: rgba(134, 93, 76, 0.15) !important;
+}
+
+[data-theme="dark"] .checkout-product-item,
+[data-theme="dark"] .checkout-cart-summary,
+[data-theme="dark"] .form-checkout > div {
+    background: rgba(40, 40, 40, 0.7) !important;
+    border-color: var(--laly-surface-border) !important;
+}
+
+[data-theme="dark"] .checkout-product-item:hover {
+    background: #2a2a2a;
+}
+
+[data-theme="dark"] .promo-code-form .btn-apply {
+    background: #333;
+}
+[data-theme="dark"] .promo-code-form .btn-apply:hover {
+    background: var(--laly-primary);
+}
+
+[data-theme="dark"] .mobile-checkout-footer__btn-secondary {
+    background: rgba(40,40,40,0.8) !important;
+    color: #fff !important;
+}
+
+@media (max-width: 768px) {
+    [data-theme="dark"] body.checkout-page {
+        background-color: #121212 !important;
+    }
+    
+    [data-theme="dark"] .payment-checkout-form .list-group-item,
+    [data-theme="dark"] .checkout-payment-form .list-group-item,
+    [data-theme="dark"] .list_payment_method .list-group-item {
+        background: rgba(30, 30, 30, 0.9) !important;
+        border-color: rgba(255,255,255,0.05) !important;
+    }
+    
+    [data-theme="dark"] .mobile-checkout-footer {
+        background: #1e1e1e !important;
+        border-top-color: rgba(255,255,255,0.05) !important;
+    }
+}

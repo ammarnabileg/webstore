@@ -1,0 +1,627 @@
+<?php
+
+use Botble\Theme\Facades\Theme;
+use Illuminate\Support\Facades\Route;
+use Botble\Ecommerce\Repositories\Interfaces\ProductInterface;
+use Botble\Ecommerce\Repositories\Interfaces\ProductCategoryInterface;
+use Illuminate\Http\Request;
+use Botble\Media\Facades\RvMedia;
+use Botble\Ecommerce\Facades\Cart;
+use Botble\Slug\Facades\SlugHelper;
+
+Theme::registerRoutes(function (): void {
+
+    // Internal Vue API Routes
+    Route::group(['prefix' => 'ajax/vue', 'as' => 'public.ajax.vue.', 'middleware' => ['web', 'core']], function (): void {
+
+        Route::get('notifications', function (Request $request) {
+            $isLoggedIn = auth('customer')->check();
+            $query = \Botble\Ecommerce\Models\Notification::query()
+                ->whereIn('status', ['published', 'scheduled'])
+                ->where(function ($q) {
+                    $q->whereNull('scheduled_at')->orWhere('scheduled_at', '<=', now());
+                });
+
+            if ($isLoggedIn) {
+                $query->whereIn('type', ['all', 'logged_in']);
+            } else {
+                $query->whereIn('type', ['all', 'guest']);
+            }
+
+            $notifications = $query->orderByDesc('created_at')->get()->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'title' => $item->title,
+                    'description' => $item->description,
+                    'target_url' => $item->target_url,
+                    'created_at' => $item->created_at ? $item->created_at->diffForHumans() : '',
+                ];
+            });
+
+            return response()->json(['data' => $notifications, 'is_logged_in' => $isLoggedIn]);
+        });
+
+        Route::post('fcm-token', function (Request $request) {
+            $token = $request->input('token');
+            $deviceType = $request->input('device_type', 'web');
+            if (!$token) {
+                return response()->json(['success' => false, 'message' => 'Token missing'], 400);
+            }
+
+            $fcmToken = \Botble\Ecommerce\Models\CustomerFcmToken::query()->firstOrNew(['token' => $token]);
+            $fcmToken->customer_id = auth('customer')->check() ? auth('customer')->id() : null;
+            $fcmToken->device_type = $deviceType;
+            $fcmToken->save();
+
+            return response()->json(['success' => true, 'customer_id' => $fcmToken->customer_id]);
+        });
+
+        Route::get('products', function (Request $request, ProductInterface $productRepository) {
+            $params = [
+                'paginate' => [
+                    'per_page' => $request->integer('per_page', 10),
+                    'current_paged' => $request->integer('page', 1),
+                ],
+                'with' => ['slugable', 'productLabels', 'productCollections', 'tags'],
+            ];
+
+            $filters = [];
+
+            // Keyword Search
+            if ($request->filled('q')) {
+                $filters['keyword'] = $request->input('q');
+            }
+
+            // Category Filter
+            if ($request->filled('category')) {
+                $categoryInput = $request->input('category');
+                $filters['categories'] = is_array($categoryInput) ? $categoryInput : explode(',', $categoryInput);
+            }
+
+            // Attribute Filter
+            if ($request->filled('attributes')) {
+                $attrsInput = $request->input('attributes');
+                $filters['attributes'] = is_array($attrsInput) ? $attrsInput : explode(',', $attrsInput);
+            }
+
+            // Use getProducts to properly apply the filters with default conditions
+            $products = $productRepository->getProducts($params, $filters);
+
+            $data = [];
+            foreach ($products as $product) {
+                $data[] = [
+                    'id' => $product->id,
+                    'name' => html_entity_decode($product->name),
+                    'slug' => $product->slug,
+                    'image' => RvMedia::getImageUrl($product->image, 'medium', false, RvMedia::getDefaultImage()),
+                    'price' => $product->price,
+                    'price_format' => format_price($product->price),
+                    'front_sale_price' => $product->front_sale_price,
+                    'front_sale_price_format' => format_price($product->front_sale_price),
+                    'is_out_of_stock' => $product->isOutOfStock(),
+                    'labels' => $product->productLabels->map(function ($label) {
+                        return ['id' => $label->id, 'name' => $label->name, 'color' => $label->color];
+                    }),
+                    'tags' => $product->tags->map(function ($tag) {
+                        return ['id' => $tag->id, 'name' => $tag->name];
+                    }),
+                    'collections' => $product->productCollections->map(function ($col) {
+                        return ['id' => $col->id, 'name' => $col->name];
+                    }),
+                    'accepts_taly' => $product->getMetaData('accepts_taly', true) == 1,
+                    'accepts_deema' => $product->getMetaData('accepts_deema', true) == 1,
+                ];
+            }
+            return response()->json(['data' => $data]);
+        });
+
+        // Get single product by slug
+        Route::get('products/{slug}', function (string $slug, ProductInterface $productRepository) {
+            $slugModel = SlugHelper::getSlug($slug, SlugHelper::getPrefix(\Botble\Ecommerce\Models\Product::class), \Botble\Ecommerce\Models\Product::class);
+            if (!$slugModel) {
+                return response()->json(['message' => 'Product not found'], 404);
+            }
+            $product = $productRepository->findById($slugModel->reference_id, ['slugable', 'productLabels', 'productCollections', 'tags']);
+            if (!$product) {
+                return response()->json(['message' => 'Product not found'], 404);
+            }
+
+            return response()->json([
+                'data' => [
+                    'id' => $product->id,
+                    'name' => html_entity_decode($product->name),
+                    'slug' => $product->slug,
+                    'image' => RvMedia::getImageUrl($product->image, 'medium', false, RvMedia::getDefaultImage()),
+                    'images' => array_map(function ($img) {
+                        return RvMedia::getImageUrl($img, null, false, RvMedia::getDefaultImage());
+                    }, is_array($product->images) ? $product->images : []),
+                    'price' => $product->price,
+                    'price_format' => format_price($product->price),
+                    'front_sale_price' => $product->front_sale_price,
+                    'front_sale_price_format' => format_price($product->front_sale_price),
+                    'is_out_of_stock' => $product->isOutOfStock(),
+                    'stock_status' => (string) $product->stock_status,
+                    'description' => $product->description,
+                    'content' => $product->content,
+                    'labels' => $product->productLabels->map(function ($label) {
+                        return ['id' => $label->id, 'name' => $label->name, 'color' => $label->color];
+                    }),
+                    'tags' => $product->tags->map(function ($tag) {
+                        return ['id' => $tag->id, 'name' => $tag->name];
+                    }),
+                    'collections' => $product->productCollections->map(function ($col) {
+                        return ['id' => $col->id, 'name' => $col->name];
+                    }),
+                    'accepts_taly' => $product->getMetaData('accepts_taly', true) == 1,
+                    'accepts_deema' => $product->getMetaData('accepts_deema', true) == 1,
+                ]
+            ]);
+        });
+
+        // Get slider by key
+        Route::get('sliders/{key}', function (string $key) {
+            if (!is_plugin_active('simple-slider')) {
+                return response()->json(['data' => []]);
+            }
+
+            $slider = \Botble\SimpleSlider\Models\SimpleSlider::where('key', $key)
+                ->where('status', 'published')
+                ->first();
+
+            if (!$slider) {
+                return response()->json(['data' => []]);
+            }
+
+            $items = \Botble\SimpleSlider\Models\SimpleSliderItem::where('simple_slider_id', $slider->id)
+                ->orderBy('order', 'ASC')
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'title' => $item->title,
+                        'description' => $item->description,
+                        'link' => $item->link,
+                        'image' => RvMedia::getImageUrl($item->image, null, false, RvMedia::getDefaultImage()),
+                    ];
+                });
+
+            return response()->json(['data' => $items]);
+        });
+
+        // Get homepage collections
+        Route::get('home-collections', function () {
+            $data = [];
+            
+            $formatProduct = function ($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => html_entity_decode($product->name),
+                    'slug' => $product->slug,
+                    'image' => RvMedia::getImageUrl($product->image, 'medium', false, RvMedia::getDefaultImage()),
+                    'price' => $product->price,
+                    'price_format' => format_price($product->price),
+                    'front_sale_price' => $product->front_sale_price,
+                    'front_sale_price_format' => format_price($product->front_sale_price),
+                    'is_out_of_stock' => method_exists($product, 'isOutOfStock') ? $product->isOutOfStock() : false,
+                    'stock_status' => (string) $product->stock_status,
+                    'labels' => $product->productLabels ? $product->productLabels->map(function ($label) {
+                        return ['id' => $label->id, 'name' => $label->name, 'color' => $label->color];
+                    }) : [],
+                    'accepts_taly' => $product->getMetaData('accepts_taly', true) == 1,
+                    'accepts_deema' => $product->getMetaData('accepts_deema', true) == 1,
+                ];
+            };
+
+            $baseQuery = \Botble\Ecommerce\Models\Product::query()
+                ->where('status', 'published')
+                ->where('is_variation', false)
+                ->with(['slugable', 'productLabels']);
+
+            $featured = (clone $baseQuery)->where('is_featured', 1)->orderByDesc('created_at')->limit(8)->get();
+            $data['featured_products'] = $featured->map($formatProduct);
+
+            $topRated = (clone $baseQuery)->orderByDesc('views')->limit(8)->get();
+            $data['top_products'] = $topRated->map($formatProduct);
+
+            $trending = (clone $baseQuery)->orderByDesc('created_at')->limit(8)->get();
+            $data['weekly_best_sellers'] = $trending->map($formatProduct);
+
+            // Flash Sales
+            $flashSales = \Botble\Ecommerce\Models\FlashSale::query()
+                ->where('status', 'published')
+                ->where('end_date', '>', now())
+                ->with(['products' => function ($query) {
+                    $query->where('status', 'published')->where('is_variation', false)->with(['slugable', 'productLabels']);
+                }])
+                ->get();
+                
+            $data['flash_sales'] = $flashSales->map(function($fs) use ($formatProduct) {
+                return [
+                    'id' => $fs->id,
+                    'name' => $fs->name,
+                    'end_date' => $fs->end_date,
+                    'products' => $fs->products->map($formatProduct)
+                ];
+            });
+
+            return response()->json(['data' => $data]);
+        });
+
+        // Get homepage content
+        Route::get('homepage', function () {
+            $homepageId = theme_option('homepage_id');
+            if (!$homepageId) {
+                return response()->json(['message' => 'Homepage not configured'], 404);
+            }
+            $page = \Botble\Page\Models\Page::find($homepageId);
+            if (!$page || $page->status != 'published') {
+                return response()->json(['message' => 'Homepage not found'], 404);
+            }
+
+            return response()->json([
+                'data' => [
+                    'id' => $page->id,
+                    'name' => $page->name,
+                    'content' => BaseHelper::clean($page->content),
+                ]
+            ]);
+        });
+
+        // Get single CMS page by slug
+        Route::get('pages/{slug}', function (string $slug) {
+            $slugModel = SlugHelper::getSlug($slug, SlugHelper::getPrefix(\Botble\Page\Models\Page::class), \Botble\Page\Models\Page::class);
+            if (!$slugModel) {
+                return response()->json(['message' => 'Page not found'], 404);
+            }
+            $page = \Botble\Page\Models\Page::find($slugModel->reference_id);
+            if (!$page || $page->status != 'published') {
+                return response()->json(['message' => 'Page not found'], 404);
+            }
+
+            return response()->json([
+                'data' => [
+                    'id' => $page->id,
+                    'name' => $page->name,
+                    'content' => BaseHelper::clean($page->content),
+                ]
+            ]);
+        });
+
+        Route::get('product-categories', function (ProductCategoryInterface $categoryRepository) {
+            $categories = $categoryRepository->advancedGet([
+                'condition' => ['status' => 'published'],
+                'with' => ['translations', 'slugable'],
+                'order_by' => ['order' => 'ASC', 'created_at' => 'DESC'],
+            ]);
+            $data = [];
+            foreach ($categories as $category) {
+                $data[] = [
+                    'id' => $category->id,
+                    'parent_id' => $category->parent_id,
+                    'name' => html_entity_decode($category->name),
+                    'slug' => $category->slug ?: ($category->slugable ? $category->slugable->key : ''),
+                    'url' => $category->url,
+                    'image' => RvMedia::getImageUrl($category->image, 'thumb', false, RvMedia::getDefaultImage()),
+                    'icon' => $category->icon ?: $category->icon_font,
+                    'icon_image' => $category->icon_image ? RvMedia::getImageUrl($category->icon_image) : null,
+                    'is_featured' => $category->is_featured,
+                ];
+            }
+            return response()->json(['data' => $data]);
+        });
+
+        Route::get('filters', function (Request $request) {
+            $query = \Botble\Ecommerce\Models\ProductAttributeSet::where('status', 'published')
+                ->with([
+                    'attributes' => function ($q) {
+                        $q->orderBy('order', 'ASC');
+                    }
+                ])
+                ->orderBy('order', 'ASC');
+
+            if ($request->filled('category')) {
+                $categoryInput = $request->input('category');
+                $categoryIds = is_array($categoryInput) ? $categoryInput : explode(',', $categoryInput);
+
+                // Fetch attribute sets assigned to these categories
+                $query->whereHas('categories', function ($subQ) use ($categoryIds) {
+                    $subQ->whereIn('ec_product_categorizables.category_id', $categoryIds);
+                });
+            }
+
+            $attributeSets = $query->get();
+
+            $attributeData = [];
+            foreach ($attributeSets as $set) {
+                $attrs = [];
+                foreach ($set->attributes as $attr) {
+                    $attrs[] = [
+                        'id' => $attr->id,
+                        'title' => $attr->title,
+                        'color' => $attr->color,
+                        'image' => $attr->image ? RvMedia::getImageUrl($attr->image) : null,
+                    ];
+                }
+                $attributeData[] = [
+                    'id' => $set->id,
+                    'title' => $set->title,
+                    'attributes' => $attrs,
+                ];
+            }
+
+            $data = [
+                'attributes' => $attributeData,
+                'collections' => \Botble\Ecommerce\Models\ProductCollection::where('status', 'published')->get()->map(function ($c) {
+                    return ['id' => $c->id, 'title' => $c->name];
+                }),
+                'tags' => \Botble\Ecommerce\Models\ProductTag::where('status', 'published')->get()->map(function ($t) {
+                    return ['id' => $t->id, 'title' => $t->name];
+                }),
+            ];
+            return response()->json(['data' => $data]);
+        });
+
+        Route::get('cart', function () {
+            $items = [];
+            foreach (Cart::instance('cart')->content() as $item) {
+                $items[] = [
+                    'id' => $item->id,
+                    'rowId' => $item->rowId,
+                    'name' => $item->name,
+                    'qty' => $item->qty,
+                    'price' => $item->price,
+                    'price_format' => format_price($item->price),
+                    'product_image' => RvMedia::getImageUrl($item->options->image ?? ''),
+                ];
+            }
+            return response()->json([
+                'data' => [
+                    'items' => $items,
+                    'count' => Cart::instance('cart')->count(),
+                    'sub_total_format' => format_price(Cart::instance('cart')->rawSubTotal()),
+                    'tax_amount' => Cart::instance('cart')->rawTax(),
+                    'tax_amount_format' => format_price(Cart::instance('cart')->rawTax()),
+                    'total_format' => format_price(Cart::instance('cart')->rawTotal()),
+                ]
+            ]);
+        });
+
+        Route::post('cart/add', function (Request $request, ProductInterface $productRepository) {
+            $productId = $request->input('id');
+            $qty = $request->input('qty', 1);
+
+            $product = $productRepository->findById($productId);
+            if (!$product) {
+                return response()->json(['error' => true, 'message' => 'Product not found'], 404);
+            }
+
+            $price = $product->front_sale_price ?: $product->price;
+
+            Cart::instance('cart')->add(
+                $product->id,
+                $product->name,
+                $qty,
+                $price,
+                ['image' => $product->image]
+            );
+
+            return response()->json(['error' => false, 'message' => 'Added to cart']);
+        });
+
+        Route::delete('cart/remove/{id}', function (string $id) {
+            Cart::instance('cart')->remove($id);
+            return response()->json(['error' => false, 'message' => 'Removed from cart']);
+        });
+
+        Route::post('cart/update', function (Request $request) {
+            $rowId = $request->input('rowId');
+            $qty = $request->input('qty');
+            Cart::instance('cart')->update($rowId, $qty);
+            return response()->json(['error' => false, 'message' => 'Cart updated']);
+        });
+
+    });
+
+    // SPA Catch-All Routes: Force Botble to return the Vue layout when user manually reloads on these pages
+    $spaRoutes = [
+        'products' => 'public.products',
+        'categories' => 'public.categories',
+        'cart' => 'public.cart',
+        'search' => 'public.search',
+        'profile' => 'public.profile',
+        'notifications' => 'public.notifications',
+        'project-wizard' => 'public.system-wizard',
+    ];
+    foreach ($spaRoutes as $spaRoute => $name) {
+        Route::get($spaRoute, function () {
+            return Theme::scope('page')->render();
+        })->name($name);
+    }
+
+    // SEO-Optimized SPA Route for Single Product
+    Route::get('product/{slug}', function (string $slug, ProductInterface $productRepository) {
+        $slugModel = SlugHelper::getSlug($slug, SlugHelper::getPrefix(\Botble\Ecommerce\Models\Product::class), \Botble\Ecommerce\Models\Product::class);
+        
+        if (!$slugModel) {
+            abort(404);
+        }
+
+        $product = $productRepository->findById($slugModel->reference_id);
+        
+        if (!$product || $product->status != \Botble\Base\Enums\BaseStatusEnum::PUBLISHED) {
+            abort(404);
+        }
+
+        $seoMeta = $product->getMetaData('seo_meta', true);
+        $description = $seoMeta['seo_description'] ?? '';
+        
+        if (empty($description)) {
+            $desc = str_replace(['<br>', '<br/>', '<br />', '</p>'], ' ', $product->description);
+            $desc = strip_tags($desc);
+            $desc = preg_replace('/[\x{1F600}-\x{1F64F}\x{1F300}-\x{1F5FF}\x{1F680}-\x{1F6FF}\x{2600}-\x{26FF}\x{2700}-\x{27BF}\x{1F900}-\x{1F9FF}\x{1FA70}-\x{1FAFF}]/u', '', $desc);
+            $desc = trim(preg_replace('/\s+/', ' ', $desc));
+            $description = \Illuminate\Support\Str::limit($desc, 155);
+        }
+
+        \Botble\SeoHelper\Facades\SeoHelper::setTitle($product->name)
+            ->setDescription($description);
+        
+        \Botble\SeoHelper\Facades\SeoHelper::meta()->setUrl(url()->current());
+        \Botble\SeoHelper\Facades\SeoHelper::meta()->addMeta('property:og:site_name', theme_option('site_title'));
+        
+        if ($product->image) {
+            \Botble\SeoHelper\Facades\SeoHelper::setImage(RvMedia::getImageUrl($product->image));
+        }
+
+        // Add Schema.org JSON-LD for rich snippets
+        $schema = [
+            '@context' => 'https://schema.org/',
+            '@type' => 'Product',
+            'name' => html_entity_decode($product->name),
+            'image' => [RvMedia::getImageUrl($product->image, null, false, RvMedia::getDefaultImage())],
+            'description' => $description,
+            'offers' => [
+                '@type' => 'Offer',
+                'url' => url()->current(),
+                'priceCurrency' => get_application_currency()->title ?? 'KWD',
+                'price' => $product->front_sale_price ?: $product->price,
+                'itemCondition' => 'https://schema.org/NewCondition',
+                'availability' => $product->isOutOfStock() ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+            ]
+        ];
+        Theme::asset()->container('header')->writeContent('schema-org-product', '<script type="application/ld+json">' . json_encode($schema, JSON_UNESCAPED_UNICODE) . '</script>');
+
+        // Poor Man's SSR HTML
+        $price = $product->front_sale_price ?: $product->price;
+        $formattedPrice = format_price($price);
+        
+        $ssrHtml = '<div class="ssr-product-container" style="padding:20px; max-width:1200px; margin:0 auto; font-family:sans-serif;">';
+        $ssrHtml .= '<div style="display:flex; flex-wrap:wrap; gap:20px;">';
+        $ssrHtml .= '<div style="flex:1; min-width:300px;"><img src="'.RvMedia::getImageUrl($product->image).'" alt="'.htmlentities($product->name).'" width="600" height="600" style="width:100%; height:auto; object-fit:cover; border-radius:8px;"></div>';
+        $ssrHtml .= '<div style="flex:1; min-width:300px;">';
+        $ssrHtml .= '<h1>'.htmlentities($product->name).'</h1>';
+        $ssrHtml .= '<h2 style="color:#d32f2f; font-size:24px;">'.$formattedPrice.'</h2>';
+        $ssrHtml .= '<div class="product-description" style="margin-top:20px; line-height:1.6;">'.$product->description.'</div>';
+        
+        // Category Links (Breadcrumb equivalent)
+        if ($product->categories && $product->categories->count()) {
+            $ssrHtml .= '<div style="margin-top:20px;"><strong>Categories:</strong> <ul>';
+            foreach ($product->categories as $category) {
+                $ssrHtml .= '<li><a href="'.url('product-categories/'.$category->slug).'">'.htmlentities($category->name).'</a></li>';
+            }
+            $ssrHtml .= '</ul></div>';
+        }
+        
+        // Related Products Links
+        $relatedProducts = \Botble\Ecommerce\Models\Product::where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
+            ->where('id', '!=', $product->id)
+            ->limit(4)->get(); // basic related fetch for SEO crawling
+        if ($relatedProducts->count()) {
+            $ssrHtml .= '<div style="margin-top:40px;"><strong>Related Products:</strong> <ul style="display:flex; gap:10px; list-style:none; padding:0;">';
+            foreach ($relatedProducts as $related) {
+                $ssrHtml .= '<li><a href="'.url('product/'.$related->slug).'">'.htmlentities($related->name).'</a></li>';
+            }
+            $ssrHtml .= '</ul></div>';
+        }
+        
+        $ssrHtml .= '</div></div></div>';
+
+        return Theme::scope('page', ['ssrHtml' => $ssrHtml])->render();
+    })->name('public.product');
+
+    // SEO-Optimized SPA Route for Categories
+    Route::get('product-categories/{slug}', function (string $slug, ProductCategoryInterface $categoryRepository) {
+        $slugModel = SlugHelper::getSlug($slug, SlugHelper::getPrefix(\Botble\Ecommerce\Models\ProductCategory::class), \Botble\Ecommerce\Models\ProductCategory::class);
+        
+        if (!$slugModel) {
+            abort(404);
+        }
+
+        $category = $categoryRepository->findById($slugModel->reference_id);
+        
+        if (!$category || $category->status != \Botble\Base\Enums\BaseStatusEnum::PUBLISHED) {
+            abort(404);
+        }
+
+        $seoMeta = $category->getMetaData('seo_meta', true);
+        $description = $seoMeta['seo_description'] ?? '';
+        
+        if (empty($description)) {
+            $desc = str_replace(['<br>', '<br/>', '<br />', '</p>'], ' ', $category->description);
+            $desc = strip_tags($desc);
+            $desc = preg_replace('/[\x{1F600}-\x{1F64F}\x{1F300}-\x{1F5FF}\x{1F680}-\x{1F6FF}\x{2600}-\x{26FF}\x{2700}-\x{27BF}\x{1F900}-\x{1F9FF}\x{1FA70}-\x{1FAFF}]/u', '', $desc);
+            $desc = trim(preg_replace('/\s+/', ' ', $desc));
+            $description = \Illuminate\Support\Str::limit($desc, 155);
+        }
+
+        \Botble\SeoHelper\Facades\SeoHelper::setTitle($category->name)
+            ->setDescription($description);
+            
+        \Botble\SeoHelper\Facades\SeoHelper::meta()->setUrl(url()->current());
+        \Botble\SeoHelper\Facades\SeoHelper::meta()->addMeta('property:og:site_name', theme_option('site_title'));
+        
+        if ($category->image) {
+            \Botble\SeoHelper\Facades\SeoHelper::setImage(RvMedia::getImageUrl($category->image));
+        }
+
+        // Poor Man's SSR HTML for Category
+        $ssrHtml = '<div class="ssr-category-container" style="padding:20px; max-width:1200px; margin:0 auto; font-family:sans-serif;">';
+        $ssrHtml .= '<h1>'.htmlentities($category->name).'</h1>';
+        if ($category->description) {
+            $ssrHtml .= '<p>'.strip_tags($category->description).'</p>';
+        }
+        
+        // List products in this category
+        $products = $category->products()->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)->limit(20)->get();
+        if ($products->count()) {
+            $ssrHtml .= '<ul style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:20px; list-style:none; padding:0;">';
+            foreach ($products as $prod) {
+                $ssrHtml .= '<li style="border:1px solid #eee; padding:10px; border-radius:8px;">';
+                $ssrHtml .= '<a href="'.url('product/'.$prod->slug).'" style="text-decoration:none; color:#333;">';
+                $ssrHtml .= '<img src="'.RvMedia::getImageUrl($prod->image, 'thumb', false, RvMedia::getDefaultImage()).'" alt="'.htmlentities($prod->name).'" width="200" height="200" style="width:100%; height:auto; aspect-ratio:1;">';
+                $ssrHtml .= '<h3 style="font-size:16px; margin:10px 0;">'.htmlentities($prod->name).'</h3>';
+                $ssrHtml .= '<div style="color:#d32f2f; font-weight:bold;">'.format_price($prod->front_sale_price ?: $prod->price).'</div>';
+                $ssrHtml .= '</a></li>';
+            }
+            $ssrHtml .= '</ul>';
+        }
+        $ssrHtml .= '</div>';
+
+        return Theme::scope('page', ['ssrHtml' => $ssrHtml])->render();
+    })->name('public.product-category');
+});
+
+Route::get('/fix-db-notifications', function () {
+    try {
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('ec_notifications', 'target_type')) {
+            \Illuminate\Support\Facades\Schema::table('ec_notifications', function (\Illuminate\Database\Schema\Blueprint $table) {
+                $table->string('target_type', 60)->default('none')->after('type');
+            });
+        }
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('ec_notifications', 'target_id')) {
+            \Illuminate\Support\Facades\Schema::table('ec_notifications', function (\Illuminate\Database\Schema\Blueprint $table) {
+                $table->unsignedBigInteger('target_id')->nullable()->after('target_type');
+            });
+        }
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('ec_notifications', 'custom_url')) {
+            \Illuminate\Support\Facades\Schema::table('ec_notifications', function (\Illuminate\Database\Schema\Blueprint $table) {
+                $table->string('custom_url', 255)->nullable()->after('target_id');
+            });
+        }
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('ec_notifications', 'status')) {
+            \Illuminate\Support\Facades\Schema::table('ec_notifications', function (\Illuminate\Database\Schema\Blueprint $table) {
+                $table->string('status', 60)->default('draft')->after('custom_url');
+            });
+        }
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('ec_notifications', 'scheduled_at')) {
+            \Illuminate\Support\Facades\Schema::table('ec_notifications', function (\Illuminate\Database\Schema\Blueprint $table) {
+                $table->timestamp('scheduled_at')->nullable()->after('status');
+            });
+        }
+        return 'success';
+    } catch (\Exception $e) {
+        return $e->getMessage();
+    }
+});
+
+Theme::routes();
