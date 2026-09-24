@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::group(['namespace' => 'Botble\Taly\Http\Controllers', 'middleware' => ['web', 'core']], function () {
     Route::get('payments/taly/status', [TalyController::class, 'getPaymentStatus'])
+        ->middleware('throttle:payment-return')
         ->name('payments.taly.status');
 
     // Server-to-server postBack authenticated by Taly-Signature; CSRF is excluded in bootstrap/app.php.

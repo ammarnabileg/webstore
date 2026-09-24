@@ -37,6 +37,7 @@ class DeemaPaymentService
         }
 
         $callbackUrl = route('deema.callback');
+        $orderToken = \Botble\Ecommerce\Models\Order::query()->whereKey($orderId)->value('token');
         $address = $paymentData['address'] ?? [];
 
         try {
@@ -46,8 +47,9 @@ class DeemaPaymentService
                     'amount'      => (float) $paymentData['amount'],
                     'currency'    => 'KWD',
                     'order_id'    => (string) $orderId,
-                    'success_url' => $callbackUrl . '?status=success&order_id=' . $orderId,
-                    'cancel_url'  => $callbackUrl . '?status=cancel&order_id=' . $orderId,
+                    // The return URL carries the order's secret checkout token, never the sequential id.
+                    'success_url' => $callbackUrl . '?status=success&t=' . urlencode((string) $orderToken),
+                    'cancel_url'  => $callbackUrl . '?status=cancel&t=' . urlencode((string) $orderToken),
                     'customer'    => [
                         'first_name' => $address['name'] ?? 'Guest',
                         'last_name'  => '',

@@ -85,6 +85,7 @@ class KlickpayPaymentService
             }
             
             $orderIdStr = (string)$data['order_id'];
+            $orderToken = \Botble\Ecommerce\Models\Order::query()->whereKey($data['order_id'])->value('token');
             $amount = (float)str_replace(',', '', (string)$data['amount']);
             
             $payload = [
@@ -93,8 +94,9 @@ class KlickpayPaymentService
                 'client_phone' => $clientPhone,
                 'transction_reference' => 'ORD-' . $orderIdStr,
                 'transction_amount' => $amount,
-                'success_page' => $data['callback_url'] . '?status=success&order_id=' . $orderIdStr,
-                'error_page' => $data['callback_url'] . '?status=error&order_id=' . $orderIdStr,
+                // The return URL carries the order's secret checkout token, never the sequential id.
+                'success_page' => $data['callback_url'] . '?status=success&t=' . urlencode((string) $orderToken),
+                'error_page' => $data['callback_url'] . '?status=error&t=' . urlencode((string) $orderToken),
                 'source' => 'web_app',
                 'transaction_details' => [
                     'total_items' => 1,

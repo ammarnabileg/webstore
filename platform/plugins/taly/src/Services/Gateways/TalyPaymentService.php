@@ -36,8 +36,9 @@ class TalyPaymentService
                 'amount' => $data['amount'],
                 'currency' => strtoupper($data['currency']) == 'KWD' || $data['currency'] == 'دينار كويتي' ? 'KWD' : $data['currency'],
                 'merchantOrderId' => $data['order_id'],
-                'successUrl' => $data['callback_url'] . '?result=success&order_id=' . $data['order_id'],
-                'failUrl' => $data['callback_url'] . '?result=failed&order_id=' . $data['order_id'],
+                // The return URL carries the order's secret checkout token, never the sequential id.
+                'successUrl' => $data['callback_url'] . '?result=success&t=' . urlencode((string) \Botble\Ecommerce\Models\Order::query()->whereKey($data['order_id'])->value('token')),
+                'failUrl' => $data['callback_url'] . '?result=failed&t=' . urlencode((string) \Botble\Ecommerce\Models\Order::query()->whereKey($data['order_id'])->value('token')),
                 'postBackUrl' => route('payments.taly.webhook'),
                 'customer' => [
                     'firstName' => $data['address']['first_name'] ?? 'Customer',

@@ -5,5 +5,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::group(['namespace' => 'Botble\Deema\Http\Controllers', 'middleware' => ['web', 'core']], function () {
     Route::get('payment/deema/callback', [DeemaController::class, 'getCallback'])
+        ->middleware('throttle:payment-return')
         ->name('deema.callback');
 });

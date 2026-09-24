@@ -17,7 +17,8 @@ class DeemaController extends BaseController
      */
     public function getCallback(Request $request, BaseHttpResponse $response)
     {
-        $order = Order::query()->find((int) $request->input('order_id'));
+        // Looked up by the unguessable checkout token from our own return URL (never the id).
+        $order = $request->filled('t') ? Order::query()->where('token', (string) $request->input('t'))->first() : null;
         $token = $order?->token;
 
         if (! $order || $request->input('status') !== 'success') {

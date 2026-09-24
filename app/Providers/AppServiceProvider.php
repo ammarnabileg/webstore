@@ -50,6 +50,7 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('admin-tools', fn (Request $request) => Limit::perMinute(10)->by($byUserOrIp($request)));
         RateLimiter::for('whatsapp-auth', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
         RateLimiter::for('webhooks', fn (Request $request) => Limit::perMinute(120)->by($request->ip()));
+        RateLimiter::for('payment-return', fn (Request $request) => Limit::perMinute(30)->by($request->ip()));
         RateLimiter::for('wizard-leads', fn (Request $request) => Limit::perMinutes(10, 5)->by($request->ip()));
         RateLimiter::for('wizard-events', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
     }

@@ -16,6 +16,8 @@ use Symfony\Component\ErrorHandler\Exception\FlattenException;
 use Throwable;
 use TijsVerkoyen\CssToInlineStyles\CssToInlineStyles;
 use Twig\Extension\DebugExtension;
+use Twig\Extension\SandboxExtension;
+use Twig\Sandbox\SecurityPolicy;
 use Twig\TwigFilter;
 
 class EmailHandler
@@ -335,6 +337,33 @@ class EmailHandler
         return $value;
     }
 
+    protected function sandboxedValueCompiler(TwigCompiler $base): TwigCompiler
+    {
+        $compiler = new TwigCompiler([
+            'autoescape' => false,
+            'debug' => false,
+        ]);
+
+        // Reuse the filters/functions Botble and plugins registered (trans, price_format...).
+        foreach ($base->getExtensions() as $extension) {
+            if (! $compiler->hasExtension($extension::class)) {
+                $compiler->addExtension($extension);
+            }
+        }
+
+        $compiler->addExtension(new SandboxExtension(new SecurityPolicy(
+            ['if', 'for', 'set'],
+            ['escape', 'e', 'upper', 'lower', 'title', 'capitalize', 'trim', 'nl2br', 'striptags', 'raw',
+                'default', 'length', 'join', 'first', 'last', 'replace', 'format', 'date', 'number_format',
+                'trans', 'price_format', 'icon_url'],
+            [],
+            [],
+            ['trans', 'date', 'range']
+        ), true));
+
+        return $compiler;
+    }
+
     protected function replaceVariableValue(array $variables, ?string $module, string $content): string
     {
         do_action('email_variable_value');
@@ -351,9 +380,15 @@ class EmailHandler
 
         $twigCompiler = apply_filters('cms_twig_compiler', $this->twigCompiler);
 
+        // Variable values can contain customer input (name, address, notes...). They are
+        // compiled in a sandbox so a value like {{ ['x']|map('system') }} cannot call PHP
+        // functions (server-side template injection). Only the admin-authored template
+        // below is compiled with the full environment.
+        $valueCompiler = $this->sandboxedValueCompiler($twigCompiler);
+
         foreach ($data as $key => $value) {
             try {
-                $data[$key] = $value && is_string($value) ? $twigCompiler->compile($value, $data) : $value;
+                $data[$key] = $value && is_string($value) ? $valueCompiler->compile($value, $data) : $value;
             } catch (Throwable) {
                 $data[$key] = $value;
             }

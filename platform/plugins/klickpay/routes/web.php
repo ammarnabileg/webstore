@@ -7,7 +7,7 @@ Route::group(['namespace' => 'Botble\Klickpay\Http\Controllers', 'middleware' =>
         Route::get('status', [
             'as' => 'payments.klickpay.status',
             'uses' => 'KlickpayController@status',
-        ]);
+        ])->middleware('throttle:payment-return');
 
         // Server-to-server call authenticated by HMAC; CSRF is excluded in bootstrap/app.php.
         Route::post('webhook', [

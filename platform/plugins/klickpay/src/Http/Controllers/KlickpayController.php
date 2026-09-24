@@ -25,7 +25,9 @@ class KlickpayController extends BaseController
      */
     public function status(Request $request, BaseHttpResponse $response, KlickpayPaymentService $klickpayService)
     {
-        $order = Order::query()->find((int) $request->input('order_id'));
+        // Looked up by the unguessable checkout token from our own return URL; a numeric
+        // order id would let anyone walk order ids and open other customers' order pages.
+        $order = $request->filled('t') ? Order::query()->where('token', (string) $request->input('t'))->first() : null;
 
         if (! $order) {
             return $response
