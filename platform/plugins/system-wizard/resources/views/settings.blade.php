@@ -144,7 +144,7 @@
                         
                         <h5 class="mb-3 mt-4 text-danger">مساحات التخزين (هارد مراقبة)</h5>
                         <div class="row">
-                            @foreach([1, 2, 4, 6, 8, 12] as $tb)
+                            @foreach(\Botble\SystemWizard\Services\WizardCatalog::HDD_SIZES as $tb)
                                 <div class="col-md-4 form-group mb-3">
                                     <label class="control-label">هارد {{ $tb }} تيرا</label>
                                     <select name="sw_hdd_{{ $tb }}tb" class="form-control select-search-full">

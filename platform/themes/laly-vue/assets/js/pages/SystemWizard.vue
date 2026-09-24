@@ -1,7 +1,9 @@
 <template>
 <div class="suha-page">
-  <div v-if="loadingCatalog" style="padding:50px; text-align:center;">
-    جاري التحميل...
+  <div v-if="loadingCatalog" class="sw-state" role="status">جارٍ التحميل...</div>
+  <div v-else-if="catalogError" class="sw-state" role="alert">
+    <p>تعذّر تحميل بيانات الباقات.</p>
+    <button class="btn btn-primary" @click="loadCatalog">حاول مرة أخرى</button>
   </div>
   <template v-else>
 <!-- header -->
@@ -26,8 +28,8 @@
 
       <!-- STEP 1: place type -->
       <section v-if="step===1 && !submitted" key="s1">
-        <h1 class="q-title">النظام ده لمكان ايه؟</h1>
-        <p class="q-hint">اختار نوع المكان وإحنا نظبط الباقي.</p>
+        <h1 class="q-title">لأي مكان هذا النظام؟</h1>
+        <p class="q-hint">اختر نوع المكان وسنتولى الباقي.</p>
         <div class="grid">
           <button v-for="p in placeTypes" :key="p.id" class="opt"
                   :class="{sel: a.place===p.id}" @click="a.place=p.id"
@@ -40,8 +42,8 @@
 
       <!-- STEP 2: place details -->
       <section v-else-if="step===2 && !submitted" key="s2">
-        <h1 class="q-title">قولنا عن المكان شوية</h1>
-        <p class="q-hint">أرقام تقريبية كفاية — مش محتاجين دقة.</p>
+        <h1 class="q-title">أخبرنا عن المكان</h1>
+        <p class="q-hint">تكفي الأرقام التقريبية، لا نحتاج إلى دقة.</p>
 
         <div class="seg-block">
           <div class="seg-title">المساحة الإجمالية تقريباً</div>
@@ -65,35 +67,35 @@
         </div>
 
         <div class="seg-block">
-          <div class="seg-title">في مناطق خارجية؟ (حوش / جراج / سور)</div>
+          <div class="seg-title">هل توجد مناطق خارجية؟ (حوش / كراج / سور)</div>
           <div class="seg">
-            <button class="opt" :class="{sel:a.outdoor===true}" @click="a.outdoor=true" :aria-pressed="a.outdoor===true">أيوه</button>
-            <button class="opt" :class="{sel:a.outdoor===false}" @click="a.outdoor=false" :aria-pressed="a.outdoor===false">لأ</button>
+            <button class="opt" :class="{sel:a.outdoor===true}" @click="a.outdoor=true" :aria-pressed="a.outdoor===true">نعم</button>
+            <button class="opt" :class="{sel:a.outdoor===false}" @click="a.outdoor=false" :aria-pressed="a.outdoor===false">لا</button>
           </div>
         </div>
 
         <div class="seg-block">
-          <div class="seg-title">حالة المكان دلوقتي</div>
+          <div class="seg-title">حالة المكان حاليًا</div>
           <div class="seg">
             <button v-for="(o,i) in conditionOpts" :key="i" class="opt" :class="{sel:a.condition===i}" @click="a.condition=i" :aria-pressed="a.condition===i">{{ o.label }}</button>
           </div>
         </div>
 
         <div class="seg-block" v-if="a.condition===2">
-          <div class="seg-title">في تمديدات (مواسير) جاهزة للكاميرات والشبكة؟</div>
+          <div class="seg-title">هل توجد تمديدات (مواسير) جاهزة للكاميرات والشبكة؟</div>
           <div class="seg">
-            <button class="opt" :class="{sel:a.conduits==='yes'}" @click="a.conduits='yes'" :aria-pressed="a.conduits==='yes'">أيوه موجودة</button>
-            <button class="opt" :class="{sel:a.conduits==='no'}" @click="a.conduits='no'" :aria-pressed="a.conduits==='no'">لأ</button>
-            <button class="opt" :class="{sel:a.conduits==='unsure'}" @click="a.conduits='unsure'" :aria-pressed="a.conduits==='unsure'">مش متأكد</button>
+            <button class="opt" :class="{sel:a.conduits==='yes'}" @click="a.conduits='yes'" :aria-pressed="a.conduits==='yes'">نعم، موجودة</button>
+            <button class="opt" :class="{sel:a.conduits==='no'}" @click="a.conduits='no'" :aria-pressed="a.conduits==='no'">لا</button>
+            <button class="opt" :class="{sel:a.conduits==='unsure'}" @click="a.conduits='unsure'" :aria-pressed="a.conduits==='unsure'">لست متأكدًا</button>
           </div>
-          <p class="plan-hint" v-if="a.conduits==='unsure'" style="margin-top:8px;">عادي — بنأكدها في المعاينة المجانية، ولو التمديدات طلعت موجودة السعر بينزل.</p>
+          <p class="plan-hint" v-if="a.conduits==='unsure'" style="margin-top:8px;">لا مشكلة، سنتأكد منها في المعاينة المجانية، وإذا كانت التمديدات موجودة ينخفض السعر.</p>
         </div>
       </section>
 
       <!-- STEP 3: needs (problem language) -->
       <section v-else-if="step===3 && !submitted" key="s3">
-        <h1 class="q-title">عايز النظام يعملك ايه؟</h1>
-        <p class="q-hint">اختار كل اللي يهمك — مش لازم تعرف أسماء الأجهزة.</p>
+        <h1 class="q-title">ماذا تريد أن يحقق لك النظام؟</h1>
+        <p class="q-hint">اختر كل ما يهمك، لا يلزم أن تعرف أسماء الأجهزة.</p>
         <div class="grid one">
           <button v-for="g in goals" :key="g.id" class="opt row"
                   v-show="g.id!=='perimeter' || a.outdoor"
@@ -108,60 +110,60 @@
         </div>
 
         <div class="seg-block" v-if="wantsWifi" style="margin-top:18px;">
-          <div class="seg-title">كام جهاز تقريباً هيستخدم النت؟</div>
+          <div class="seg-title">كم جهازًا تقريبًا سيستخدم الإنترنت؟</div>
           <div class="seg">
             <button v-for="(o,i) in deviceOpts" :key="i" class="opt" :class="{sel:a.devices===i}" @click="a.devices=i" :aria-pressed="a.devices===i">{{ o.label }}</button>
           </div>
         </div>
 
         <div class="seg-block" v-if="wantsCams" style="margin-top:6px;">
-          <div class="seg-title">التسجيل يفضل محفوظ قد ايه؟</div>
+          <div class="seg-title">ما المدة التي تريد حفظ التسجيل خلالها؟</div>
           <div class="seg">
             <button v-for="(o,i) in recordOpts" :key="i" class="opt" :class="{sel:a.recordDays===i}" @click="a.recordDays=i" :aria-pressed="a.recordDays===i">{{ o.label }}</button>
           </div>
           <p class="plan-hint" v-if="isCommercial" style="margin-top:8px;">{{ moiNotice }}</p>
-          <p class="plan-hint" v-if="isCommercial && a.recordDays!==null && recordOpts[a.recordDays].days < 180" style="color:var(--rec);margin-top:4px;">اختيارك أقل من اشتراط الوزارة للمنشآت التجارية — نقدر نمشي بيه، بس المسؤولية النظامية عليك.</p>
+          <p class="plan-hint" v-if="isCommercial && a.recordDays!==null && recordOpts[a.recordDays].days < 180" style="color:var(--rec);margin-top:4px;">اختيارك أقل من اشتراط الوزارة للمنشآت التجارية. يمكننا تنفيذه، لكن المسؤولية النظامية تقع عليك.</p>
         </div>
 
         <div class="seg-block" v-if="wantsCams">
-          <div class="seg-title">في إنترنت ثابت في المكان؟ <span style="font-weight:400;color:var(--muted);">(عشان المتابعة من الموبايل)</span></div>
+          <div class="seg-title">هل يوجد إنترنت ثابت في المكان؟ <span style="font-weight:400;color:var(--muted);">(للمتابعة من الهاتف)</span></div>
           <div class="seg">
-            <button class="opt" :class="{sel:a.internet==='yes'}" @click="a.internet='yes'" :aria-pressed="a.internet==='yes'">أيوه</button>
-            <button class="opt" :class="{sel:a.internet==='no'}" @click="a.internet='no'" :aria-pressed="a.internet==='no'">لأ</button>
+            <button class="opt" :class="{sel:a.internet==='yes'}" @click="a.internet='yes'" :aria-pressed="a.internet==='yes'">نعم</button>
+            <button class="opt" :class="{sel:a.internet==='no'}" @click="a.internet='no'" :aria-pressed="a.internet==='no'">لا</button>
           </div>
         </div>
 
         <div class="seg-block" v-if="zoomVisible">
-          <div class="seg-title">في نقط بعيدة محتاج تقرّب عليها؟ <span style="font-weight:400;color:var(--muted);">(بوابة بعيدة، ساحة، سور طويل)</span></div>
+          <div class="seg-title">هل توجد نقاط بعيدة تحتاج إلى تقريب الصورة عليها؟ <span style="font-weight:400;color:var(--muted);">(بوابة بعيدة، ساحة، سور طويل)</span></div>
           <div class="seg">
-            <button class="opt" :class="{sel:a.zoom===true}" @click="a.zoom=true" :aria-pressed="a.zoom===true">أيوه</button>
-            <button class="opt" :class="{sel:a.zoom===false}" @click="a.zoom=false" :aria-pressed="a.zoom===false">لأ</button>
+            <button class="opt" :class="{sel:a.zoom===true}" @click="a.zoom=true" :aria-pressed="a.zoom===true">نعم</button>
+            <button class="opt" :class="{sel:a.zoom===false}" @click="a.zoom=false" :aria-pressed="a.zoom===false">لا</button>
           </div>
         </div>
       </section>
 
       <!-- STEP 4: budget & brand (optional) -->
       <section v-else-if="step===4 && !submitted" key="s4">
-        <h1 class="q-title">ميزانية تقريبية في بالك؟</h1>
-        <p class="q-hint">اختياري — بيساعدنا نرشحلك الأنسب من أول مرة.</p>
+        <h1 class="q-title">هل لديك ميزانية تقريبية؟</h1>
+        <p class="q-hint">اختياري، ويساعدنا على ترشيح الأنسب لك من المرة الأولى.</p>
         <div class="seg-block">
           <div class="seg">
             <button v-for="(o,i) in budgetOpts" :key="i" class="opt" :class="{sel:a.budget===i}" @click="a.budget=i" :aria-pressed="a.budget===i">{{ o.label }}</button>
           </div>
         </div>
         <div class="seg-block">
-          <div class="seg-title">مفضّل براند معين؟</div>
+          <div class="seg-title">هل تفضّل علامة تجارية معينة؟</div>
           <div class="seg">
             <button v-for="(o,i) in brandOpts" :key="i" class="opt" :class="{sel:a.brand===i}" @click="a.brand=i" :aria-pressed="a.brand===i">{{ o.label }}</button>
           </div>
         </div>
-        <button class="skip" @click="skipBudget">تخطّي — محددتش لسه</button>
+        <button class="skip" @click="skipBudget">تخطَّ، لم أحدد بعد</button>
       </section>
 
       <!-- STEP 5: packages + summary + lead -->
       <section v-else-if="step===5 && !submitted" key="s5">
-        <h1 class="q-title">اختار الباقة اللي تناسبك</h1>
-        <p class="q-hint">اتبنت على إجاباتك — بمكونات حقيقية من مخزننا.</p>
+        <h1 class="q-title">اختر الباقة المناسبة لك</h1>
+        <p class="q-hint">بُنيت على إجاباتك، بمكونات حقيقية من مخزوننا.</p>
 
         <button v-for="pkg in packages" :key="pkg.tier" class="pkg"
                 :class="{sel: a.package===pkg.tier}" @click="a.package=pkg.tier"
@@ -169,7 +171,7 @@
           <span v-if="pkg.badge" class="pkg-badge">{{ pkg.badge }}</span>
           <div class="pkg-head">
             <span class="pkg-name">{{ pkg.title }}</span>
-            <span class="pkg-price">يبدأ من ~{{ pkg.total }} د.ك <small>شامل تركيب تقديري</small></span>
+            <span class="pkg-price">يبدأ من ~{{ pkg.total }} د.ك <small>شاملة التركيب التقديري</small></span>
           </div>
           <div class="pkg-outcome">{{ pkg.outcome }}</div>
           <ul class="pkg-items">
@@ -181,10 +183,10 @@
         </button>
 
         <button class="pkg slim" :class="{sel: a.package==='advise'}" @click="a.package='advise'" :aria-pressed="a.package==='advise'">
-          <span class="pkg-name">مش متأكد؟ سيبها لينا — نرشحلك الأنسب في المعاينة المجانية</span>
+          <span class="pkg-name">لست متأكدًا؟ اترك الأمر لنا، وسنرشح لك الأنسب في المعاينة المجانية</span>
         </button>
 
-        <p class="reco-note">الأسعار استرشادية وبتتأكد بعد معاينة المكان — المعاينة مجانية وبدون التزام. تكلفة التركيب بتختلف حسب حالة المكان{{ a.condition===2 ? ' (المكان المتشطب بيحتاج تمديدات خارجية بترنكات)' : '' }}. لو رسمت مخطط المكان تحت، أعداد الكاميرات وأسعار الباقات بتتظبط عليه تلقائياً.{{ a.condition===2 && a.conduits==='unsure' ? ' ولو التمديدات طلعت موجودة في المعاينة، السعر بينزل مش بيزيد.' : '' }}</p>
+        <p class="reco-note">الأسعار استرشادية وتُؤكَّد بعد معاينة المكان، والمعاينة مجانية ودون التزام. تختلف تكلفة التركيب حسب حالة المكان{{ a.condition===2 ? ' (المكان المُشطّب يحتاج إلى تمديدات خارجية عبر مجارٍ)' : '' }}. إذا رسمت مخطط المكان بالأسفل، تُضبط أعداد الكاميرات وأسعار الباقات عليه تلقائيًا.{{ a.condition===2 && a.conduits==='unsure' ? ' وإذا تبيّن في المعاينة وجود التمديدات، ينخفض السعر ولا يزيد.' : '' }}</p>
 
         <div class="h-sub">ملخص طلبك</div>
         <div class="sum-list">
@@ -193,7 +195,7 @@
           </div>
         </div>
 
-        <div class="h-sub">مخطط المكان <span style="font-weight:400;color:var(--muted);font-size:13px;">(اختياري — بيخلينا نجهزلك عرض أدق قبل المعاينة)</span></div>
+        <div class="h-sub">مخطط المكان <span style="font-weight:400;color:var(--muted);font-size:13px;">(اختياري، ويساعدنا على تجهيز عرض أدق قبل المعاينة)</span></div>
         <div class="plan-box">
           <div class="plan-tabs">
             <button :class="{sel:planTab==='draw'}" @click="planTab='draw'">ارسمه بنفسك</button>
@@ -211,7 +213,6 @@
               </button>
               <button class="tool" @click="skUndo" :disabled="!sk.hist.length">تراجع</button>
               <button class="tool danger" v-if="sk.rooms.length || sk.pins.length" @click="skClear">امسح الكل</button>
-              <button class="tool" v-if="sk.rooms.length" @click="toggle3d">{{ s3d.open ? 'اقفل الـ 3D' : 'شوفه 3D' }}</button>
             </div>
 
             <div class="floor-tabs" v-if="floorsAvail.length > 1">
@@ -221,12 +222,12 @@
             </div>
 
             <div class="live-price" v-if="livePkg">
-              <span>سعر {{ livePkg.title }} دلوقتي <span style="color:var(--muted);">(بيتحدث مع الكاميرات والأكسس اللي بتحطها)</span></span>
+              <span>سعر {{ livePkg.title }} الآن <span style="color:var(--muted);">(يتحدّث مع كل كاميرا ونقطة واي فاي تضيفها)</span></span>
               <b>~{{ livePkg.total }} د.ك</b>
             </div>
 
             <div class="label-chips" v-if="sk.sel!==null && sk.rooms[sk.sel]">
-              <span style="font-size:12px;color:var(--muted);">سمّي الأوضة:</span>
+              <span style="font-size:12px;color:var(--muted);">سمِّ الغرفة:</span>
               <button v-for="l in roomLabels" :key="l" class="lchip" :class="{out: zoneType(l)==='out'}" @click="labelRoom(l)">{{ l }}</button>
             </div>
 
@@ -236,7 +237,7 @@
                    :style="{left:r.x+'%', top:r.y+'%', width:r.w+'%', height:r.h+'%'}"
                    @pointerdown.stop="roomDown(i,$event)" @click.stop="roomClick(i,$event)">
                 <span class="lbl">{{ r.label }}</span>
-                <button class="x" @pointerdown.stop @click.stop="delRoom(i)" aria-label="امسح الأوضة">×</button>
+                <button class="x" @pointerdown.stop @click.stop="delRoom(i)" aria-label="احذف الغرفة">×</button>
                 <span class="handle" @pointerdown.stop="resizeDown(i,$event)" aria-hidden="true"></span>
               </div>
               <div v-if="sk.draft" class="room draft"
@@ -246,24 +247,22 @@
                    :style="{left:p.x+'%', top:p.y+'%'}"
                    @pointerdown.stop.prevent="skPinDrag(p,$event)" @click.stop>
                 <span v-html="icon(pinIcon(p.t))"></span>
-                <button class="x" @pointerdown.stop @click.stop="delSkPin(i)" aria-label="امسح العلامة">×</button>
+                <button class="x" @pointerdown.stop @click.stop="delSkPin(i)" aria-label="احذف العلامة">×</button>
               </div>
               <div v-if="!sk.rooms.length && !sk.draft && !sk.dismiss" class="sketch-empty" style="pointer-events:auto;">
                 <div>
-                  <p style="margin-bottom:10px;">معانا إجاباتك عن المكان — نجهزلك رسمة مبدئية تعدّل عليها؟</p>
+                  <p style="margin-bottom:10px;">لدينا إجاباتك عن المكان. هل نجهّز لك رسمًا مبدئيًا تعدّل عليه؟</p>
                   <div style="display:flex;gap:8px;justify-content:center;">
-                    <button class="lchip" style="border-color:var(--primary);color:var(--primary-ink);background:var(--primary-soft);" @pointerdown.stop @click.stop="generateStarter">جهزهالي</button>
-                    <button class="lchip" @pointerdown.stop @click.stop="sk.dismiss=true">هرسم من الصفر</button>
+                    <button class="lchip" style="border-color:var(--primary);color:var(--primary-ink);background:var(--primary-soft);" @pointerdown.stop @click.stop="generateStarter">جهّزه لي</button>
+                    <button class="lchip" @pointerdown.stop @click.stop="sk.dismiss=true">سأرسم من البداية</button>
                   </div>
                 </div>
               </div>
-              <p v-else-if="!sk.rooms.length && !sk.draft" class="sketch-empty">اسحب بصباعك هنا عشان ترسم أول منطقة كمستطيل</p>
+              <p v-else-if="!sk.rooms.length && !sk.draft" class="sketch-empty">اسحب بإصبعك هنا لرسم أول منطقة على شكل مستطيل</p>
             </div>
-            <p class="plan-hint" v-if="sketchCams.in + sketchCams.out > 0" style="color:var(--ink);">كاميرات الرسم: <b>{{ sketchCams.in }}</b> داخلية · <b>{{ sketchCams.out }}</b> خارجية — أعداد وأسعار الباقات فوق اتظبطت عليهم تلقائياً.</p>
-            <p class="plan-hint" v-if="sketchWiring.nets + sketchWiring.tvs > 0 || sketchWiring.rack" style="color:var(--ink);">تمديدات: {{ sketchWiring.nets }} نقطة نت · {{ sketchWiring.tvs }} تلفزيون · الكبينة {{ sketchWiring.rack ? 'محددة' : 'لسه متحددتش' }} — كلها محسوبة في السعر.</p>
-            <p class="plan-hint">دوس جوه أي منطقة على طول عشان تحط النقطة فيها. الأسماء الخضرا بتتحسب خارجية تلقائياً وبتغيّر نوع الكاميرا وسعرها، وأي علامة برة كل المناطق خارجية. نقاط النت والتلفزيون والكبينة بتتحسب في السعر — «الملاحظة» للتوضيح بس. الكبينة واحدة للنظام كله: أي دوسة جديدة بتنقلها.</p>
-            <div class="t3wrap" v-show="s3d.open" id="skt3d"></div>
-            <p class="plan-hint" v-if="s3d.fail" style="color:var(--rec);">تعذر تحميل العرض ثلاثي الأبعاد — جرب تاني.</p>
+            <p class="plan-hint" v-if="sketchCams.in + sketchCams.out > 0" style="color:var(--ink);">كاميرات الرسم: <b>{{ sketchCams.in }}</b> داخلية · <b>{{ sketchCams.out }}</b> خارجية، وضُبطت أعداد الباقات وأسعارها بالأعلى تلقائيًا.</p>
+            <p class="plan-hint" v-if="sketchWiring.nets + sketchWiring.tvs > 0 || sketchWiring.rack" style="color:var(--ink);">تمديدات: {{ sketchWiring.nets }} نقطة نت · {{ sketchWiring.tvs }} تلفزيون · الكبينة {{ sketchWiring.rack ? 'محددة' : 'لم تُحدَّد بعد' }} ، وكلها محسوبة في السعر.</p>
+            <p class="plan-hint">اضغط داخل أي منطقة لإضافة نقطة فيها. الأسماء الخضراء تُحسب خارجية تلقائيًا وتغيّر نوع الكاميرا وسعرها، وأي علامة خارج كل المناطق تُعدّ خارجية. نقاط الشبكة والتلفزيون والكبينة تُحسب في السعر، أما «الملاحظة» فللتوضيح فقط. الكبينة واحدة للنظام كله، وأي ضغطة جديدة تنقلها.</p>
           </div>
 
           <!-- UPLOAD PANE -->
@@ -271,7 +270,7 @@
           <template v-if="!plan.img">
             <label class="plan-upload">
               <input type="file" accept="image/*" @change="onPlanFile" hidden>
-              ارفع صورة المخطط — أو حتى رسمة بإيدك على ورقة
+              ارفع صورة المخطط، أو حتى رسمًا بيدك على ورقة
             </label>
             <div class="err" v-if="plan.err" style="margin-top:8px;color:var(--rec);font-size:12.5px;">{{ plan.err }}</div>
           </template>
@@ -288,10 +287,10 @@
                    :style="{left:p.x+'%', top:p.y+'%'}"
                    @pointerdown.stop.prevent="startDrag(p,$event)" @click.stop>
                 <span v-html="icon(pinIcon(p.t))"></span>
-                <button class="x" @pointerdown.stop @click.stop="removePin(i)" aria-label="امسح العلامة">×</button>
+                <button class="x" @pointerdown.stop @click.stop="removePin(i)" aria-label="احذف العلامة">×</button>
               </div>
             </div>
-            <p class="plan-hint">دوس على المخطط عشان تحط علامة «{{ pinLabel(plan.tool) }}»، واسحب أي علامة عشان تحرّكها. مش شرط تكون دقيق — الفني بيظبط الأماكن النهائية في المعاينة.</p>
+            <p class="plan-hint">اضغط على المخطط لإضافة علامة «{{ pinLabel(plan.tool) }}»، واسحب أي علامة لتحريكها. لا يلزم أن تكون دقيقًا، فالفني يحدّد الأماكن النهائية في المعاينة.</p>
           </template>
           </div>
         </div>
@@ -301,15 +300,20 @@
           <input id="name" v-model.trim="lead.name" type="text" autocomplete="name" placeholder="الاسم" />
         </div>
         <div class="field">
-          <label for="phone">رقم الموبايل</label>
+          <label for="phone">رقم الهاتف</label>
           <input id="phone" v-model.trim="lead.phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="مثال: 5xxxxxxx" @blur="phoneTouched=true" />
-          <div class="err" v-if="phoneTouched && !phoneValid">اكتب رقم صحيح (8 أرقام على الأقل).</div>
+          <div class="err" v-if="phoneTouched && !phoneValid">أدخل رقمًا كويتيًا صحيحًا من 8 أرقام.</div>
         </div>
-        <p class="privacy">بياناتك بتُستخدم للتواصل بخصوص طلبك بس.</p>
+        <div class="hp-field" aria-hidden="true">
+          <label for="sw-website">اترك هذا الحقل فارغًا</label>
+          <input id="sw-website" v-model="honeypot" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+        <p class="privacy">تُستخدم بياناتك للتواصل بخصوص طلبك فقط.</p>
+        <div class="err" v-if="submitError" role="alert">{{ submitError }}</div>
 
-        <a class="wa" :href="waLink" target="_blank" rel="noopener">
+        <a class="wa" v-if="waLink" :href="waLink" target="_blank" rel="noopener">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.4 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.4-.7-2.9-1.2-4.7-4.1-4.9-4.3-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.4l.9 2.1c.1.2.1.4 0 .6l-.4.6c-.1.2-.3.4-.1.7.1.3.7 1.2 1.6 1.9 1.1.9 2 1.2 2.3 1.4.3.1.5.1.6-.1l.8-.9c.2-.2.4-.2.6-.1l2 .9c.2.1.4.2.4.3.1.1.1.6-.3 1.5z"/></svg>
-          أو ابعت الطلب على واتساب
+          أو أرسل الطلب عبر واتساب
         </a>
       </section>
 
@@ -318,8 +322,9 @@
         <div class="done-ic">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
         </div>
-        <h2>وصلنا طلبك يا {{ lead.name || 'صديقنا' }}</h2>
-        <p>هنكلمك خلال 24 ساعة على {{ lead.phone }} عشان نحدد معاد المعاينة المجانية ونأكد العرض النهائي.</p>
+        <h2>وصلنا طلبك يا {{ lead.name || 'عزيزنا' }}</h2>
+        <p>سنتواصل معك خلال 24 ساعة على {{ lead.phone }} لتحديد موعد المعاينة المجانية وتأكيد العرض النهائي.</p>
+        <p v-if="serverEstimate !== null" class="done-estimate">التكلفة التقديرية لباقتك: ~{{ Math.round(serverEstimate) }} د.ك</p>
       </section>
 
     </transition>
@@ -329,7 +334,7 @@
   <div class="tray" v-if="!submitted && step>1 && step<5 && trayChips.length">
     <div class="tray-inner">
       <div class="tray-card">
-        <span class="tray-title"><span class="rec-dot" aria-hidden="true"></span> نظامك بيتبني</span>
+        <span class="tray-title"><span class="rec-dot" aria-hidden="true"></span> نظامك قيد التجهيز</span>
         <span v-for="c in trayChips" :key="c" class="chip">{{ c }}</span>
       </div>
     </div>
@@ -339,7 +344,7 @@
   <div class="nav" v-if="!submitted">
     <div class="nav-inner">
       <button v-if="step>1" class="btn btn-ghost" @click="back">رجوع</button>
-      <button class="btn btn-primary" :disabled="!canNext" @click="next">{{ nextLabel }}</button>
+      <button class="btn btn-primary" :disabled="!canNext || submitting" @click="next">{{ submitting ? 'جارٍ الإرسال...' : nextLabel }}</button>
     </div>
   </div>
   </template>
@@ -347,55 +352,23 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, nextTick, onMounted } from 'vue';
+import { ref, reactive, computed, nextTick, onMounted, watch } from 'vue';
 import axios from 'axios';
 
-// ================= CONFIG — عدّل قبل الربط بموقعك =================
-const WHATSAPP_NUMBER = "965XXXXXXXX";        // رقم واتساب الشركة بكود الدولة بدون +
-const API_ENDPOINT    = "/api/project-leads";  // Laravel endpoint للـ POST
-
-// ================= CATALOG (بيانات تجريبية) =================
-// !! كل الأسعار هنا وهمية للعرض بس — في موقعك ده بييجي من جدول
-// `products` في Laravel عن طريق GET /api/wizard-catalog
-// شكل الصف: {sku, name, category, tier, specs(json), price, active}
-let CATALOG = {
-  camera: {
-    basic: { in:{name:'كاميرا داخلية 2MP', price:12}, out:{name:'كاميرا خارجية 2MP مقاومة للجو', price:16}, gbDay:12 },
-    pro:   { in:{name:'كاميرا داخلية 4MP', price:19}, out:{name:'كاميرا خارجية 4MP رؤية ليلية', price:24}, gbDay:20 },
-    prem:  { in:{name:'كاميرا 4K ColorVu داخلية', price:29}, out:{name:'كاميرا 4K ColorVu خارجية (ألوان بالليل)', price:38}, gbDay:35 },
-  },
-  ptz: { name:'كاميرا زوم متحركة PTZ ×25', price:95 },
-  nvr: { // السعر حسب عدد القنوات × المستوى
-    8:  {basic:45,  pro:60,  prem:85},
-    16: {basic:70,  pro:95,  prem:130},
-    32: {basic:120, pro:160, prem:210},
-  },
-  hdd: { sizes:[1,2,4,6,8,12,16], price:{1:18,2:28,4:45,6:60,8:78,12:115,16:145} }, // تيرابايت مراقبة
-  poeSwitch: { ports:[4,8,16,24], price:{4:22,8:38,16:68,24:98} },
-  ap: {
-    basic:{name:'أكسس بوينت WiFi 5', price:22},
-    pro:  {name:'أكسس بوينت WiFi 6', price:38},
-    prem: {name:'أكسس بوينت WiFi 6 سقفي احترافي', price:58},
-    controller:{name:'وحدة تحكم للشبكة', price:45},
-  },
-  intercom: { basic:{name:'إنتركم فيديو', price:38}, pro:{name:'إنتركم فيديو بالموبايل', price:60}, prem:{name:'إنتركم ذكي متعدد الشقق', price:95} },
-  alarm:    { basic:{name:'طقم إنذار أساسي', price:65}, pro:{name:'طقم إنذار بالموبايل', price:95}, prem:{name:'نظام إنذار متكامل بالحساسات', price:150} },
-  router4g: { name:'راوتر 4G للمتابعة عن بعد', price:32 },
-  netPoint: { basic:{name:'نقطة شبكة سلكية Cat5e', price:5}, pro:{name:'نقطة شبكة سلكية Cat6', price:7}, prem:{name:'نقطة شبكة سلكية Cat6A', price:10} },
-  tvPoint:  { basic:{name:'نقطة تلفزيون', price:6}, pro:{name:'نقطة تلفزيون HD', price:8}, prem:{name:'نقطة تلفزيون 4K', price:11} },
-  rack:     { basic:{name:'كبينة شبكة صغيرة', price:15}, pro:{name:'كبينة شبكة 6U منظمة', price:28}, prem:{name:'كبينة 9U بتهوية وتنظيم', price:45} },
-  installPerPoint: 8, // د.ك لكل نقطة تركيب — يتضرب في معامل حالة المكان
-};
+// Catalog comes from GET /ajax/vue/wizard-catalog (admin-mapped products, see
+// platform/plugins/system-wizard). The server recomputes every estimate on submit.
+const catalog = ref(null);
+const catalogError = ref(false);
 
 // اشتراطات وزارة الداخلية للمنشآت التجارية — راجع النص الرسمي حسب نوع النشاط قبل الإطلاق، والقيم دي config
 const COMMERCIAL_TYPES = ['shop','office','warehouse'];
 const MOI_RETENTION_DAYS = 180;
-const MOI_NOTICE = 'تنويه: اشتراطات وزارة الداخلية للمنشآت التجارية تتطلب الاحتفاظ بالتسجيل لمدة 6 شهور.';
+const MOI_NOTICE = 'تنويه: تشترط وزارة الداخلية على المنشآت التجارية الاحتفاظ بالتسجيل لمدة 6 أشهر.';
 
 const TIERS = [
-  { tier:'basic', title:'الباقة الأساسية',  outcome:'تعرف إن في حركة وتراجع التسجيلات وقت ما تحب.' },
-  { tier:'pro',   title:'الباقة المحترفة',  outcome:'تميّز الوجوه وأرقام العربيات بوضوح — نهاراً وليلاً.', badge:'الأكثر طلباً' },
-  { tier:'prem',  title:'الباقة الممتازة',  outcome:'تفاصيل دقيقة بالألوان حتى في العتمة، وأعلى جودة تخزين.' },
+  { tier:'basic', title:'الباقة الأساسية',  outcome:'تعرف عند وجود حركة، وتراجع التسجيلات متى شئت.' },
+  { tier:'pro',   title:'الباقة الاحترافية',  outcome:'تميّز الوجوه وأرقام السيارات بوضوح، نهارًا وليلًا.', badge:'الأكثر طلبًا' },
+  { tier:'prem',  title:'الباقة المميزة',  outcome:'تفاصيل دقيقة بالألوان حتى في الظلام، وأعلى جودة تخزين.' },
 ];
 
 const ICONS = {
@@ -432,25 +405,25 @@ const step = ref(1);
       {id:'shop',      label:'محل',          icon:'shop'},
       {id:'office',    label:'مكتب / شركة',   icon:'office'},
       {id:'warehouse', label:'مخزن / مصنع',   icon:'warehouse'},
-      {id:'compound',  label:'عمارة / كمبوند', icon:'compound'},
+      {id:'compound',  label:'عمارة / مجمع', icon:'compound'},
     ];
 
-    const areaOpts      = [{label:'أقل من 100م²',mid:80},{label:'100–250م²',mid:175},{label:'250–500م²',mid:375},{label:'أكتر من 500م²',mid:650}];
-    const floorOpts     = [{label:'دور واحد',v:1},{label:'دورين',v:2},{label:'3 أدوار أو أكتر',v:3}];
+    const areaOpts      = [{label:'أقل من 100م²',mid:80},{label:'100–250م²',mid:175},{label:'250–500م²',mid:375},{label:'أكثر من 500م²',mid:650}];
+    const floorOpts     = [{label:'طابق واحد',v:1},{label:'طابقان',v:2},{label:'3 طوابق أو أكثر',v:3}];
     const entranceOpts  = [{label:'1',v:1},{label:'2',v:2},{label:'3',v:3},{label:'4+',v:4}];
-    const conditionOpts = [{label:'لسه بيتبني',factor:0.9},{label:'في مرحلة التشطيب',factor:1.0},{label:'جاهز ومتشطب',factor:1.35}];
-    const deviceOpts    = [{label:'أقل من 10'},{label:'10–25'},{label:'أكتر من 25'}];
-    const recordOpts    = [{label:'أسبوع',days:7},{label:'أسبوعين',days:14},{label:'شهر',days:30},{label:'3 شهور',days:90},{label:'6 شهور',days:180}];
-    const budgetOpts    = [{label:'أقل من 200 د.ك'},{label:'200–500 د.ك'},{label:'500–1000 د.ك'},{label:'أكتر من 1000 د.ك'}];
+    const conditionOpts = [{label:'قيد الإنشاء',factor:0.9},{label:'في مرحلة التشطيب',factor:1.0},{label:'جاهز ومُشطّب',factor:1.35}];
+    const deviceOpts    = [{label:'أقل من 10'},{label:'10–25'},{label:'أكثر من 25'}];
+    const recordOpts    = [{label:'أسبوع',days:7},{label:'أسبوعين',days:14},{label:'شهر',days:30},{label:'3 أشهر',days:90},{label:'6 أشهر',days:180}];
+    const budgetOpts    = [{label:'أقل من 200 د.ك'},{label:'200–500 د.ك'},{label:'500–1000 د.ك'},{label:'أكثر من 1000 د.ك'}];
     const brandOpts     = [{label:'Hikvision'},{label:'Dahua'},{label:'Ubiquiti'},{label:'TP-Link'},{label:'انصحوني بالأنسب'}];
 
     const goals = [
-      {id:'entry',     label:'مراقبة المداخل والأبواب',   sub:'تعرف مين دخل وخرج وامتى',      icon:'door'},
-      {id:'indoor',    label:'مراقبة من جوه',             sub:'الصالة، الكاشير، الممرات',      icon:'cam'},
-      {id:'perimeter', label:'تأمين المحيط الخارجي',      sub:'الحوش، الجراج، السور',         icon:'fence'},
-      {id:'wifi',      label:'واي فاي قوي يغطي كل المكان', sub:'من غير مناطق ضعيفة',           icon:'wifi'},
-      {id:'intercom',  label:'إنتركم للباب',              sub:'تشوف وترد على اللي بره',       icon:'intercom'},
-      {id:'alarm',     label:'إنذار ضد السرقة',           sub:'تنبيه فوري لو في حركة غريبة',   icon:'bell'},
+      {id:'entry',     label:'مراقبة المداخل والأبواب',   sub:'تعرف من دخل وخرج ومتى',      icon:'door'},
+      {id:'indoor',    label:'مراقبة داخلية',             sub:'الصالة، الكاشير، الممرات',      icon:'cam'},
+      {id:'perimeter', label:'تأمين المحيط الخارجي',      sub:'الحوش، الكراج، السور',         icon:'fence'},
+      {id:'wifi',      label:'واي فاي قوي يغطي كل المكان', sub:'دون مناطق ضعيفة',           icon:'wifi'},
+      {id:'intercom',  label:'إنتركم للباب',              sub:'ترى الزائر وترد عليه',       icon:'intercom'},
+      {id:'alarm',     label:'إنذار ضد السرقة',           sub:'تنبيه فوري عند أي حركة غريبة',   icon:'bell'},
     ];
 
     const a = reactive({
@@ -476,7 +449,7 @@ const step = ref(1);
     function onPlanFile(e){
       const f = e.target.files && e.target.files[0];
       if(!f) return;
-      if(f.size > 8*1024*1024){ plan.err = 'الصورة أكبر من 8 ميجا — صغّرها الأول.'; e.target.value=''; return; }
+      if(f.size > 8*1024*1024){ plan.err = 'حجم الصورة أكبر من 8 ميجابايت، صغّرها أولًا.'; e.target.value=''; return; }
       plan.err = '';
       const r = new FileReader();
       r.onload = ()=>{ plan.img = r.result; plan.pins = []; };
@@ -525,10 +498,10 @@ const step = ref(1);
       const extra = floorsAvail.value.length > 1 ? ['سلم'] : [];
       return [...v.in, ...extra, ...v.out];
     });
-    const ZONE = {'صالة':'in','نوم':'in','مطبخ':'in','حمام':'in','مدخل':'in','ممر':'in','مكتب':'in','مخزن':'in','استقبال':'in','اجتماعات':'in','أوضة':'in','سلم':'in','حوش':'out','حديقة':'out','جراج':'out','موقف':'out','بلكونة':'out','ساحة':'out'};
+    const ZONE = {'صالة':'in','نوم':'in','مطبخ':'in','حمام':'in','مدخل':'in','ممر':'in','مكتب':'in','مخزن':'in','استقبال':'in','اجتماعات':'in','غرفة':'in','سلم':'in','حوش':'out','حديقة':'out','جراج':'out','موقف':'out','بلكونة':'out','ساحة':'out'};
     const zoneType = l => ZONE[l] || 'in';
     // الأدوار المتاحة بتتولد من إجابة "عدد الأدوار" ونوع المكان — دور واحد = مفيش تابات ولا احتكاك
-    const FLOOR_DEFS = [{id:'g',label:'الأرضي'},{id:'f1',label:'الأول'},{id:'f2',label:'التاني'},{id:'roof',label:'السطح'}];
+    const FLOOR_DEFS = [{id:'g',label:'الأرضي'},{id:'f1',label:'الأول'},{id:'f2',label:'الثاني'},{id:'roof',label:'السطح'}];
     const floorsAvail = computed(()=>{
       const v = a.floors!==null ? floorOpts[a.floors].v : 1;
       const list = [FLOOR_DEFS[0]];
@@ -682,118 +655,6 @@ const step = ref(1);
       return packages.value.find(p=>p.tier===t) || null;
     });
 
-    // ---- 3D preview (مرجع تنفيذ للمرحلة المؤجلة) — المكتبة بتتحمل لحظة الضغط بس ----
-    const s3d = reactive({ open:false, ready:false, fail:false, loading:false });
-    let T=null, tScene=null, tCam=null, tRen=null, tDyn=null, tKey='', tTheta=0.9, tPhi=1.02, tR=9.5, tAuto=true;
-    function load3dLib(){
-      return new Promise((res, rej)=>{
-        if(window.THREE){ res(); return; }
-        const s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-        s.onload = res; s.onerror = rej;
-        document.head.appendChild(s);
-      });
-    }
-    function toggle3d(){
-      if(s3d.open){ s3d.open = false; return; }
-      s3d.open = true;
-      if(s3d.ready || s3d.loading) return;
-      s3d.loading = true;
-      load3dLib().then(()=>{ s3d.fail=false; nextTick(()=> init3d()); })
-                 .catch(()=>{ s3d.fail=true; s3d.open=false; s3d.loading=false; });
-    }
-    function init3d(){
-      const wrap = document.getElementById('skt3d');
-      if(!wrap || !window.THREE){ s3d.fail=true; s3d.loading=false; return; }
-      T = window.THREE;
-      tScene = new T.Scene();
-      const W = wrap.clientWidth || 340, Hh = 300;
-      tCam = new T.PerspectiveCamera(46, W/Hh, 0.1, 100);
-      tRen = new T.WebGLRenderer({antialias:true, alpha:true});
-      tRen.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
-      tRen.setSize(W, Hh); tRen.setClearColor(0x000000, 0);
-      wrap.appendChild(tRen.domElement);
-      tScene.add(new T.AmbientLight(0xffffff, 0.8));
-      const dl = new T.DirectionalLight(0xffffff, 0.65); dl.position.set(5,9,4); tScene.add(dl);
-      const g = new T.Mesh(new T.PlaneGeometry(13,13), new T.MeshLambertMaterial({color:0xF1EFE8}));
-      g.rotation.x = -Math.PI/2; g.position.y = -0.02; tScene.add(g);
-      tScene.add(new T.GridHelper(12,12,0xD3D1C7,0xE0DED5));
-      tDyn = new T.Group(); tScene.add(tDyn);
-      let tTarget = new T.Vector3(0, 0.35, 0);
-      const wallM = new T.MeshLambertMaterial({color:0xB4B2A9});
-      const fenceM = new T.MeshLambertMaterial({color:0x97C459});
-      const slabIn = new T.MeshLambertMaterial({color:0xE1F5EE});
-      const slabOut = new T.MeshLambertMaterial({color:0xC0DD97});
-      const camM = new T.MeshLambertMaterial({color:0x1D9E75});
-      const apM = new T.MeshLambertMaterial({color:0x7F77DD});
-      const noteM = new T.MeshLambertMaterial({color:0xE5484D});
-      function bx(w,h,d,m,x,y,z){ const b=new T.Mesh(new T.BoxGeometry(w,h,d),m); b.position.set(x,y,z); tDyn.add(b); }
-      function rebuild(){
-        for(let i=tDyn.children.length-1;i>=0;i--){
-          const c=tDyn.children[i];
-          if(c.geometry) c.geometry.dispose();
-          if(c.material && c.material.map) c.material.map.dispose();
-          tDyn.remove(c);
-        }
-        const vNum = a.floors!==null ? floorOpts[a.floors].v : 1;
-        const LVL = {g:0, f1:1, f2:2, roof:(vNum>=3?3:2)};
-        let top = 0;
-        sk.rooms.concat(sk.pins).forEach(x=>{ top = Math.max(top, LVL[x.floor||'g']||0); });
-        tTarget = new T.Vector3(0, 0.35 + top*0.6, 0);
-        sk.rooms.forEach(r=>{
-          const o = zoneType(r.label)==='out', H = o ? 0.32 : 1.1;
-          const yOff = (LVL[r.floor||'g']||0) * 1.4;
-          const rw=r.w*0.1, rd=r.h*0.1, cx=(r.x+r.w/2-50)*0.1, cz=(r.y+r.h/2-50)*0.1;
-          bx(rw,H,0.06, o?fenceM:wallM, cx, yOff+H/2, cz-rd/2);
-          bx(rw,H,0.06, o?fenceM:wallM, cx, yOff+H/2, cz+rd/2);
-          bx(0.06,H,rd, o?fenceM:wallM, cx-rw/2, yOff+H/2, cz);
-          bx(0.06,H,rd, o?fenceM:wallM, cx+rw/2, yOff+H/2, cz);
-          bx(rw-0.08,0.04,rd-0.08, o?slabOut:slabIn, cx, yOff+0.02, cz);
-          const cv=document.createElement('canvas'); cv.width=256; cv.height=96;
-          const c2=cv.getContext('2d'); c2.font='500 42px sans-serif'; c2.textAlign='center'; c2.fillStyle='#444441'; c2.fillText(r.label,128,60);
-          const sp=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true}));
-          sp.scale.set(1.7,0.64,1); sp.position.set(cx, yOff+H+0.5, cz); tDyn.add(sp);
-        });
-        const netM = new T.MeshLambertMaterial({color:0x2F6FED});
-        const tvM = new T.MeshLambertMaterial({color:0xC026D3});
-        const rackM = new T.MeshLambertMaterial({color:0xB7791F});
-        sk.pins.forEach(p=>{
-          const px=(p.x-50)*0.1, pz=(p.y-50)*0.1;
-          const yOff = (LVL[p.floor||'g']||0) * 1.4;
-          if(p.t==='rack'){ bx(0.32,0.95,0.24, rackM, px, yOff+0.475, pz); return; }
-          if(p.t==='net' || p.t==='tv'){
-            const m2 = p.t==='net' ? netM : tvM;
-            bx(0.05,0.5,0.05, m2, px, yOff+0.25, pz);
-            const s2=new T.Mesh(new T.SphereGeometry(0.09,14,10), m2); s2.position.set(px, yOff+0.52, pz); tDyn.add(s2);
-            return;
-          }
-          const m = p.t==='cam' ? camM : p.t==='ap' ? apM : noteM;
-          bx(0.05,1.25,0.05, m, px, yOff+0.62, pz);
-          const s=new T.Mesh(new T.SphereGeometry(0.1,16,12), m); s.position.set(px, yOff+1.28, pz); tDyn.add(s);
-          if(p.t==='cam'){
-            const cg=new T.ConeGeometry(0.5,1.7,24,1,true); cg.rotateX(-Math.PI/2); cg.translate(0,0,0.85);
-            const cone=new T.Mesh(cg, new T.MeshBasicMaterial({color:0x1D9E75, transparent:true, opacity:0.14, side:T.DoubleSide}));
-            const gp=new T.Group(); gp.position.set(px, yOff+1.28, pz); gp.add(cone); gp.lookAt(new T.Vector3(0, yOff+0.35, 0)); tDyn.add(gp);
-          }
-        });
-      }
-      let down=false, lx=0, ly=0;
-      wrap.addEventListener('pointerdown', e=>{ down=true; tAuto=false; lx=e.clientX; ly=e.clientY; wrap.setPointerCapture && wrap.setPointerCapture(e.pointerId); });
-      window.addEventListener('pointermove', e=>{ if(!down) return; tTheta-=(e.clientX-lx)*0.008; tPhi=Math.min(1.35, Math.max(0.35, tPhi+(e.clientY-ly)*0.006)); lx=e.clientX; ly=e.clientY; });
-      window.addEventListener('pointerup', ()=>{ down=false; });
-      s3d.ready = true; s3d.loading = false;
-      (function loop(){
-        requestAnimationFrame(loop);
-        if(!s3d.open) return;
-        const key = JSON.stringify([sk.rooms, sk.pins]);
-        if(key !== tKey){ tKey = key; rebuild(); }
-        if(tAuto) tTheta += 0.0035;
-        tCam.position.set(tR*Math.sin(tPhi)*Math.sin(tTheta), tR*Math.cos(tPhi), tR*Math.sin(tPhi)*Math.cos(tTheta));
-        tCam.lookAt(tTarget);
-        tRen.render(tScene, tCam);
-      })();
-    }
-
     function stageDown(e){
       if(sk.mode!=='room' || e.target!==e.currentTarget) return;
       const rect = e.currentTarget.getBoundingClientRect();
@@ -811,7 +672,7 @@ const step = ref(1);
         window.removeEventListener('pointerup', up);
         if(sk.draft && sk.draft.w>=6 && sk.draft.h>=6 && sk.rooms.length<20){
           snapPush();
-          sk.rooms.push({...sk.draft, label:'أوضة', floor: sk.floor});
+          sk.rooms.push({...sk.draft, label:'غرفة', floor: sk.floor});
           sk.sel = sk.rooms.length-1;
         }
         sk.draft = null;
@@ -920,57 +781,58 @@ const step = ref(1);
     }
 
     function buildPackage(meta){
+      if(!catalog.value) return {...meta, items:[], total:0, foot:''};
       const t = meta.tier;
       const items = [];
       let total = 0;
       const add = (name, qty, unitPrice)=>{ items.push({name, qty}); total += qty*unitPrice; };
 
       const {indoor, outdoor} = camCounts.value;
-      if(indoor>0)  add(CATALOG.camera[t].in.name, indoor, CATALOG.camera[t].in.price);
-      if(outdoor>0) add(CATALOG.camera[t].out.name, outdoor, CATALOG.camera[t].out.price);
-      if(a.zoom)    add(CATALOG.ptz.name, 1, CATALOG.ptz.price);
+      if(indoor>0)  add(catalog.value.camera[t].in.name, indoor, catalog.value.camera[t].in.price);
+      if(outdoor>0) add(catalog.value.camera[t].out.name, outdoor, catalog.value.camera[t].out.price);
+      if(a.zoom)    add(catalog.value.ptz.name, 1, catalog.value.ptz.price);
 
       const cams = camTotal.value;
       if(cams>0){
         const ch = pickSize([8,16,32], cams);
-        add(`جهاز تسجيل NVR ${ch} قناة`, 1, CATALOG.nvr[ch][t]);
+        add(`جهاز تسجيل NVR ${ch} قناة`, 1, catalog.value.nvr[ch][t]);
         // حجم التخزين = عدد الكاميرات × أيام الحفظ × جيجا/يوم حسب جودة الباقة
         const days = a.recordDays!==null ? recordOpts[a.recordDays].days : 14;
-        const tbNeeded = (cams * days * CATALOG.camera[t].gbDay) / 1000;
-        const maxDrive = CATALOG.hdd.sizes[CATALOG.hdd.sizes.length-1];
+        const tbNeeded = (cams * days * catalog.value.camera[t].gbDay) / 1000;
+        const maxDrive = catalog.value.hdd.sizes[catalog.value.hdd.sizes.length-1];
         const recLabel = a.recordDays!==null ? recordOpts[a.recordDays].label : 'أسبوعين';
         if(tbNeeded <= maxDrive){
-          const tb = pickSize(CATALOG.hdd.sizes, tbNeeded);
-          add(`هارد مراقبة ${tb} تيرا (يكفي ${recLabel})`, 1, CATALOG.hdd.price[tb]);
+          const tb = pickSize(catalog.value.hdd.sizes, tbNeeded);
+          add(`قرص تخزين للمراقبة ${tb} تيرابايت (يكفي ${recLabel})`, 1, catalog.value.hdd.price[tb]);
         } else {
           // مدد التخزين الطويلة (اشتراط الوزارة مثلاً) محتاجة أكتر من هارد
           const n = Math.ceil(tbNeeded / maxDrive);
-          add(`هارد مراقبة ${maxDrive} تيرا (يكفي ${recLabel})`, n, CATALOG.hdd.price[maxDrive]);
+          add(`قرص تخزين للمراقبة ${maxDrive} تيرابايت (يكفي ${recLabel})`, n, catalog.value.hdd.price[maxDrive]);
         }
       }
 
       // البنية التحتية للشبكة بتتضاف تلقائي — الكاميرات IP محتاجاها حتى لو مطلبش "واي فاي"
       const aps = apCount.value;
       if(cams + aps > 0){
-        const ports = pickSize(CATALOG.poeSwitch.ports, cams + aps + 2);
-        add(`سويتش PoE ${ports} منفذ`, 1, CATALOG.poeSwitch.price[ports]);
+        const ports = pickSize(catalog.value.poeSwitch.ports, cams + aps + 2);
+        add(`سويتش PoE ${ports} منفذ`, 1, catalog.value.poeSwitch.price[ports]);
       }
       if(aps>0){
-        add(CATALOG.ap[t].name, aps, CATALOG.ap[t].price);
-        if(aps>3) add(CATALOG.ap.controller.name, 1, CATALOG.ap.controller.price);
+        add(catalog.value.ap[t].name, aps, catalog.value.ap[t].price);
+        if(aps>3) add(catalog.value.ap.controller.name, 1, catalog.value.ap.controller.price);
       }
 
-      if(a.goals.includes('intercom')) add(CATALOG.intercom[t].name, 1, CATALOG.intercom[t].price);
-      if(a.goals.includes('alarm'))    add(CATALOG.alarm[t].name, 1, CATALOG.alarm[t].price);
-      if(a.internet==='no' && cams>0)  add(CATALOG.router4g.name, 1, CATALOG.router4g.price);
+      if(a.goals.includes('intercom')) add(catalog.value.intercom[t].name, 1, catalog.value.intercom[t].price);
+      if(a.goals.includes('alarm'))    add(catalog.value.alarm[t].name, 1, catalog.value.alarm[t].price);
+      if(a.internet==='no' && cams>0)  add(catalog.value.router4g.name, 1, catalog.value.router4g.price);
 
       // تمديدات من الرسم: نقاط شبكة سلكية، تلفزيون، والكبينة الرئيسية
       const nets = sk.pins.filter(pp=>pp.t==='net').length;
       const tvs  = sk.pins.filter(pp=>pp.t==='tv').length;
       const hasRack = sk.pins.some(pp=>pp.t==='rack');
-      if(nets)   add(CATALOG.netPoint[t].name, nets, CATALOG.netPoint[t].price);
-      if(tvs)    add(CATALOG.tvPoint[t].name, tvs, CATALOG.tvPoint[t].price);
-      if(hasRack) add(CATALOG.rack[t].name, 1, CATALOG.rack[t].price);
+      if(nets)   add(catalog.value.netPoint[t].name, nets, catalog.value.netPoint[t].price);
+      if(tvs)    add(catalog.value.tvPoint[t].name, tvs, catalog.value.tvPoint[t].price);
+      if(hasRack) add(catalog.value.rack[t].name, 1, catalog.value.rack[t].price);
 
       // التركيب: نقاط × سعر النقطة × معامل حالة المكان
       const points = cams + aps + nets + tvs + (hasRack?1:0) + (a.goals.includes('intercom')?1:0) + (a.goals.includes('alarm')?3:0);
@@ -979,8 +841,8 @@ const step = ref(1);
         let factor = a.condition!==null ? conditionOpts[a.condition].factor : 1;
         const readyConduits = a.condition===2 && a.conduits==='yes';
         if(readyConduits) factor = 1.0;
-        const install = Math.round(points * CATALOG.installPerPoint * factor);
-        items.push({name: readyConduits ? 'تركيب عبر التمديدات الجاهزة (تقديري)' : (a.condition===2 ? 'تركيب وتمديدات بترنكات خارجية (تقديري)' : 'تركيب وتمديدات (تقديري)'), qty:1});
+        const install = Math.round(points * catalog.value.installPerPoint * factor);
+        items.push({name: readyConduits ? 'تركيب عبر التمديدات الجاهزة (تقديري)' : (a.condition===2 ? 'تركيب وتمديدات عبر مجارٍ خارجية (تقديري)' : 'تركيب وتمديدات (تقديري)'), qty:1});
         total += install;
       }
 
@@ -988,7 +850,7 @@ const step = ref(1);
         ...meta,
         items,
         total: Math.round(total),
-        foot: cams>0 ? 'شامل المتابعة من الموبايل والإعداد الكامل.' : 'شامل الإعداد والبرمجة الكاملة.',
+        foot: cams>0 ? 'تشمل المتابعة من الهاتف والإعداد الكامل.' : 'تشمل الإعداد والبرمجة الكاملة.',
       };
     }
 
@@ -1014,21 +876,21 @@ const step = ref(1);
       if(pt) s.push({k:'المكان', v:pt.label});
       if(a.area!==null) s.push({k:'المساحة', v:areaOpts[a.area].label});
       if(a.condition!==null) s.push({k:'حالة المكان', v:conditionOpts[a.condition].label});
-      if(a.condition===2 && a.conduits!==null) s.push({k:'تمديدات جاهزة', v: a.conduits==='yes' ? 'موجودة' : a.conduits==='no' ? 'مش موجودة' : 'مش متأكد — بتتأكد في المعاينة'});
+      if(a.condition===2 && a.conduits!==null) s.push({k:'تمديدات جاهزة', v: a.conduits==='yes' ? 'موجودة' : a.conduits==='no' ? 'غير موجودة' : 'غير متأكد، تُؤكَّد في المعاينة'});
       if(a.floors!==null) s.push({k:'الأدوار', v:floorOpts[a.floors].label});
       if(a.entrances!==null) s.push({k:'المداخل', v:entranceOpts[a.entrances].label});
       s.push({k:'الاحتياج', v:a.goals.map(g=>goals.find(x=>x.id===g).label).join('، ')});
-      if(wantsCams.value) s.push({k:'إنترنت ثابت', v:a.internet==='yes'?'موجود':'مش موجود'});
+      if(wantsCams.value) s.push({k:'إنترنت ثابت', v:a.internet==='yes'?'موجود':'غير موجود'});
       if(sk.rooms.length || sk.pins.length){
         const flN = new Set(sk.rooms.map(r=>r.floor||'g').concat(sk.pins.map(p=>p.floor||'g'))).size;
-        s.push({k:'مخطط', v:`مرسوم — ${sk.rooms.length} منطقة و${sk.pins.length} علامة على ${flN} دور`});
+        s.push({k:'مخطط', v:`مرسوم: ${sk.rooms.length} منطقة و${sk.pins.length} علامة على ${flN} دور`});
         if(sketchCams.value.in + sketchCams.value.out > 0) s.push({k:'كاميرات من الرسم', v:`${sketchCams.value.in} داخلي · ${sketchCams.value.out} خارجي`});
         const w = sketchWiring.value;
         if(w.nets + w.tvs > 0 || w.rack) s.push({k:'تمديدات من الرسم', v:`${w.nets} نت · ${w.tvs} تلفزيون${w.rack?' · كبينة رئيسية':''}`});
       }
       else if(plan.img) s.push({k:'مخطط', v: plan.pins.length ? `صورة مرفوعة + ${plan.pins.length} علامة` : 'صورة مرفوعة'});
       if(a.budget!==null) s.push({k:'الميزانية', v:budgetOpts[a.budget].label});
-      if(a.brand!==null) s.push({k:'البراند', v:brandOpts[a.brand].label});
+      if(a.brand!==null) s.push({k:'العلامة التجارية', v:brandOpts[a.brand].label});
       return s;
     });
 
@@ -1048,12 +910,13 @@ const step = ref(1);
       return false;
     });
 
-    const phoneValid = computed(()=> /^\d{8,12}$/.test(lead.phone.replace(/\s|-/g,'')));
+    // Same rule as the server: Kuwaiti 8-digit number, optional +965 / 00965.
+    const phoneValid = computed(()=> /^(?:\+?965|00965)?[124569]\d{7}$/.test(lead.phone.replace(/[\s-]/g,'')));
 
     const nextLabel = computed(()=>{
-      if(step.value===4) return 'شوف الباقات';
-      if(step.value===5) return 'ابعت الطلب';
-      return 'كمّل';
+      if(step.value===4) return 'اعرض الباقات';
+      if(step.value===5) return 'أرسل الطلب';
+      return 'متابعة';
     });
 
     const isCommercial = computed(()=> COMMERCIAL_TYPES.includes(a.place));
@@ -1069,101 +932,109 @@ const step = ref(1);
     function back(){ if(step.value>1) step.value--; window.scrollTo({top:0}); }
     function skipBudget(){ a.budget=null; a.brand=null; step.value=5; window.scrollTo({top:0}); }
 
+    // Raw answer indices: the server maps them to the same option tables and recomputes
+    // the package (RecommendationService). Display labels are not sent.
     function payload(){
-      const chosen = a.package && a.package!=='advise' ? packages.value.find(p=>p.tier===a.package) : null;
+      const hasSketch = sk.rooms.length || sk.pins.length;
       return {
-        place: a.place,
-        area: a.area!==null ? areaOpts[a.area].label : null,
-        floors: a.floors!==null ? floorOpts[a.floors].v : null,
-        entrances: a.entrances!==null ? entranceOpts[a.entrances].label : null,
-        outdoor: a.outdoor,
-        condition: a.condition!==null ? conditionOpts[a.condition].label : null,
-        conduits: a.condition===2 ? a.conduits : null,
-        goals: a.goals,
-        devices: a.devices!==null ? deviceOpts[a.devices].label : null,
-        record_days: a.recordDays!==null ? recordOpts[a.recordDays].days : null,
-        commercial: COMMERCIAL_TYPES.includes(a.place),
-        internet: a.internet,
-        zoom: a.zoom,
-        budget: a.budget!==null ? budgetOpts[a.budget].label : null,
-        brand: a.brand!==null ? brandOpts[a.brand].label : null,
-        package: a.package,
-        package_estimate: chosen ? chosen.total : null,
-        bom: chosen ? chosen.items : null,
-        plan_attached: !!plan.img,
-        plan_pins: plan.pins.map(p=>({t:p.t, x:+p.x.toFixed(1), y:+p.y.toFixed(1)})),
-        sketch: (sk.rooms.length || sk.pins.length) ? {
-          rooms: sk.rooms.map(r=>({x:r.x, y:r.y, w:r.w, h:r.h, label:r.label, zone:zoneType(r.label), floor:r.floor||'g'})),
-          pins:  sk.pins.map(p=>({t:p.t, x:+p.x.toFixed(1), y:+p.y.toFixed(1), zone:classifyPin(p), floor:p.floor||'g'})),
-          floors_drawn: [...new Set(sk.rooms.map(r=>r.floor||'g').concat(sk.pins.map(p=>p.floor||'g')))],
+        answers: {
+          place: a.place, area: a.area, floors: a.floors, entrances: a.entrances,
+          outdoor: a.outdoor, condition: a.condition,
+          conduits: a.condition===2 ? a.conduits : null,
+          goals: a.goals, devices: a.devices, recordDays: a.recordDays,
+          internet: a.internet, zoom: a.zoom, budget: a.budget, brand: a.brand,
+        },
+        sketch: hasSketch ? {
+          rooms: sk.rooms.map(r=>({x:+r.x, y:+r.y, w:+r.w, h:+r.h, label:r.label || null, floor:r.floor||'g'})),
+          pins:  sk.pins.map(p=>({t:p.t, x:+(+p.x).toFixed(1), y:+(+p.y).toFixed(1), floor:p.floor||'g'})),
+          generated: !!sk.generated,
         } : null,
-        cams_indoor: camCounts.value.indoor,
-        cams_outdoor: camCounts.value.outdoor,
-        sketch_generated: sk.generated,
+        plan_attached: !!plan.img,
+        plan_pins: plan.pins.map(p=>({t:p.t, x:+(+p.x).toFixed(1), y:+(+p.y).toFixed(1)})),
+        package: a.package,
         name: lead.name,
         phone: lead.phone,
       };
     }
 
-    function submit(){
-      phoneTouched.value = true;
-      if(!canNext.value) return;
-      // في موقعك: ابعت للـ Laravel API —
-      // fetch(API_ENDPOINT, {method:'POST', headers:{'Content-Type':'application/json','X-CSRF-TOKEN':token}, body: JSON.stringify(payload())})
-      console.log('LEAD PAYLOAD →', payload());
-      submitted.value = true;
-      window.scrollTo({top:0});
-    }
-
+    const waNumber = computed(()=> catalog.value?.whatsappNumber || '');
     const waLink = computed(()=>{
       const chosen = a.package && a.package!=='advise' ? packages.value.find(p=>p.tier===a.package) : null;
       const lines = [
         'طلب نظام جديد 👇',
         summary.value.map(s=>`${s.k}: ${s.v}`).join(' | '),
-        chosen ? `الباقة المختارة: ${chosen.title} (~${chosen.total} د.ك)` : 'الباقة: محتاج ترشيح في المعاينة',
-        (sk.rooms.length || sk.pins.length) ? `مرفق رسم للمكان (${sk.rooms.length} منطقة، ${sk.pins.length} علامة — كاميرات: ${sketchCams.value.in} داخلي/${sketchCams.value.out} خارجي)` : (plan.img ? 'مرفق صورة مخطط — بتتبعت من الموقع' : ''),
+        chosen ? `الباقة المختارة: ${chosen.title} (~${chosen.total} د.ك)` : 'الباقة: أحتاج إلى ترشيح في المعاينة',
+        (sk.rooms.length || sk.pins.length) ? `مرفق رسم للمكان (${sk.rooms.length} منطقة، ${sk.pins.length} علامة — كاميرات: ${sketchCams.value.in} داخلي/${sketchCams.value.out} خارجي)` : (plan.img ? 'مرفق صورة مخطط، تُرسل من الموقع' : ''),
         lead.name ? `الاسم: ${lead.name}` : '',
-        lead.phone ? `الموبايل: ${lead.phone}` : '',
+        lead.phone ? `الهاتف: ${lead.phone}` : '',
       ].filter(Boolean);
-      return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join('\n'))}`;
+      return waNumber.value ? `https://wa.me/${waNumber.value}?text=${encodeURIComponent(lines.join('\n'))}` : '';
     });
 
     const icon = (name)=> ICONS[name] || '';
 
-// fetch catalog on mounted
-onMounted(async () => {
-    try {
-        const res = await axios.get('/ajax/vue/wizard-catalog');
-        if (res.data && res.data.data) {
-            CATALOG = res.data.data;
-            loadingCatalog.value = false;
-        }
-    } catch (e) {
-        console.error('Failed to load catalog', e);
-        // Fallback for development if API is not ready
-        alert('فشل في تحميل الإعدادات');
-    }
+// ---- analytics: wizard funnel events (sw_wizard_events) ----
+const wizardSession = (() => {
+  try {
+    let id = sessionStorage.getItem('sw_session');
+    if (!id) { id = Date.now().toString(36) + Math.random().toString(36).slice(2, 10); sessionStorage.setItem('sw_session', id); }
+    return id;
+  } catch (e) { return Date.now().toString(36); }
+})();
+function track(action, payloadData = null) {
+  axios.post('/ajax/vue/wizard-events', {
+    session_id: wizardSession,
+    step: String(step.value),
+    action,
+    payload: payloadData,
+  }).catch(() => {});
+}
+watch(step, (value) => track('step_view', { step: value }));
+
+const loadCatalog = async () => {
+  loadingCatalog.value = true;
+  catalogError.value = false;
+  try {
+    const res = await axios.get('/ajax/vue/wizard-catalog');
+    catalog.value = res.data?.data || null;
+    if (!catalog.value) catalogError.value = true;
+  } catch (e) {
+    catalogError.value = true;
+  } finally {
+    loadingCatalog.value = false;
+  }
+};
+
+onMounted(() => {
+  loadCatalog();
+  track('start');
 });
 
-// submit handler
+const submitting = ref(false);
+const submitError = ref('');
+const honeypot = ref('');
+const serverEstimate = ref(null);
+
 const submitLead = async () => {
   phoneTouched.value = true;
-  if(!phoneValid.value) return;
+  if (!canNext.value || submitting.value) return;
   submitting.value = true;
+  submitError.value = '';
   try {
-    const p = payload();
-    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-    const res = await axios.post('/ajax/vue/project-leads', p, {
-      headers: token ? { 'X-CSRF-TOKEN': token } : {}
-    });
+    const res = await axios.post('/ajax/vue/project-leads', { ...payload(), website: honeypot.value });
     if (res.data && res.data.error === false) {
+      serverEstimate.value = res.data.data?.estimate ?? null;
       submitted.value = true;
+      track('submit', { package: a.package });
+      window.scrollTo({ top: 0 });
     } else {
-      alert(res.data.message || 'حدث خطأ أثناء الإرسال');
+      submitError.value = res.data?.message || 'تعذّر إرسال الطلب. حاول مرة أخرى.';
     }
-  } catch(e) {
-    console.error(e);
-    alert('تعذر الاتصال بالسيرفر. يرجى المحاولة مرة أخرى.');
+  } catch (e) {
+    const errors = e.response?.data?.errors;
+    submitError.value = e.response?.data?.message
+      || (errors ? Object.values(errors).flat()[0] : '')
+      || 'تعذّر الاتصال بالخادم. تحقق من الإنترنت وحاول مرة أخرى.';
   } finally {
     submitting.value = false;
   }
@@ -1172,20 +1043,17 @@ const submitLead = async () => {
 
 <style scoped>
 .suha-page{
-
-  --bg:#F3F6F8;
-  --surface:#FFFFFF;
-  --ink:#17242F;
-  --muted:#5C7080;
-  --primary:#0E6B62;
-  --primary-ink:#0A544D;
-  --primary-soft:#E4F1EF;
-  --rec:#E5484D;
+  /* Storefront design tokens (--bg, --surface, --ink, --primary, --primary-soft, --line,
+     --radius) are inherited from app.scss; only wizard-specific roles are mapped here. */
+  --muted:var(--ink-2);
+  --primary-ink:var(--primary-strong);
+  --rec:var(--sale);
   --out-b:#639922; --out-bg:rgba(99,153,34,.12); --out-t:#3B6D11;
-  --line:#DCE4EA;
-  --radius:14px;
-  --font-display:'Changa','Segoe UI',Tahoma,sans-serif;
-  --font-body:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;
+  --font-display:var(--font);
+  --font-body:var(--font);
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font-body);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 [v-cloak]{display:none;}
@@ -1225,7 +1093,7 @@ max-width:560px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:colu
 .signal span:nth-child(3){height:16px;}
 .signal span:nth-child(4){height:20px;}
 .signal span:nth-child(5){height:24px;}
-.signal span.on{background:var(--primary);}
+.signal span.on{background:var(--primary-strong);}
 
 .step-label{padding:0 20px 6px;font-size:13px;color:var(--muted);}
 
@@ -1260,7 +1128,7 @@ main{flex:1;padding:8px 20px 150px;}
   border:1.5px solid var(--line);display:grid;place-items:center;flex:none;
   color:transparent;background:#fff;transition:all .15s ease;
 }
-.opt.sel .check{background:var(--primary);border-color:var(--primary);color:#fff;}
+.opt.sel .check{background:var(--primary-strong);border-color:var(--primary);color:var(--on-primary);}
 
 /* ---------- packages (step 5) ---------- */
 .pkg{
@@ -1312,7 +1180,7 @@ main{flex:1;padding:8px 20px 150px;}
 }
 .nav-inner{max-width:560px;margin:0 auto;padding:12px 20px;display:flex;gap:10px;align-items:center;}
 .btn{border:none;border-radius:12px;font-size:16px;font-weight:600;padding:14px 18px;transition:background .15s ease, opacity .15s ease;}
-.btn-primary{background:var(--primary);color:#fff;flex:1;}
+.btn-primary{background:var(--primary-strong);color:var(--on-primary);flex:1;}
 .btn-primary:hover{background:var(--primary-ink);}
 .btn-primary:disabled{opacity:.4;cursor:not-allowed;}
 .btn-ghost{background:transparent;color:var(--muted);border:1.5px solid var(--line);}
@@ -1368,7 +1236,7 @@ main{flex:1;padding:8px 20px 150px;}
   touch-action:none;cursor:grab;
 }
 .pin svg{width:14px;height:14px;}
-.pin.cam{background:var(--primary);}
+.pin.cam{background:var(--primary-strong);}
 .pin.ap{background:var(--ink);}
 .pin.note{background:var(--rec);}
 .pin.net{background:#2F6FED;}
@@ -1393,10 +1261,6 @@ main{flex:1;padding:8px 20px 150px;}
 }
 .floor-tabs button.sel{border-color:var(--ink);background:var(--ink);color:#fff;}
 .floor-tabs .cnt{font-weight:400;font-size:11.5px;opacity:.75;}
-.t3wrap{
-  position:relative;height:300px;border:1px solid var(--line);border-radius:10px;
-  overflow:hidden;touch-action:none;cursor:grab;background:#FBFCFD;margin-top:10px;
-}
 
 /* ---------- sketch tool: ارسم بنفسك ---------- */
 .plan-tabs{display:flex;gap:8px;margin-bottom:12px;}
@@ -1460,4 +1324,7 @@ main{flex:1;padding:8px 20px 150px;}
 @media (max-width: 991px) {
   .suha-page { padding-bottom: 145px; }
 }
+.sw-state{padding:48px 16px;text-align:center;display:grid;gap:12px;justify-items:center;color:var(--ink);}
+.hp-field{position:absolute;inset-inline-start:-9999px;width:1px;height:1px;overflow:hidden;}
+.done-estimate{font-weight:700;color:var(--primary-ink);}
 </style>

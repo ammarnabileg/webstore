@@ -3,6 +3,8 @@
 export const translations = {
     ar: {
         "home": "الرئيسية",
+        "wizard_cta_title": "اعرف نظامك المناسب",
+        "wizard_cta_sub": "أجب عن أسئلة بسيطة واحصل على 3 باقات كاميرات وشبكات بأسعار تقديرية",
         "back": "رجوع",
         "close": "إغلاق",
         "decrease_qty": "تقليل الكمية",
@@ -133,6 +135,8 @@ export const translations = {
     },
     en: {
         "home": "Home",
+        "wizard_cta_title": "Find the right system",
+        "wizard_cta_sub": "Answer a few simple questions and get 3 camera and network packages with estimated prices",
         "back": "Back",
         "close": "Close",
         "decrease_qty": "Decrease quantity",

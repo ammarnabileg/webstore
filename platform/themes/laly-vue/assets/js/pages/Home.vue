@@ -88,6 +88,16 @@
         </div>
       </div>
 
+      <!-- Entry point to the "Know your system" lead wizard -->
+      <router-link to="/project-wizard" class="wizard-cta">
+        <i class="ti ti-device-cctv" aria-hidden="true"></i>
+        <span class="wizard-cta-text">
+          <strong>{{ __('wizard_cta_title') }}</strong>
+          <small>{{ __('wizard_cta_sub') }}</small>
+        </span>
+        <i class="ti ti-chevron-left wizard-cta-arrow" aria-hidden="true"></i>
+      </router-link>
+
       <!-- Categories Hierarchy -->
       <div class="sblock home-cats">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -562,5 +572,35 @@ html[dir="rtl"] .cat-nav-next {
   .cat-nav-btn {
     display: none !important;
   }
+}
+.wizard-cta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--primary-soft);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+}
+.wizard-cta > .ti-device-cctv {
+  font-size: 28px;
+  color: var(--primary-strong);
+}
+.wizard-cta-text {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+}
+.wizard-cta-text small {
+  color: var(--ink-2);
+}
+.wizard-cta-arrow {
+  color: var(--primary-strong);
+}
+[dir="ltr"] .wizard-cta-arrow {
+  transform: scaleX(-1);
 }
 </style>

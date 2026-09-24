@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 // Admin-only routes: AdminHelper adds the admin prefix and the ['web', 'core', 'auth'] middleware,
 // and the `permission` action is enforced by Botble's ACL Authenticate middleware.
 AdminHelper::registerRoutes(function (): void {
-    Route::middleware('throttle:10,1')->group(function (): void {
+    Route::middleware('throttle:admin-tools')->group(function (): void {
         Route::post('ecommerce/products/generate-seo', [GenerateAiSeoController::class, 'generate'])
             ->name('ecommerce.products.generate-seo')
             ->permission('products.edit');
@@ -35,9 +35,9 @@ AdminHelper::registerRoutes(function (): void {
 });
 
 Route::post('/api/whatsapp/webhook', [WhatsAppWebhookController::class, 'handle'])
-    ->middleware('throttle:120,1');
+    ->middleware('throttle:webhooks');
 
-Route::middleware('throttle:10,1')->group(function (): void {
+Route::middleware('throttle:whatsapp-auth')->group(function (): void {
     Route::post('/api/whatsapp/auth/send-otp', [WhatsAppAuthController::class, 'sendOtp'])->name('whatsapp.auth.send-otp');
     Route::post('/api/whatsapp/auth/verify-otp', [WhatsAppAuthController::class, 'verifyOtp'])->name('whatsapp.auth.verify-otp');
     Route::post('/api/whatsapp/auth/send-magic-link', [WhatsAppAuthController::class, 'sendMagicLink'])->name('whatsapp.auth.send-magic-link');

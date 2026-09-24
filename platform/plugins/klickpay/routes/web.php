@@ -13,6 +13,6 @@ Route::group(['namespace' => 'Botble\Klickpay\Http\Controllers', 'middleware' =>
         Route::post('webhook', [
             'as' => 'payments.klickpay.webhook',
             'uses' => 'KlickpayController@webhook',
-        ])->middleware('throttle:120,1');
+        ])->middleware('throttle:webhooks');
     });
 });
