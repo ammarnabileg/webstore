@@ -221,7 +221,8 @@
             // Fix Bootstrap Dropdown inside checkout
             if (typeof bootstrap === 'undefined') {
                 const script = document.createElement('script');
-                script.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js';
+                // Local copy shipped with Botble: no third-party script on the payment page.
+                script.src = @json(asset('vendor/core/core/base/libraries/bootstrap.bundle.min.js'));
                 document.body.appendChild(script);
             }
         });

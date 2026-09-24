@@ -137,7 +137,7 @@ class KlickpayController extends BaseController
             $alreadyPaid = Payment::query()
                 ->where('order_id', $order->getKey())
                 ->where('charge_id', $chargeId)
-                ->where('status', PaymentStatusEnum::COMPLETED)
+                // Any status: a replayed success webhook must not re-open a refunded payment.
                 ->exists();
 
             if ($alreadyPaid) {

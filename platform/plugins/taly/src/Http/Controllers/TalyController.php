@@ -40,7 +40,8 @@ class TalyController extends BaseController
 
     public function postWebhook(Request $request, TalyPaymentService $talyService)
     {
-        $payload = $request->input();
+        // Body only: input() would merge query-string parameters into the signed payload.
+        $payload = $request->isJson() ? $request->json()->all() : $request->post();
         $signature = (string) $request->header('Taly-Signature');
 
         if ($signature === '' || ! $talyService->verifySignature($payload, $signature)) {
@@ -72,7 +73,7 @@ class TalyController extends BaseController
                 $alreadyPaid = Payment::query()
                     ->where('order_id', $order->getKey())
                     ->where('charge_id', $chargeId)
-                    ->where('status', PaymentStatusEnum::COMPLETED)
+                    // Any status: a replayed success webhook must not re-open a refunded payment.
                     ->exists();
 
                 if ($alreadyPaid) {

@@ -21,9 +21,12 @@ class SafeUrlFetcher
             ->withUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) BotbleBot/1.0')
             ->withOptions([
                 'allow_redirects' => false,
-                // Pin the connection to the address we validated, so a second DNS lookup
-                // cannot be rebound to an internal IP.
-                'curl' => [CURLOPT_RESOLVE => ["{$host}:{$port}:{$ips[0]}"]],
+                // Connect to the address we validated whatever host name curl sees, so a second
+                // DNS lookup cannot be rebound to an internal IP.
+                'curl' => [
+                    CURLOPT_CONNECT_TO => ['::' . (str_contains($ips[0], ':') ? "[{$ips[0]}]" : $ips[0]) . ':' . $port],
+                    CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+                ],
             ])
             ->get($url);
     }
@@ -42,7 +45,13 @@ class SafeUrlFetcher
         }
 
         $port = (int) ($parts['port'] ?? ($scheme === 'https' ? 443 : 80));
-        $host = trim($host, '[]');
+
+        // Web ports only: blocks reaching Redis/MySQL/SMTP on the server's own public address.
+        if (! in_array($port, [80, 443], true)) {
+            throw new InvalidArgumentException('Only ports 80 and 443 are allowed.');
+        }
+
+        $host = rtrim(strtolower(trim($host, '[]')), '.');
 
         if (filter_var($host, FILTER_VALIDATE_IP)) {
             $ips = [$host];

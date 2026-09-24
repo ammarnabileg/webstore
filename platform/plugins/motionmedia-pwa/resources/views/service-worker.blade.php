@@ -1,8 +1,8 @@
 const CACHE_NAME = '{{ $cacheName }}';
 const OFFLINE_URL = '/offline';
 
+// Only the offline page: the home page HTML embeds the logged-in customer's details.
 const PRECACHE_URLS = [
-    '/',
     '/offline'
 ];
 

@@ -41,16 +41,18 @@ Theme::registerRoutes(function (): void {
             return response()->json(['data' => $notifications, 'is_logged_in' => $isLoggedIn]);
         });
 
-        Route::post('fcm-token', function (Request $request) {
-            $token = $request->input('token');
-            $deviceType = $request->input('device_type', 'web');
-            if (!$token) {
-                return response()->json(['success' => false, 'message' => 'Token missing'], 400);
-            }
+        Route::middleware('throttle:public-forms')->post('fcm-token', function (Request $request) {
+            $validated = $request->validate([
+                'token' => ['required', 'string', 'max:512'],
+                'device_type' => ['nullable', 'in:web,ios,android'],
+            ]);
 
-            $fcmToken = \Botble\Ecommerce\Models\CustomerFcmToken::query()->firstOrNew(['token' => $token]);
-            $fcmToken->customer_id = auth('customer')->check() ? auth('customer')->id() : null;
-            $fcmToken->device_type = $deviceType;
+            $fcmToken = \Botble\Ecommerce\Models\CustomerFcmToken::query()->firstOrNew(['token' => $validated['token']]);
+            // A guest request must not detach a token from the customer it belongs to.
+            if (auth('customer')->check()) {
+                $fcmToken->customer_id = auth('customer')->id();
+            }
+            $fcmToken->device_type = $validated['device_type'] ?? 'web';
             $fcmToken->save();
 
             return response()->json(['success' => true, 'customer_id' => $fcmToken->customer_id]);
@@ -68,8 +70,8 @@ Theme::registerRoutes(function (): void {
             $filters = [];
 
             // Keyword Search
-            if ($request->filled('q')) {
-                $filters['keyword'] = $request->input('q');
+            if ($request->filled('q') && is_string($request->input('q'))) {
+                $filters['keyword'] = mb_substr($request->input('q'), 0, 100);
             }
 
             // Category Filter
@@ -94,8 +96,9 @@ Theme::registerRoutes(function (): void {
                 'price_desc' => ['ec_products.price' => 'DESC'],
                 'popular' => ['ec_products.views' => 'DESC'],
             ];
-            if (isset($sorts[$request->input('sort')])) {
-                $params['order_by'] = $sorts[$request->input('sort')];
+            $sort = is_string($request->input('sort')) ? $request->input('sort') : '';
+            if (isset($sorts[$sort])) {
+                $params['order_by'] = $sorts[$sort];
             }
 
             // Attribute Filter
@@ -427,6 +430,12 @@ Theme::registerRoutes(function (): void {
                 $product = $product->defaultVariation->product;
             }
 
+            // A variation id must not bypass the parent's draft/pending status.
+            $parent = $product->is_variation ? $product->original_product : $product;
+            if (!$parent || $parent->status != \Botble\Base\Enums\BaseStatusEnum::PUBLISHED) {
+                return response()->json(['error' => true, 'message' => 'Product not found'], 404);
+            }
+
             if ($product->isOutOfStock()) {
                 return response()->json(['error' => true, 'message' => 'Product is out of stock'], 422);
             }
@@ -459,8 +468,22 @@ Theme::registerRoutes(function (): void {
                 'rowId' => ['required', 'string', 'max:64'],
                 'qty' => ['required', 'integer', 'min:1', 'max:100'],
             ]);
-            if (!Cart::instance('cart')->content()->has($validated['rowId'])) {
+            $item = Cart::instance('cart')->content()->get($validated['rowId']);
+            if (!$item) {
                 return response()->json(['error' => true, 'message' => 'Item not found'], 404);
+            }
+            // Same stock rule as cart/add.
+            $product = \Botble\Ecommerce\Models\Product::query()->find($item->id);
+            if (!$product || $product->isOutOfStock()) {
+                return response()->json(['error' => true, 'message' => 'Product is out of stock'], 422);
+            }
+            if ($product->with_storehouse_management && !$product->allow_checkout_when_out_of_stock) {
+                $otherRows = Cart::instance('cart')->content()
+                    ->filter(fn ($row) => $row->id == $product->id && $row->rowId !== $item->rowId)
+                    ->sum('qty');
+                if ($otherRows + (int) $validated['qty'] > $product->quantity) {
+                    return response()->json(['error' => true, 'message' => 'Not enough stock'], 422);
+                }
             }
             Cart::instance('cart')->update($validated['rowId'], (int) $validated['qty']);
             return response()->json(['error' => false, 'message' => 'Cart updated']);

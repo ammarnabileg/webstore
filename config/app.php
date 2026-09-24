@@ -15,6 +15,9 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    // Enforce the Content-Security-Policy (App\Http\Middleware\SecurityHeaders) instead of report-only.
+    'csp_enforce' => (bool) env('SECURITY_CSP_ENFORCE', false),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

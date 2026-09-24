@@ -23,6 +23,7 @@ class SafeUrlFetcherTest extends TestCase
             'file scheme' => ['file:///etc/passwd'],
             'gopher scheme' => ['gopher://example.com/'],
             'credentials in url' => ['http://user:pass@93.184.215.14/'],
+            'non-web port' => ['http://93.184.215.14:6379/'],
         ];
     }
 

@@ -33,8 +33,10 @@ class PWAController extends BaseController
         $request->validate([
             'pwa_name' => 'required|string|max:255',
             'pwa_short_name' => 'required|string|max:12',
-            'pwa_theme_color' => 'required|string',
-            'pwa_background_color' => 'required|string',
+            'pwa_description' => 'nullable|string|max:500',
+            'pwa_theme_color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{3,8}$/'],
+            'pwa_background_color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{3,8}$/'],
+            'pwa_icon' => 'nullable|image|mimes:png,jpg,jpeg,webp|max:2048',
         ]);
 
         // Save settings

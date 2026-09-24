@@ -9,10 +9,11 @@ class WhatsAppWebhookController extends Controller
 {
     public function handle(Request $request)
     {
-        // 1. Only accept calls that carry the shared token configured in Evolution's webhook URL/headers
+        // 1. Only accept calls that carry the shared token configured in Evolution's webhook headers
         //    (EVOLUTION_WEBHOOK_TOKEN). Without it anyone could post fake events.
         $expected = (string) config('services.evolution.webhook_token');
-        $given = (string) ($request->header('X-Webhook-Token') ?: $request->query('token', ''));
+        // Header only: a token in the query string ends up in web server access logs.
+        $given = (string) $request->header('X-Webhook-Token', '');
 
         if ($expected === '' || ! hash_equals($expected, $given)) {
             return response()->json(['status' => 'unauthorized'], 401);
