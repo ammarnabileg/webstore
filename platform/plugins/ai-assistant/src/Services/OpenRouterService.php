@@ -20,7 +20,7 @@ class OpenRouterService
             'Authorization' => 'Bearer ' . $apiKey,
             'HTTP-Referer' => url(''),
             'X-Title' => 'Botble AI Assistant',
-        ])->withoutVerifying()
+        ])
         ->timeout(120)
         ->post('https://openrouter.ai/api/v1/chat/completions', [
             'model' => $model,

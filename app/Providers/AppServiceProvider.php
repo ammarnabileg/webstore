@@ -28,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
                     'name' => 'WhatsApp Marketing',
                     'icon' => 'ti ti-brand-whatsapp',
                     'url' => route('whatsapp.marketing.index'),
-                    'permissions' => [],
+                    'permissions' => ['customers.edit'],
                 ]);
             }
         });

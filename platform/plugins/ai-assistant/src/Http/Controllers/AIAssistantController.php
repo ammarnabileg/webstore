@@ -42,7 +42,8 @@ class AIAssistantController extends BaseController
 
     public function updateSettings(Request $request, BaseHttpResponse $response)
     {
-        $settings = $request->except(['_token']);
+        // Allowlist: this form must not be able to overwrite unrelated settings.
+        $settings = $request->only(['ai_assistant_openrouter_api_key', 'ai_assistant_openrouter_model']);
 
         foreach ($settings as $key => $value) {
             setting()->set($key, (string)$value);

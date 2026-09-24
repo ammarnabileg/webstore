@@ -70,3 +70,10 @@ storage/framework/maintenance.php
 .claude/
 .mcp.json
 .taskmaster/
+
+# Local scratch / debug files
+/test_*.php
+/test_*.js
+/temp_*
+/*.sql
+node_modules/

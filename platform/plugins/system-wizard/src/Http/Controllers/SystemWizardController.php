@@ -28,8 +28,14 @@ class SystemWizardController extends BaseController
 
     public function saveSettings(Request $request, BaseHttpResponse $response)
     {
+        // Only this plugin's own keys: a request must not be able to overwrite unrelated
+        // settings (admin email, payment secrets, activated plugins...).
         foreach ($request->except(['_token']) as $key => $value) {
-            setting()->set($key, $value);
+            if (! preg_match('/^sw_[a-z0-9_]{1,60}$/', (string) $key) || is_array($value)) {
+                continue;
+            }
+
+            setting()->set($key, $value === null ? '' : (string) $value);
         }
         setting()->save();
 

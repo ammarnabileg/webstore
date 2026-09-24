@@ -35,4 +35,19 @@ return [
         ],
     ],
 
+    'evolution' => [
+        'url' => env('EVOLUTION_API_URL'),
+        'instance' => env('EVOLUTION_INSTANCE_NAME'),
+        'key' => env('EVOLUTION_API_KEY'),
+        'webhook_token' => env('EVOLUTION_WEBHOOK_TOKEN'),
+        'timeout' => (int) env('EVOLUTION_API_TIMEOUT', 15),
+    ],
+
+    'ai' => [
+        'key' => env('AI_API_KEY') ?: env('OPENROUTER_API_KEY'),
+        'base_url' => env('AI_BASE_URL', 'https://openrouter.ai/api/v1/chat/completions'),
+        'model' => env('AI_MODEL') ?: env('OPENROUTER_MODEL', 'qwen/qwen3-235b-a22b'),
+        'output_language' => env('AI_OUTPUT_LANGUAGE', 'ar'),
+    ],
+
 ];

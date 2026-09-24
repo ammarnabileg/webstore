@@ -9,8 +9,14 @@ class WhatsAppWebhookController extends Controller
 {
     public function handle(Request $request)
     {
-        // 1. تسجيل البيانات الواردة في ملف الـ Log لفهم الهيكلة (مفيد جداً في مرحلة التطوير)
-        Log::info('WhatsApp Webhook Received:', $request->all());
+        // 1. Only accept calls that carry the shared token configured in Evolution's webhook URL/headers
+        //    (EVOLUTION_WEBHOOK_TOKEN). Without it anyone could post fake events.
+        $expected = (string) config('services.evolution.webhook_token');
+        $given = (string) ($request->header('X-Webhook-Token') ?: $request->query('token', ''));
+
+        if ($expected === '' || ! hash_equals($expected, $given)) {
+            return response()->json(['status' => 'unauthorized'], 401);
+        }
 
         // 2. التحقق من نوع الحدث (Evolution API يرسل أحداثاً مختلفة)
         $event = $request->input('event');
@@ -38,7 +44,8 @@ class WhatsAppWebhookController extends Controller
             }
 
             // --- هنا يمكنك كتابة الكود الخاص بك ---
-            Log::info("New Message from $remoteJid: $text");
+            // Do not log message bodies or full numbers: they are customer personal data.
+            Log::info('WhatsApp message received', ['type' => $messageType, 'from_suffix' => substr($remoteJid, -6)]);
             // مثلاً: حفظ الرسالة في قاعدة البيانات، أو استدعاء دالة لإرسال رد تلقائي
             
         }

@@ -69,7 +69,7 @@ class FirebaseMessagingService
                 'assertion' => $jwt,
             ]));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 15);
             $response = curl_exec($ch);
             curl_close($ch);
 
@@ -133,7 +133,7 @@ class FirebaseMessagingService
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 15);
 
             curl_multi_add_handle($multiCurl, $ch);
             $curlHandles[$index] = $ch;

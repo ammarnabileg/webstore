@@ -1,1 +1,0 @@
-<?php require __DIR__.'/../vendor/autoload.php'; require __DIR__.'/../bootstrap/app.php'; \ = require_once __DIR__.'/../bootstrap/app.php'; \ = \->make(Illuminate\Contracts\Http\Kernel::class); \ = \->handle(\ = Illuminate\Http\Request::capture()); echo json_encode(\Botble\SystemWizard\Models\ProjectLead::orderBy('id', 'desc')->take(5)->get());

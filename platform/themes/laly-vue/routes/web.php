@@ -59,7 +59,7 @@ Theme::registerRoutes(function (): void {
         Route::get('products', function (Request $request, ProductInterface $productRepository) {
             $params = [
                 'paginate' => [
-                    'per_page' => $request->integer('per_page', 10),
+                    'per_page' => min(max($request->integer('per_page', 10), 1), 60),
                     'current_paged' => $request->integer('page', 1),
                 ],
                 'with' => ['slugable', 'productLabels', 'productCollections', 'tags'],
@@ -122,7 +122,7 @@ Theme::registerRoutes(function (): void {
                 return response()->json(['message' => 'Product not found'], 404);
             }
             $product = $productRepository->findById($slugModel->reference_id, ['slugable', 'productLabels', 'productCollections', 'tags']);
-            if (!$product) {
+            if (!$product || $product->status != \Botble\Base\Enums\BaseStatusEnum::PUBLISHED) {
                 return response()->json(['message' => 'Product not found'], 404);
             }
 
@@ -141,8 +141,8 @@ Theme::registerRoutes(function (): void {
                     'front_sale_price_format' => format_price($product->front_sale_price),
                     'is_out_of_stock' => $product->isOutOfStock(),
                     'stock_status' => (string) $product->stock_status,
-                    'description' => $product->description,
-                    'content' => $product->content,
+                    'description' => BaseHelper::clean($product->description),
+                    'content' => BaseHelper::clean($product->content),
                     'labels' => $product->productLabels->map(function ($label) {
                         return ['id' => $label->id, 'name' => $label->name, 'color' => $label->color];
                     }),
@@ -386,24 +386,41 @@ Theme::registerRoutes(function (): void {
             ]);
         });
 
-        Route::post('cart/add', function (Request $request, ProductInterface $productRepository) {
-            $productId = $request->input('id');
-            $qty = $request->input('qty', 1);
+        Route::post('cart/add', function (Request $request) {
+            $validated = $request->validate([
+                'id' => ['required', 'integer', 'min:1'],
+                'qty' => ['nullable', 'integer', 'min:1', 'max:100'],
+            ]);
+            $qty = (int) ($validated['qty'] ?? 1);
 
-            $product = $productRepository->findById($productId);
-            if (!$product) {
+            $product = \Botble\Ecommerce\Models\Product::query()->find($validated['id']);
+            if (!$product || $product->status != \Botble\Base\Enums\BaseStatusEnum::PUBLISHED) {
                 return response()->json(['error' => true, 'message' => 'Product not found'], 404);
             }
 
-            $price = $product->front_sale_price ?: $product->price;
+            // Same rule as the stock cart: a parent product with variations is added as its default variation.
+            if ($product->variations->isNotEmpty() && !$product->is_variation && $product->defaultVariation?->product) {
+                $product = $product->defaultVariation->product;
+            }
 
-            Cart::instance('cart')->add(
-                $product->id,
-                $product->name,
-                $qty,
-                $price,
-                ['image' => $product->image]
-            );
+            if ($product->isOutOfStock()) {
+                return response()->json(['error' => true, 'message' => 'Product is out of stock'], 422);
+            }
+
+            if ($product->with_storehouse_management && !$product->allow_checkout_when_out_of_stock) {
+                $inCart = Cart::instance('cart')->content()->where('id', $product->id)->sum('qty');
+                if ($inCart + $qty > $product->quantity) {
+                    return response()->json(['error' => true, 'message' => 'Not enough stock'], 422);
+                }
+            }
+
+            // Delegate to Botble so price, tax, SKU and variation data are computed server-side.
+            // Only qty is forwarded; client-supplied options/extras are not trusted here.
+            try {
+                \Botble\Ecommerce\Facades\OrderHelper::handleAddCart($product, new Request(['qty' => $qty]));
+            } catch (\Throwable $e) {
+                return response()->json(['error' => true, 'message' => 'Could not add product to cart'], 422);
+            }
 
             return response()->json(['error' => false, 'message' => 'Added to cart']);
         });
@@ -414,9 +431,14 @@ Theme::registerRoutes(function (): void {
         });
 
         Route::post('cart/update', function (Request $request) {
-            $rowId = $request->input('rowId');
-            $qty = $request->input('qty');
-            Cart::instance('cart')->update($rowId, $qty);
+            $validated = $request->validate([
+                'rowId' => ['required', 'string', 'max:64'],
+                'qty' => ['required', 'integer', 'min:1', 'max:100'],
+            ]);
+            if (!Cart::instance('cart')->content()->has($validated['rowId'])) {
+                return response()->json(['error' => true, 'message' => 'Item not found'], 404);
+            }
+            Cart::instance('cart')->update($validated['rowId'], (int) $validated['qty']);
             return response()->json(['error' => false, 'message' => 'Cart updated']);
         });
 
@@ -501,7 +523,7 @@ Theme::registerRoutes(function (): void {
         $ssrHtml .= '<div style="flex:1; min-width:300px;">';
         $ssrHtml .= '<h1>'.htmlentities($product->name).'</h1>';
         $ssrHtml .= '<h2 style="color:#d32f2f; font-size:24px;">'.$formattedPrice.'</h2>';
-        $ssrHtml .= '<div class="product-description" style="margin-top:20px; line-height:1.6;">'.$product->description.'</div>';
+        $ssrHtml .= '<div class="product-description" style="margin-top:20px; line-height:1.6;">'.BaseHelper::clean($product->description).'</div>';
         
         // Category Links (Breadcrumb equivalent)
         if ($product->categories && $product->categories->count()) {
@@ -589,39 +611,6 @@ Theme::registerRoutes(function (): void {
 
         return Theme::scope('page', ['ssrHtml' => $ssrHtml])->render();
     })->name('public.product-category');
-});
-
-Route::get('/fix-db-notifications', function () {
-    try {
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('ec_notifications', 'target_type')) {
-            \Illuminate\Support\Facades\Schema::table('ec_notifications', function (\Illuminate\Database\Schema\Blueprint $table) {
-                $table->string('target_type', 60)->default('none')->after('type');
-            });
-        }
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('ec_notifications', 'target_id')) {
-            \Illuminate\Support\Facades\Schema::table('ec_notifications', function (\Illuminate\Database\Schema\Blueprint $table) {
-                $table->unsignedBigInteger('target_id')->nullable()->after('target_type');
-            });
-        }
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('ec_notifications', 'custom_url')) {
-            \Illuminate\Support\Facades\Schema::table('ec_notifications', function (\Illuminate\Database\Schema\Blueprint $table) {
-                $table->string('custom_url', 255)->nullable()->after('target_id');
-            });
-        }
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('ec_notifications', 'status')) {
-            \Illuminate\Support\Facades\Schema::table('ec_notifications', function (\Illuminate\Database\Schema\Blueprint $table) {
-                $table->string('status', 60)->default('draft')->after('custom_url');
-            });
-        }
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('ec_notifications', 'scheduled_at')) {
-            \Illuminate\Support\Facades\Schema::table('ec_notifications', function (\Illuminate\Database\Schema\Blueprint $table) {
-                $table->timestamp('scheduled_at')->nullable()->after('status');
-            });
-        }
-        return 'success';
-    } catch (\Exception $e) {
-        return $e->getMessage();
-    }
 });
 
 Theme::routes();

@@ -4,18 +4,29 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class EvolutionApiService
 {
-    protected $baseUrl;
-    protected $instanceName;
-    protected $apiKey;
+    protected ?string $baseUrl;
+
+    protected ?string $instanceName;
+
+    protected ?string $apiKey;
+
+    protected int $timeout;
 
     public function __construct()
     {
-        $this->baseUrl = rtrim(env('EVOLUTION_API_URL', 'https://web.hahireai.com'), '/');
-        $this->instanceName = env('EVOLUTION_INSTANCE_NAME', 'e5d77360-7119-45f0-ac09-ca0c1e0bd3d7'); // User's instance string or name
-        $this->apiKey = env('EVOLUTION_API_KEY', '94AD7AEA908A-4037-8CBF-6F59E3F08616');
+        $this->baseUrl = rtrim((string) config('services.evolution.url'), '/') ?: null;
+        $this->instanceName = config('services.evolution.instance');
+        $this->apiKey = config('services.evolution.key');
+        $this->timeout = (int) config('services.evolution.timeout', 15);
+    }
+
+    public function isConfigured(): bool
+    {
+        return $this->baseUrl && $this->instanceName && $this->apiKey;
     }
 
     /**
@@ -27,30 +38,38 @@ class EvolutionApiService
      */
     public function sendMessage($phone, $text)
     {
+        if (! $this->isConfigured()) {
+            Log::error('Evolution API is not configured (EVOLUTION_API_URL / EVOLUTION_INSTANCE_NAME / EVOLUTION_API_KEY).');
+
+            return false;
+        }
+
         // Add WhatsApp suffix if missing
-        if (!str_contains($phone, '@s.whatsapp.net')) {
+        if (! str_contains($phone, '@s.whatsapp.net')) {
             $phone = preg_replace('/[^0-9]/', '', $phone) . '@s.whatsapp.net';
         }
 
         try {
-            $response = Http::withoutVerifying()->withHeaders([
+            $response = Http::timeout($this->timeout)->withHeaders([
                 'apikey' => $this->apiKey,
                 'Content-Type' => 'application/json',
             ])->post("{$this->baseUrl}/message/sendText/{$this->instanceName}", [
                 'number' => $phone,
                 'text' => $text,
                 'delay' => 1200,
-                'presence' => 'composing'
+                'presence' => 'composing',
             ]);
 
             if ($response->successful()) {
                 return $response->json();
             }
 
-            Log::error('Evolution API Send Message Error', ['response' => $response->body()]);
+            Log::error('Evolution API Send Message Error', ['status' => $response->status()]);
+
             return false;
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             Log::error('Evolution API Exception', ['message' => $e->getMessage()]);
+
             return false;
         }
     }

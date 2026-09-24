@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Support\SafeUrlFetcher;
 
 class AiProductSpecsGeneratorService
 {
@@ -13,21 +14,21 @@ class AiProductSpecsGeneratorService
             throw new \Exception("Please provide a Source URL or existing description to extract specs from.", 422);
         }
 
-        $outputLanguage = env('AI_OUTPUT_LANGUAGE', 'ar');
+        $outputLanguage = config('services.ai.output_language', 'ar');
 
         $fetchedPageText = 'Not Available';
         if ($sourceUrl) {
             try {
-                // Fetch the URL
-                $response = Http::timeout(10)
-                    ->withUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) BotbleBot/1.0')
-                    ->get($sourceUrl);
-                    
+                $response = SafeUrlFetcher::get($sourceUrl, 10);
+
+
                 if ($response->successful()) {
                     // Extract text, limiting to 5000 chars to avoid token explosion but capture enough specs
                     $html = strip_tags($response->body());
                     $fetchedPageText = mb_substr(preg_replace('/\s+/', ' ', $html), 0, 5000);
                 }
+            } catch (\InvalidArgumentException $e) {
+                throw new \Exception($e->getMessage(), 422);
             } catch (\Exception $e) {
                 throw new \Exception("Failed to fetch the Source URL. Ensure the URL is accessible.", 422);
             }
@@ -56,9 +57,9 @@ EXISTING DESCRIPTION: " . mb_substr(strip_tags($existingDescription ?? ''), 0, 3
 ---
 Generate the JSON now.";
 
-        $apiKey = env('AI_API_KEY') ?: env('OPENROUTER_API_KEY');
-        $baseUrl = env('AI_BASE_URL', 'https://openrouter.ai/api/v1/chat/completions');
-        $model = env('AI_MODEL') ?: env('OPENROUTER_MODEL', 'qwen/qwen3-235b-a22b');
+        $apiKey = config('services.ai.key');
+        $baseUrl = config('services.ai.base_url');
+        $model = config('services.ai.model');
 
         if (empty($apiKey)) {
             throw new \Exception("API Key is missing. Please set AI_API_KEY or OPENROUTER_API_KEY in .env file.", 422);
@@ -87,7 +88,7 @@ Generate the JSON now.";
                 'status' => $response->status(),
                 'body' => $response->body()
             ]);
-            throw new \Exception("API Error: " . $response->body(), 500);
+            throw new \Exception("AI provider request failed (HTTP {$response->status()}).", 500);
         }
 
         $responseData = $response->json();

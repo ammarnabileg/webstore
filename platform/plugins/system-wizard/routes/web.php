@@ -36,11 +36,11 @@ Route::group(['namespace' => 'Botble\SystemWizard\Http\Controllers', 'middleware
         Route::post('project-leads', [
             'as'   => 'store-lead',
             'uses' => 'PublicSystemWizardController@storeLead',
-        ]);
-        
+        ])->middleware('throttle:5,10');
+
         Route::post('wizard-events', [
             'as'   => 'events',
             'uses' => 'SystemWizardEventController@store',
-        ]);
+        ])->middleware('throttle:60,1');
     });
 });
