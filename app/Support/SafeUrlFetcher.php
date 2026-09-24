@@ -21,6 +21,8 @@ class SafeUrlFetcher
             ->withUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) BotbleBot/1.0')
             ->withOptions([
                 'allow_redirects' => false,
+                // An HTTP(S)_PROXY from the environment would resolve the host itself and undo the pinning below.
+                'proxy' => '',
                 // Connect to the address we validated whatever host name curl sees, so a second
                 // DNS lookup cannot be rebound to an internal IP.
                 'curl' => [

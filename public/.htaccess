@@ -1,16 +1,6 @@
-# No directory listings, whatever modules are loaded.
-Options -Indexes
-
-# Uploaded files must never execute as PHP.
-<If "%{REQUEST_URI} =~ m#^/storage/#">
-    <FilesMatch "\.(php\d?|phtml|phar)$">
-        Require all denied
-    </FilesMatch>
-</If>
-
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
-        Options -MultiViews
+        Options -MultiViews -Indexes
     </IfModule>
 
     RewriteEngine On

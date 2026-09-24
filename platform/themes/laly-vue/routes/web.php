@@ -41,7 +41,7 @@ Theme::registerRoutes(function (): void {
             return response()->json(['data' => $notifications, 'is_logged_in' => $isLoggedIn]);
         });
 
-        Route::middleware('throttle:public-forms')->post('fcm-token', function (Request $request) {
+        Route::middleware('throttle:fcm-token')->post('fcm-token', function (Request $request) {
             $validated = $request->validate([
                 'token' => ['required', 'string', 'max:512'],
                 'device_type' => ['nullable', 'in:web,ios,android'],
@@ -55,7 +55,7 @@ Theme::registerRoutes(function (): void {
             $fcmToken->device_type = $validated['device_type'] ?? 'web';
             $fcmToken->save();
 
-            return response()->json(['success' => true, 'customer_id' => $fcmToken->customer_id]);
+            return response()->json(['success' => true]);
         });
 
         Route::get('products', function (Request $request, ProductInterface $productRepository) {
@@ -476,6 +476,10 @@ Theme::registerRoutes(function (): void {
             $product = \Botble\Ecommerce\Models\Product::query()->find($item->id);
             if (!$product || $product->isOutOfStock()) {
                 return response()->json(['error' => true, 'message' => 'Product is out of stock'], 422);
+            }
+            $parent = $product->is_variation ? $product->original_product : $product;
+            if (!$parent || $parent->status != \Botble\Base\Enums\BaseStatusEnum::PUBLISHED) {
+                return response()->json(['error' => true, 'message' => 'Product is not available'], 422);
             }
             if ($product->with_storehouse_management && !$product->allow_checkout_when_out_of_stock) {
                 $otherRows = Cart::instance('cart')->content()

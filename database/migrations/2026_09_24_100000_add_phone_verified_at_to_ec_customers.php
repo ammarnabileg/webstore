@@ -18,10 +18,21 @@ return new class () extends Migration {
         });
 
         // Accounts created by the WhatsApp OTP flow could only be reached by proving the number.
+        // Only the exact shape that flow produces (email = "<phone>@whatsapp.local"), so an account
+        // registered with an arbitrary @whatsapp.local email is not promoted. Accounts that already
+        // replaced the placeholder email during onboarding cannot be told apart from an account
+        // where someone typed another person's number, so they are left unverified on purpose.
         DB::table('ec_customers')
+            ->select(['id', 'phone', 'email', 'created_at'])
             ->where('email', 'like', '%@whatsapp.local')
             ->whereNotNull('phone')
-            ->update(['phone_verified_at' => DB::raw('created_at')]);
+            ->orderBy('id')
+            ->each(function ($row): void {
+                if (strtolower($row->email) === $row->phone . '@whatsapp.local') {
+                    DB::table('ec_customers')->where('id', $row->id)
+                        ->update(['phone_verified_at' => $row->created_at ?? now()]);
+                }
+            });
     }
 
     public function down(): void

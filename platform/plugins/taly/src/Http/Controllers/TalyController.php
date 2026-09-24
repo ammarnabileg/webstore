@@ -42,6 +42,11 @@ class TalyController extends BaseController
     {
         // Body only: input() would merge query-string parameters into the signed payload.
         $payload = $request->isJson() ? $request->json()->all() : $request->post();
+        if (! $payload && $request->getContent() !== '') {
+            // Callbacks sent without a JSON Content-Type still carry a JSON body.
+            $decoded = json_decode($request->getContent(), true);
+            $payload = is_array($decoded) ? $decoded : [];
+        }
         $signature = (string) $request->header('Taly-Signature');
 
         if ($signature === '' || ! $talyService->verifySignature($payload, $signature)) {

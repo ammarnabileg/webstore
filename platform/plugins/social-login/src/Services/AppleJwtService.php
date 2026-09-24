@@ -48,8 +48,9 @@ class AppleJwtService
 
             // Validate audience: the token must have been issued for this site's Apple client id,
             // not for any other app that uses Sign in with Apple.
-            $clientId = \Botble\SocialLogin\Facades\SocialService::setting('apple_app_id');
-            if (! $clientId || ! in_array($clientId, (array) ($tokenData['aud'] ?? []), true)) {
+            // The setting may list several ids (web Services ID + iOS bundle id), comma separated.
+            $clientIds = array_filter(array_map('trim', explode(',', (string) \Botble\SocialLogin\Facades\SocialService::setting('apple_app_id'))));
+            if (! $clientIds || ! array_intersect($clientIds, (array) ($tokenData['aud'] ?? []))) {
                 throw new Exception('Invalid token audience');
             }
 

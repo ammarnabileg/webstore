@@ -17,6 +17,9 @@ class WhatsAppAuthController extends Controller
 {
     private const OTP_TTL_MINUTES = 15;
 
+    /** Lets only this flow save the reserved "<phone>@whatsapp.local" placeholder email. */
+    public static bool $creatingPlaceholderAccount = false;
+
     private const OTP_MAX_ATTEMPTS = 5;
 
     protected $evolutionApi;
@@ -270,17 +273,24 @@ class WhatsAppAuthController extends Controller
     private function findOrCreateVerifiedCustomer(string $phone): Customer
     {
         $customer = Customer::where('phone', $phone)->whereNotNull('phone_verified_at')->first()
-            // Accounts created by this flow earlier (placeholder email) were only reachable via OTP.
-            ?? Customer::where('email', $phone . '@whatsapp.local')->first();
+            // Accounts created by this flow before phone_verified_at existed (the migration
+            // backfills these; this covers rows created between deploy and migrate).
+            ?? Customer::where('email', $phone . '@whatsapp.local')->where('phone', $phone)->first();
 
         if (! $customer) {
-            $customer = Customer::create([
-                'name' => 'User ' . substr($phone, -4),
-                'email' => $phone . '@whatsapp.local', // Placeholder email as Botble requires it
-                'phone' => $phone,
-                'password' => bcrypt(Str::random(16)),
-                'status' => 'activated',
-            ]);
+            static::$creatingPlaceholderAccount = true;
+
+            try {
+                $customer = Customer::create([
+                    'name' => 'User ' . substr($phone, -4),
+                    'email' => $phone . '@whatsapp.local', // Placeholder email as Botble requires it
+                    'phone' => $phone,
+                    'password' => bcrypt(Str::random(16)),
+                    'status' => 'activated',
+                ]);
+            } finally {
+                static::$creatingPlaceholderAccount = false;
+            }
         }
 
         if (! $customer->phone_verified_at) {

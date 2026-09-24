@@ -1,0 +1,12 @@
+# Uploaded files are served as static files only: never execute scripts from here.
+<FilesMatch "\.(php\d?|phtml|phar|pht|shtml|cgi|pl|py)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</FilesMatch>
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>

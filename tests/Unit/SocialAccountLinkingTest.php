@@ -52,4 +52,12 @@ class SocialAccountLinkingTest extends TestCase
         $this->assertFalse($service->oauthEmailIsVerified('x', ['email' => 'a@b.c']));
         $this->assertFalse($service->oauthEmailIsVerified('github', []));
     }
+
+    public function test_same_id_on_a_different_user_model_is_not_the_same_identity(): void
+    {
+        $admin = new class () extends Model {};
+        $admin->setAttribute($admin->getKeyName(), 5);
+
+        $this->assertFalse((new SocialLoginService())->mayLinkExistingAccount($this->account(5), $admin, false));
+    }
 }

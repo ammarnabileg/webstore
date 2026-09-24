@@ -140,7 +140,8 @@ class SocialLoginService
             return true;
         }
 
-        if ($socialLoginUser && $socialLoginUser->getKey() === $account->getKey()) {
+        // Same class too: a customer and an admin user can share a numeric id.
+        if ($socialLoginUser && $socialLoginUser::class === $account::class && $socialLoginUser->getKey() === $account->getKey()) {
             return true;
         }
 

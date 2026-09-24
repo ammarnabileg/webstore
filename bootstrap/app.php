@@ -15,12 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
 
-        // Behind a CDN/load balancer, set TRUSTED_PROXIES to its IP ranges (comma separated) so
-        // rate limits see the real client IP. Empty = trust nobody (X-Forwarded-For ignored).
-        $trusted = array_filter(array_map('trim', explode(',', (string) env('TRUSTED_PROXIES', ''))));
-        if ($trusted) {
-            $middleware->trustProxies(at: $trusted);
-        }
+        // Trusted proxies are applied in AppServiceProvider::boot(): .env is not loaded yet when
+        // this callback runs, so reading TRUSTED_PROXIES here would silently see nothing.
 
         // Server-to-server callbacks authenticate with their own token/signature, not a CSRF token.
         $middleware->validateCsrfTokens(except: [
