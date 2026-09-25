@@ -4,8 +4,11 @@ namespace App\Listeners;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Botble\Ecommerce\Events\OrderPlacedEvent;
 use App\Services\EvolutionApiService;
+use App\Support\KuwaitPhone;
 
 class OrderEventListener implements ShouldQueue
 {
@@ -24,20 +27,37 @@ class OrderEventListener implements ShouldQueue
         $customer = $order->user;
         $address = $order->address;
 
-        $phone = $address->phone ?? ($customer->phone ?? null);
+        // The order-address phone is free text typed at checkout (guest COD included), so it is an
+        // attacker-chosen recipient. Confirmations are delivered from the store's own WhatsApp
+        // Business number, so an unrestricted send lets anyone use it to message arbitrary numbers
+        // (harassment / spam / getting the business number rate-limited or banned). Two guards:
+        //   1. Only send to a valid Kuwaiti number — the store's only market.
+        //   2. Cap sends per recipient so the store cannot be driven as a bulk relay.
+        $phone = KuwaitPhone::normalize($address->phone ?? ($customer->phone ?? null));
 
-        if (!$phone) {
-            return; // No phone to send to
+        if (! $phone || ! KuwaitPhone::isKuwaiti($phone)) {
+            return;
         }
 
-        $orderCode = $order->code;
-        $amount = format_price($order->amount);
+        $executed = RateLimiter::attempt(
+            'wa-order-confirm:' . $phone,
+            maxAttempts: 5,
+            callback: function () use ($order, $phone): void {
+                $orderCode = $order->code;
+                $amount = format_price($order->amount);
 
-        $message = "شكراً لك على طلبك من Laly Kuwait!\n\n";
-        $message .= "🛒 رقم الطلب: *{$orderCode}*\n";
-        $message .= "💰 الإجمالي: *{$amount}*\n\n";
-        $message .= "سنقوم بتجهيز طلبك بأسرع وقت. يمكنك تتبع طلبك عبر حسابك في الموقع.";
+                $message = "شكراً لك على طلبك من Laly Kuwait!\n\n";
+                $message .= "🛒 رقم الطلب: *{$orderCode}*\n";
+                $message .= "💰 الإجمالي: *{$amount}*\n\n";
+                $message .= "سنقوم بتجهيز طلبك بأسرع وقت. يمكنك تتبع طلبك عبر حسابك في الموقع.";
 
-        $this->evolutionApi->sendMessage($phone, $message);
+                $this->evolutionApi->sendMessage($phone, $message);
+            },
+            decaySeconds: 3600,
+        );
+
+        if (! $executed) {
+            Log::warning('Order confirmation WhatsApp suppressed: recipient send rate exceeded.');
+        }
     }
 }

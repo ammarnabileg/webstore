@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Botble\Ecommerce\Models\Customer;
+use Botble\Ecommerce\Enums\CustomerStatusEnum;
 use App\Services\EvolutionApiService;
 use App\Support\KuwaitPhone;
 use Illuminate\Support\Facades\Auth;
@@ -88,12 +89,16 @@ class WhatsAppAuthController extends Controller
 
         $customer = $this->findOrCreateVerifiedCustomer($phone);
 
-        $needsOnboarding = str_ends_with($customer->email, '@whatsapp.local');
+        if ($this->isLocked($customer)) {
+            return response()->json(['status' => 'error', 'message' => 'هذا الحساب موقوف. يرجى التواصل مع الدعم'], 403);
+        }
+
+        $needsOnboarding = $this->needsOnboarding($customer);
 
         Auth::guard('customer')->login($customer, true);
 
         return response()->json([
-            'status' => 'success', 
+            'status' => 'success',
             'message' => 'Logged in successfully',
             'needs_onboarding' => $needsOnboarding,
             'redirect' => route('customer.overview')
@@ -149,8 +154,12 @@ class WhatsAppAuthController extends Controller
         }
 
         $customer = $this->findOrCreateVerifiedCustomer($phone);
-        
-        $needsOnboarding = str_ends_with($customer->email, '@whatsapp.local');
+
+        if ($this->isLocked($customer)) {
+            return redirect()->route('customer.login')->with('error_msg', 'هذا الحساب موقوف. يرجى التواصل مع الدعم');
+        }
+
+        $needsOnboarding = $this->needsOnboarding($customer);
 
         Auth::guard('customer')->login($customer, true);
 
@@ -175,9 +184,12 @@ class WhatsAppAuthController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Unauthenticated'], 401);
         }
 
-        // Email/password can be set freely only while finishing a WhatsApp sign-up (placeholder email).
-        // Afterwards this endpoint must not become a password reset for whoever holds the session.
-        $isOnboarding = str_ends_with((string) $customer->email, '@whatsapp.local');
+        // Email/password can be set without the current password only ONCE, while the account is
+        // still finishing WhatsApp sign-up (profile_completed_at is null). Afterwards this endpoint
+        // must not become a password reset for whoever holds the session. Using a one-time flag
+        // instead of the placeholder email closes the permanent waiver on accounts that kept the
+        // "<phone>@whatsapp.local" placeholder.
+        $isOnboarding = $this->needsOnboarding($customer);
 
         if (! $isOnboarding && ($request->filled('email') || $request->filled('password'))) {
             $request->validate(['current_password' => 'required|string']);
@@ -203,13 +215,39 @@ class WhatsAppAuthController extends Controller
             $customer->password = bcrypt($request->input('password'));
         }
 
+        // Onboarding is a one-time state: once the profile is completed, later credential changes
+        // must supply the current password (handled by the $isOnboarding gate above).
+        if ($isOnboarding) {
+            $customer->profile_completed_at = now();
+        }
+
         $customer->save();
 
         return response()->json([
-            'status' => 'success', 
+            'status' => 'success',
             'message' => 'تم تحديث الملف الشخصي بنجاح',
             'redirect' => route('public.index')
         ]);
+    }
+
+    /**
+     * A WhatsApp account is still "onboarding" until it has completed its profile once.
+     * Tracked by profile_completed_at (set on first completeProfile / registerWithOtp) rather
+     * than the placeholder email, so the no-current-password waiver cannot be reused.
+     */
+    private function needsOnboarding(Customer $customer): bool
+    {
+        return $customer->profile_completed_at === null;
+    }
+
+    /** OTP / magic-link login must honour the same locked-account gate as password login. */
+    private function isLocked(Customer $customer): bool
+    {
+        $status = $customer->status instanceof CustomerStatusEnum
+            ? $customer->status->getValue()
+            : $customer->status;
+
+        return $status !== CustomerStatusEnum::ACTIVATED;
     }
 
     /**
@@ -255,12 +293,14 @@ class WhatsAppAuthController extends Controller
             'password' => bcrypt($request->input('password')),
             'status' => 'activated',
         ]);
-        $customer->forceFill(['phone_verified_at' => now()])->save();
+        // Registered directly with their own password + (optional) email -> profile is complete,
+        // so future credential changes require the current password.
+        $customer->forceFill(['phone_verified_at' => now(), 'profile_completed_at' => now()])->save();
 
         Auth::guard('customer')->login($customer, true);
 
         return response()->json([
-            'status' => 'success', 
+            'status' => 'success',
             'message' => 'تم التسجيل بنجاح',
             'redirect' => route('customer.overview')
         ]);

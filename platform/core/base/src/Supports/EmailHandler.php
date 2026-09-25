@@ -346,6 +346,35 @@ class EmailHandler
         return preg_replace('/\{(?=[{%#])/u', "{\u{200B}", $value);
     }
 
+    /**
+     * Recursively sandbox-compile and neutralize every string leaf of a variable value.
+     * Arrays are walked so a string nested inside an array (e.g. a contact custom-field
+     * list, an address array) cannot bypass neutralization and land in the later
+     * unsandboxed compile as live Twig. Non-string scalars/objects are returned unchanged.
+     */
+    protected function neutralizeValue(mixed $value, TwigCompiler $valueCompiler, array $data): mixed
+    {
+        if (is_array($value)) {
+            foreach ($value as $key => $item) {
+                $value[$key] = $this->neutralizeValue($item, $valueCompiler, $data);
+            }
+
+            return $value;
+        }
+
+        if (! is_string($value) || $value === '') {
+            return $value;
+        }
+
+        try {
+            $value = $valueCompiler->compile($value, $data);
+        } catch (Throwable) {
+            // Keep the raw value; it is still neutralized below.
+        }
+
+        return static::neutralizeTwig($value);
+    }
+
     protected function sandboxedValueCompiler(TwigCompiler $base): TwigCompiler
     {
         $compiler = new TwigCompiler([
@@ -397,19 +426,10 @@ class EmailHandler
         $valueCompiler = $this->sandboxedValueCompiler($twigCompiler);
 
         foreach ($data as $key => $value) {
-            if (! $value || ! is_string($value)) {
-                continue;
-            }
-
-            try {
-                $value = $valueCompiler->compile($value, $data);
-            } catch (Throwable) {
-                // Keep the raw value, but it is neutralized below like every other value.
-            }
-
-            // The rendered email is compiled again later (send() -> prepareData()), so a value
-            // must never carry Twig syntax into that unsandboxed pass.
-            $data[$key] = static::neutralizeTwig($value);
+            // Walk every value (including arrays/nested arrays) so a string buried inside an
+            // array cannot skip the sandbox compile + neutralize and reach the later
+            // unsandboxed pass as live Twig (server-side template injection -> RCE).
+            $data[$key] = $this->neutralizeValue($value, $valueCompiler, $data);
         }
 
         if (empty($data) || empty($content)) {
