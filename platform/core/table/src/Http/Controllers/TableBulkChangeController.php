@@ -92,6 +92,8 @@ class TableBulkChangeController extends TableController
 
         $object = $this->tableBuilder->create($class);
 
+        $this->abortIfBulkTableNotAllowed($object);
+
         $columns = $object->getAllBulkChanges();
 
         if (! empty($columns[$inputKey]['validate'])) {

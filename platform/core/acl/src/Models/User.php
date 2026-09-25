@@ -56,7 +56,11 @@ class User extends BaseModel implements
         'last_name',
         'password',
         'avatar_id',
-        'permissions',
+        // 'permissions' is intentionally NOT mass-assignable: FormAbstract::save() and
+        // CreateUserService fill the full request, so a non-super admin could POST
+        // permissions[...] (e.g. via their own profile update) and self-grant super access.
+        // Roles set it through direct assignment in Role{Assignment,Update}Listener, which
+        // is unaffected by $fillable.
     ];
 
     protected $hidden = [

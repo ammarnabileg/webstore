@@ -29,6 +29,8 @@ class TableBulkActionController extends TableController
 
             abort_unless($table instanceof TableAbstract, 400);
 
+            $this->abortIfBulkTableNotAllowed($table);
+
             return $table->dispatchBulkAction();
         } catch (BindingResolutionException) {
             return $this
