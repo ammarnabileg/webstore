@@ -17,6 +17,7 @@ use Botble\Marketplace\Http\Requests\TaxInformationSettingRequest;
 use Botble\Marketplace\Models\Store;
 use Botble\Media\Facades\RvMedia;
 use Botble\Slug\Facades\SlugHelper;
+use Illuminate\Support\Arr;
 
 class SettingController extends BaseController
 {
@@ -83,7 +84,12 @@ class SettingController extends BaseController
                 }
             }
 
-            $store->fill($request->input());
+            // Never let a vendor mass-assign ownership/verification/status on their own store
+            // (self-verify, self-publish, reassign owner). VendorStoreRequest already drops the
+            // customer_id/status rules; strip them (and the verification flags) from the fill too.
+            $store->fill(Arr::except($request->input(), [
+                'customer_id', 'status', 'is_verified', 'verified_at', 'verified_by',
+            ]));
             $store->save();
 
             $request->merge(['is_slug_editable' => 1]);

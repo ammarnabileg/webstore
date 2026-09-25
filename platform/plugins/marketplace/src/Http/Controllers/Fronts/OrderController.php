@@ -64,7 +64,10 @@ class OrderController extends BaseController
     public function update(int|string $id, UpdateOrderRequest $request)
     {
         $order = $this->findOrFail($id);
-        $order->fill($request->input());
+        // Only the validated fields (description, private_notes) may be updated. Filling the raw
+        // request let a vendor mass-assign monetary fields (amount, sub_total, shipping_amount, ...)
+        // on their own order, which feeds their store revenue / withdrawable balance.
+        $order->fill($request->validated());
         $order->save();
 
         event(new UpdatedContentEvent(ORDER_MODULE_SCREEN_NAME, $request, $order));

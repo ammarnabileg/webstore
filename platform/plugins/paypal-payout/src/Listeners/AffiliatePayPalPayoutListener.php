@@ -32,28 +32,26 @@ class AffiliatePayPalPayoutListener
             $client = $payPalPaymentService->getClient();
 
             $request = new PayoutsPostRequest();
-            $request->body = json_decode(
-                '{
-                "sender_batch_header":
-                {
-                  "email_subject": "' . trans('plugins/paypal-payout::paypal-payout.you_have_money') . '",
-                  "email_message": "' . trans('plugins/paypal-payout::paypal-payout.received_payment_affiliate') . '"
-                },
-                "items": [
-                {
-                      "recipient_type": "EMAIL",
-                      "amount": {
-                        "value": "' . ((string) $withdrawal->amount) . '",
-                        "currency": "' . $withdrawal->currency . '"
-                      },
-                      "note": "Thanks for being an affiliate on our site!",
-                      "sender_item_id": "' . $withdrawal->id . '",
-                      "receiver": "' . $withdrawal->bank_info['paypal_id'] . '"
-                  }
-                ]
-              }',
-                true
-            );
+            // Build the payout body as an array (not string-concatenated JSON): the affiliate-supplied
+            // paypal_id / currency could otherwise inject JSON to alter the amount or add receivers.
+            $request->body = [
+                'sender_batch_header' => [
+                    'email_subject' => trans('plugins/paypal-payout::paypal-payout.you_have_money'),
+                    'email_message' => trans('plugins/paypal-payout::paypal-payout.received_payment_affiliate'),
+                ],
+                'items' => [
+                    [
+                        'recipient_type' => 'EMAIL',
+                        'amount' => [
+                            'value' => (string) $withdrawal->amount,
+                            'currency' => $withdrawal->currency,
+                        ],
+                        'note' => 'Thanks for being an affiliate on our site!',
+                        'sender_item_id' => (string) $withdrawal->id,
+                        'receiver' => $withdrawal->bank_info['paypal_id'],
+                    ],
+                ],
+            ];
 
             do_action('payment_before_making_api_request', PAYPAL_PAYMENT_METHOD_NAME, $request);
 
