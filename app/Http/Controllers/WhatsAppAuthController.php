@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Botble\Ecommerce\Models\Customer;
 use App\Services\EvolutionApiService;
+use App\Support\KuwaitPhone;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
@@ -371,18 +372,8 @@ class WhatsAppAuthController extends Controller
         return null;
     }
 
-    /**
-     * Normalizes to international digits without "+". Local 8-digit Kuwaiti numbers get 965.
-     */
     private function formatPhoneNumber($phone): ?string
     {
-        $phone = preg_replace('/[^0-9]/', '', (string) $phone);
-        $phone = preg_replace('/^00/', '', $phone);
-
-        if (strlen($phone) === 8) {
-            $phone = '965' . $phone;
-        }
-
-        return preg_match('/^[1-9][0-9]{7,14}$/', $phone) ? $phone : null;
+        return is_string($phone) ? KuwaitPhone::normalize($phone) : null;
     }
 }

@@ -136,9 +136,8 @@ class PublicSystemWizardController extends BaseController
      */
     protected function normalizeKuwaitiPhone(string $phone): ?string
     {
-        $digits = preg_replace('/\D/', '', $phone);
-        $digits = preg_replace('/^(00965|965)/', '', $digits);
+        $normalized = \App\Support\KuwaitPhone::normalize($phone);
 
-        return preg_match('/^[124569]\d{7}$/', $digits) ? '965' . $digits : null;
+        return \App\Support\KuwaitPhone::isKuwaiti($normalized) ? $normalized : null;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\KuwaitPhone;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
@@ -26,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configureTrustedProxies();
         $this->configureRateLimiting();
         $this->guardCustomerPhoneIdentity();
+        $this->normalizeAddressPhones();
 
         \Event::listen(\Illuminate\Routing\Events\RouteMatched::class, function () {
             if (class_exists(\Botble\Base\Facades\DashboardMenu::class)) {
@@ -54,8 +56,16 @@ class AppServiceProvider extends ServiceProvider
         }
 
         \Botble\Ecommerce\Models\Customer::saving(function ($customer): void {
-            if ($customer->isDirty('phone') && ! $customer->isDirty('phone_verified_at')) {
-                $customer->phone_verified_at = null;
+            if ($customer->isDirty('phone')) {
+                // Store one format; keep what was typed if it is not a number we understand.
+                $customer->phone = KuwaitPhone::normalize($customer->phone) ?? $customer->phone;
+
+                // Re-formatting the same number keeps the verification; a different number loses it.
+                $numberChanged = KuwaitPhone::normalize($customer->getOriginal('phone')) !== KuwaitPhone::normalize($customer->phone);
+
+                if ($numberChanged && ! $customer->isDirty('phone_verified_at')) {
+                    $customer->phone_verified_at = null;
+                }
             }
 
             if ($customer->isDirty('email')
@@ -66,6 +76,23 @@ class AppServiceProvider extends ServiceProvider
                 ]);
             }
         });
+    }
+
+    /**
+     * Order and saved addresses get the same phone format, so WhatsApp order messages reach
+     * customers who typed a local number at checkout.
+     */
+    protected function normalizeAddressPhones(): void
+    {
+        foreach ([\Botble\Ecommerce\Models\OrderAddress::class, \Botble\Ecommerce\Models\Address::class] as $model) {
+            if (class_exists($model)) {
+                $model::saving(function ($address): void {
+                    if ($address->isDirty('phone') && $address->phone) {
+                        $address->phone = KuwaitPhone::normalize($address->phone) ?? $address->phone;
+                    }
+                });
+            }
+        }
     }
 
     protected function configureTrustedProxies(): void

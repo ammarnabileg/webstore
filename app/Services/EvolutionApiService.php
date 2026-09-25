@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\KuwaitPhone;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -44,9 +45,17 @@ class EvolutionApiService
             return false;
         }
 
-        // Add WhatsApp suffix if missing
-        if (! str_contains($phone, '@s.whatsapp.net')) {
-            $phone = preg_replace('/[^0-9]/', '', $phone) . '@s.whatsapp.net';
+        // Add WhatsApp suffix if missing. Stored numbers may be local (8 digits) or formatted.
+        if (! str_contains((string) $phone, '@s.whatsapp.net')) {
+            $normalized = KuwaitPhone::normalize((string) $phone);
+
+            if (! $normalized) {
+                Log::warning('Evolution API: skipped invalid phone number');
+
+                return false;
+            }
+
+            $phone = $normalized . '@s.whatsapp.net';
         }
 
         try {
