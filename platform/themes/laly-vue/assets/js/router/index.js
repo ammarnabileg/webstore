@@ -9,7 +9,6 @@ import Search from '../pages/Search.vue';
 import Profile from '../pages/Profile.vue';
 import Wishlist from '../pages/Wishlist.vue';
 import Notifications from '../pages/Notifications.vue';
-import SystemWizard from '../pages/SystemWizard.vue';
 import CmsPage from '../pages/CmsPage.vue';
 
 import Auth from '../pages/Auth.vue';
@@ -17,7 +16,8 @@ import Auth from '../pages/Auth.vue';
 const routes = [
     { path: '/', name: 'Home', component: Home },
     { path: '/login', alias: '/register', name: 'Auth', component: Auth },
-    { path: '/project-wizard', name: 'SystemWizard', component: SystemWizard },
+    // Loaded on demand: the wizard is large and most visitors never open it.
+    { path: '/project-wizard', name: 'SystemWizard', component: () => import(/* webpackChunkName: "wizard" */ '../pages/SystemWizard.vue') },
     { path: '/categories', name: 'Categories', component: Categories },
     { path: '/products', name: 'Products', component: Products },
     { path: '/product-categories/:slug', name: 'CategoryProducts', component: Products },
