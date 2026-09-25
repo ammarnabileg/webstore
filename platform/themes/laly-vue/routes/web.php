@@ -64,7 +64,7 @@ Theme::registerRoutes(function (): void {
                     'per_page' => min(max($request->integer('per_page', 10), 1), 60),
                     'current_paged' => $request->integer('page', 1),
                 ],
-                'with' => ['slugable', 'productLabels', 'productCollections', 'tags'],
+                'with' => ['slugable', 'productLabels', 'productCollections', 'tags', 'metadata'],
             ];
 
             $filters = [];
@@ -175,7 +175,11 @@ Theme::registerRoutes(function (): void {
                 return response()->json(['data' => []]);
             }
 
-            $related = get_related_products($product, 8) ?? collect();
+            $related = collect(get_related_products($product, 8) ?? []);
+            // Cards read labels and payment metadata: load them in one query each, not per product.
+            if ($related->isNotEmpty()) {
+                (new \Illuminate\Database\Eloquent\Collection($related->all()))->loadMissing(['productLabels', 'metadata']);
+            }
 
             return response()->json(['data' => collect($related)->map(fn ($item) => laly_vue_product_card($item))->values()]);
         });
@@ -242,7 +246,7 @@ Theme::registerRoutes(function (): void {
             $baseQuery = \Botble\Ecommerce\Models\Product::query()
                 ->where('status', 'published')
                 ->where('is_variation', false)
-                ->with(['slugable', 'productLabels']);
+                ->with(['slugable', 'productLabels', 'metadata']);
 
             $featured = (clone $baseQuery)->where('is_featured', 1)->orderByDesc('created_at')->limit(8)->get();
             $data['featured_products'] = $featured->map($formatProduct);
@@ -258,7 +262,7 @@ Theme::registerRoutes(function (): void {
                 ->where('status', 'published')
                 ->where('end_date', '>', now())
                 ->with(['products' => function ($query) {
-                    $query->where('status', 'published')->where('is_variation', false)->with(['slugable', 'productLabels']);
+                    $query->where('status', 'published')->where('is_variation', false)->with(['slugable', 'productLabels', 'metadata']);
                 }])
                 ->get();
                 
@@ -529,7 +533,7 @@ Theme::registerRoutes(function (): void {
         $description = $seoMeta['seo_description'] ?? '';
         
         if (empty($description)) {
-            $desc = str_replace(['<br>', '<br/>', '<br />', '</p>'], ' ', $product->description);
+            $desc = str_replace(['<br>', '<br/>', '<br />', '</p>'], ' ', (string) $product->description);
             $desc = strip_tags($desc);
             $desc = preg_replace('/[\x{1F600}-\x{1F64F}\x{1F300}-\x{1F5FF}\x{1F680}-\x{1F6FF}\x{2600}-\x{26FF}\x{2700}-\x{27BF}\x{1F900}-\x{1F9FF}\x{1FA70}-\x{1FAFF}]/u', '', $desc);
             $desc = trim(preg_replace('/\s+/', ' ', $desc));
@@ -547,6 +551,8 @@ Theme::registerRoutes(function (): void {
         }
 
         // Add Schema.org JSON-LD for rich snippets
+        $ssrPrice = $product->front_sale_price ?: $product->price;
+        $product->loadMissing('categories.slugable');
         $schema = [
             '@context' => 'https://schema.org/',
             '@type' => 'Product',
@@ -557,7 +563,7 @@ Theme::registerRoutes(function (): void {
                 '@type' => 'Offer',
                 'url' => url()->current(),
                 'priceCurrency' => get_application_currency()->title ?? 'KWD',
-                'price' => $product->front_sale_price ?: $product->price,
+                'price' => $ssrPrice,
                 'itemCondition' => 'https://schema.org/NewCondition',
                 'availability' => $product->isOutOfStock() ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
             ]
@@ -565,8 +571,7 @@ Theme::registerRoutes(function (): void {
         Theme::asset()->container('header')->writeContent('schema-org-product', '<script type="application/ld+json">' . json_encode($schema, JSON_UNESCAPED_UNICODE) . '</script>');
 
         // Poor Man's SSR HTML
-        $price = $product->front_sale_price ?: $product->price;
-        $formattedPrice = format_price($price);
+        $formattedPrice = format_price($ssrPrice);
         
         $ssrHtml = '<div class="ssr-product-container" style="padding:20px; max-width:1200px; margin:0 auto; font-family:sans-serif;">';
         $ssrHtml .= '<div style="display:flex; flex-wrap:wrap; gap:20px;">';
@@ -588,6 +593,7 @@ Theme::registerRoutes(function (): void {
         // Related Products Links
         $relatedProducts = \Botble\Ecommerce\Models\Product::where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
             ->where('id', '!=', $product->id)
+            ->where('is_variation', false)
             ->limit(4)->get(); // basic related fetch for SEO crawling
         if ($relatedProducts->count()) {
             $ssrHtml .= '<div style="margin-top:40px;"><strong>Related Products:</strong> <ul style="display:flex; gap:10px; list-style:none; padding:0;">';

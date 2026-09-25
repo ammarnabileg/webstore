@@ -273,7 +273,9 @@ if (! function_exists('laly_vue_product_card')) {
     function laly_vue_product_card($product): array
     {
         $price = (float) $product->price;
-        $finalPrice = (float) $product->front_sale_price;
+        // front_sale_price runs the whole price pipeline (sales, flash sales, discounts) on every read.
+        $salePrice = $product->front_sale_price;
+        $finalPrice = (float) $salePrice;
         $isOutOfStock = method_exists($product, 'isOutOfStock') ? $product->isOutOfStock() : false;
 
         return [
@@ -283,8 +285,8 @@ if (! function_exists('laly_vue_product_card')) {
             'image' => RvMedia::getImageUrl($product->image, 'medium', false, RvMedia::getDefaultImage()),
             'price' => $product->price,
             'price_format' => format_price($product->price),
-            'front_sale_price' => $product->front_sale_price,
-            'front_sale_price_format' => format_price($product->front_sale_price),
+            'front_sale_price' => $salePrice,
+            'front_sale_price_format' => format_price($salePrice),
             // front_sale_price is always the final price; it is a discount only when lower than price.
             'is_on_sale' => $finalPrice > 0 && $finalPrice < $price,
             'is_out_of_stock' => $isOutOfStock,
