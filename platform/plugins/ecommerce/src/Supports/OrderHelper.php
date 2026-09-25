@@ -1024,15 +1024,21 @@ class OrderHelper
             if ($address) {
                 $sessionData['address_id'] = $address->id;
             }
-        } elseif ($request->input('address.address_id') && $request->input('address.address_id') !== 'new') {
-            $address = Address::query()->find($request->input('address.address_id'));
+        } elseif ($currentUserId && $request->input('address.address_id') && $request->input('address.address_id') !== 'new') {
+            // Bind the address to the current customer: address_id is client-supplied, and an
+            // unscoped find() would load (and echo back) any customer's saved-address PII.
+            $address = Address::query()
+                ->where('customer_id', $currentUserId)
+                ->find($request->input('address.address_id'));
             if (! empty($address)) {
                 $sessionData['address_id'] = $address->getKey();
             }
         }
 
-        if ($sessionAddressId && $sessionAddressId !== 'new') {
-            $address = Address::query()->find($sessionAddressId);
+        if ($currentUserId && $sessionAddressId && $sessionAddressId !== 'new') {
+            $address = Address::query()
+                ->where('customer_id', $currentUserId)
+                ->find($sessionAddressId);
         }
 
         if (! empty($address)) {

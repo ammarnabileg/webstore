@@ -326,7 +326,14 @@ class PublicCheckoutController extends BaseController
         $address = null;
 
         if (($addressId = $request->input('address.address_id')) && $addressId !== 'new') {
-            $address = Address::query()->find($addressId);
+            // Bind the address to the current customer: address_id is client-supplied, and an
+            // unscoped find() would load (and echo back via setData) any customer's saved-address
+            // PII. Guests have no saved addresses, so it only resolves for the owning customer.
+            if (auth('customer')->check()) {
+                $address = Address::query()
+                    ->where('customer_id', auth('customer')->id())
+                    ->find($addressId);
+            }
             if ($address) {
                 $sessionData['address_id'] = $address->getKey();
             }
@@ -573,7 +580,17 @@ class PublicCheckoutController extends BaseController
                 }
             }
         } else {
-            $sessionData = array_merge(OrderHelper::getOrderSessionData($token), $request->input('address'));
+            // Only merge known address fields from the client. A raw merge let a checkout
+            // principal inject trusted session keys (coupon_discount_amount to pay less,
+            // created_order_id to mutate another order). Mirrors the marketplace hook's allowlist.
+            $addressKeys = [
+                'name', 'phone', 'email', 'country', 'state', 'city', 'address', 'zip_code',
+                'address_id', 'billing_address_same_as_shipping_address', 'billing_address',
+            ];
+            $sessionData = array_merge(
+                OrderHelper::getOrderSessionData($token),
+                Arr::only((array) $request->input('address', []), $addressKeys)
+            );
             OrderHelper::setOrderSessionData($token, $sessionData);
             if (session()->has('applied_coupon_code')) {
                 $discount = $applyCouponService->getCouponData(session('applied_coupon_code'), $sessionData);
