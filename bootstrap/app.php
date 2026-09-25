@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
 
+        // Reject path traversal in a client-supplied `file_name` (data-synchronize importer
+        // move/delete under storage/app). Guards a vendored package we do not patch directly.
+        $middleware->append(\App\Http\Middleware\BlockFileNameTraversal::class);
+
         // Trusted proxies are applied in AppServiceProvider::boot(): .env is not loaded yet when
         // this callback runs, so reading TRUSTED_PROXIES here would silently see nothing.
 
