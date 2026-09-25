@@ -799,21 +799,15 @@ class RazorpayController extends BaseController
                 return response('Error verifying webhook signature: ' . $exception->getMessage(), 400);
             }
         } else {
-            if (! $webhookSecret) {
-                PaymentHelper::log(
-                    RAZORPAY_PAYMENT_METHOD_NAME,
-                    ['webhook_warning' => 'No webhook secret configured'],
-                    ['recommendation' => 'Configure webhook secret for secure webhook verification']
-                );
-            }
+            // Fail closed: a webhook that cannot be signature-verified must not be processed
+            // (it can mark orders paid). Missing secret or missing signature -> reject.
+            PaymentHelper::log(
+                RAZORPAY_PAYMENT_METHOD_NAME,
+                ['webhook_rejected' => $webhookSecret ? 'Missing X-Razorpay-Signature header' : 'No webhook secret configured'],
+                ['recommendation' => 'Configure the webhook secret and ensure Razorpay signs webhook requests']
+            );
 
-            if ($signature && ! $webhookSecret) {
-                PaymentHelper::log(
-                    RAZORPAY_PAYMENT_METHOD_NAME,
-                    ['webhook_warning' => 'Signature provided but no webhook secret configured'],
-                    ['signature_prefix' => substr($signature, 0, 10) . '...']
-                );
-            }
+            return response('Webhook signature required', 400);
         }
 
         try {

@@ -944,7 +944,10 @@ class RvMedia
         $info = pathinfo($urlPath);
 
         try {
-            $response = Http::get($url);
+            // Fetch through the hardened fetcher: it disables redirects and pins the validated IP,
+            // so a public host cannot 302 to an internal address and DNS cannot be rebound between
+            // the check above and the request (SSRF). Invalid/private URLs throw and are handled below.
+            $response = \App\Support\SafeUrlFetcher::get($url);
 
             if ($response->failed() || ! $response->body()) {
                 return [

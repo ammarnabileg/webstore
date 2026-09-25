@@ -67,7 +67,7 @@ class OrderController extends BaseApiController
         }
 
         $orders = $query->latest()
-            ->paginate($request->integer('per_page', 10));
+            ->paginate(min(max($request->integer('per_page', 10), 1), 100));
 
         return $this
             ->httpResponse()

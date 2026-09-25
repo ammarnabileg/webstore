@@ -39,7 +39,7 @@ class ProductCategoryController extends BaseApiController
                 return $query->where('is_featured', $request->boolean('is_featured'));
             })
             ->when($request->input('per_page') > 0, function ($query) use ($request) {
-                return $query->paginate($request->input('per_page'));
+                return $query->paginate(min(max((int) $request->input('per_page'), 1), 100));
             }, function ($query) {
                 return $query->get();
             });

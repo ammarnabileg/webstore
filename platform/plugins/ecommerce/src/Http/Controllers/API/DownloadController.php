@@ -54,7 +54,7 @@ class DownloadController extends BaseApiController
             })
             ->where('product_type', ProductTypeEnum::DIGITAL)->latest()
             ->with(['order', 'product', 'productFiles', 'product.productFiles'])
-            ->paginate($request->integer('per_page', 10));
+            ->paginate(min(max($request->integer('per_page', 10), 1), 100));
 
         return $this
             ->httpResponse()
