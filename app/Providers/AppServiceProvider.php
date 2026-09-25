@@ -138,6 +138,11 @@ class AppServiceProvider extends ServiceProvider
                 $routes->getByName($name)?->middleware('throttle:' . $limiter);
             }
 
+            // Phones are stored normalized; login/register/profile compare the typed value.
+            foreach (['customer.login.post', 'customer.register.post', 'customer.edit-account.post'] as $name) {
+                $routes->getByName($name)?->middleware(\App\Http\Middleware\NormalizeCustomerPhoneInput::class);
+            }
+
             // Same endpoints in the (unnamed) ecommerce API, in case api_enabled is ever turned on.
             $apiLimits = [
                 'api/v1/ecommerce/coupon/apply' => 'coupon',
