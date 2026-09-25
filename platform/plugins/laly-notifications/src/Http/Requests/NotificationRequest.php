@@ -1,6 +1,6 @@
 <?php
 
-namespace Botble\Ecommerce\Http\Requests;
+namespace Botble\LalyNotifications\Http\Requests;
 
 use Botble\Support\Http\Requests\Request;
 

@@ -1,8 +1,8 @@
 <?php
 
-namespace Botble\Ecommerce\Tables;
+namespace Botble\LalyNotifications\Tables;
 
-use Botble\Ecommerce\Models\Notification;
+use Botble\LalyNotifications\Models\Notification;
 use Botble\Table\Abstracts\TableAbstract;
 use Botble\Table\Actions\DeleteAction;
 use Botble\Table\Actions\EditAction;
@@ -21,8 +21,8 @@ class NotificationTable extends TableAbstract
         $this
             ->model(Notification::class)
             ->addActions([
-                EditAction::make()->route('ecommerce.notifications.edit'),
-                DeleteAction::make()->route('ecommerce.notifications.destroy'),
+                EditAction::make()->route('laly-notifications.edit'),
+                DeleteAction::make()->route('laly-notifications.destroy'),
             ]);
     }
 
@@ -49,16 +49,16 @@ class NotificationTable extends TableAbstract
             IdColumn::make(),
             Column::make('title')
                 ->title(trans('core/base::tables.title'))
-                ->route('ecommerce.notifications.edit')
+                ->route('laly-notifications.edit')
                 ->alignLeft(),
             Column::make('type')
-                ->title(trans('plugins/ecommerce::ecommerce.type') ?: 'Type')
+                ->title(trans('plugins/laly-notifications::notifications.type'))
                 ->width(100),
             Column::make('status')
                 ->title(trans('core/base::tables.status') ?: 'Status')
                 ->width(100),
             Column::make('scheduled_at')
-                ->title(trans('plugins/ecommerce::ecommerce.scheduled_at') ?: 'Scheduled At')
+                ->title(trans('plugins/laly-notifications::notifications.scheduled_at'))
                 ->width(150),
             CreatedAtColumn::make(),
         ];
@@ -66,13 +66,13 @@ class NotificationTable extends TableAbstract
 
     public function buttons(): array
     {
-        return $this->addCreateButton(route('ecommerce.notifications.create'), 'ecommerce.notifications.create');
+        return $this->addCreateButton(route('laly-notifications.create'), 'laly-notifications.create');
     }
 
     public function bulkActions(): array
     {
         return [
-            DeleteBulkAction::make()->permission('ecommerce.notifications.destroy'),
+            DeleteBulkAction::make()->permission('laly-notifications.destroy'),
         ];
     }
 }

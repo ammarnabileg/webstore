@@ -1,8 +1,9 @@
 <?php
 
-namespace Botble\Ecommerce\Models;
+namespace Botble\LalyNotifications\Models;
 
 use Botble\Base\Models\BaseModel;
+use Botble\Ecommerce\Models\Customer;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CustomerFcmToken extends BaseModel

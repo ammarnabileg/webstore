@@ -15,6 +15,13 @@
       </span>
     </div>
 
+    <!-- Push opt-in: asked only from this button, never on page load -->
+    <div v-if="pushState === 'default'" class="push-optin d-flex align-items-center justify-content-between gap-3 rounded-4 shadow-sm mb-4 p-3">
+      <span class="fw-semibold"><i class="ti ti-bell-plus me-2" aria-hidden="true"></i>{{ __('push_optin_text') }}</span>
+      <button type="button" class="btn btn-primary rounded-pill px-4" :disabled="pushBusy" @click="enablePush">{{ __('push_enable') }}</button>
+    </div>
+    <p v-else-if="pushState === 'denied'" class="text-muted fs-7 mb-4">{{ __('push_blocked') }}</p>
+
     <!-- iOS Safari Web Push Banner -->
     <div v-if="showIOSBanner" class="ios-pwa-banner d-flex align-items-center rounded-4 shadow-sm mb-4 p-4" role="alert">
       <div class="ios-icon-box flex-shrink-0 me-3">
@@ -124,6 +131,7 @@
 
 <script setup>
 import api from '../services/api';
+import { pushSupported, pushPermission, initFirebase } from '../services/firebase';
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -134,6 +142,16 @@ const showIOSBanner = ref(false);
 const activeTab = ref('all');
 const searchQuery = ref('');
 const isRtl = window.BotbleData?.is_rtl !== false;
+// 'default' shows the opt-in button, 'denied' a hint, anything else nothing.
+const pushState = ref(pushSupported() ? pushPermission() : 'unsupported');
+const pushBusy = ref(false);
+
+const enablePush = async () => {
+  pushBusy.value = true;
+  await initFirebase({ prompt: true });
+  pushState.value = pushPermission();
+  pushBusy.value = false;
+};
 
 onMounted(async () => {
   checkIOS();
@@ -223,6 +241,11 @@ const goToTarget = (url) => {
 </script>
 
 <style scoped>
+.push-optin {
+  background: var(--primary-soft);
+  color: var(--ink);
+}
+
 .notifications-page {
   max-width: 860px;
 }

@@ -43,13 +43,8 @@ use Botble\Ecommerce\Listeners\StoreTaxComponentsListener;
 use Botble\Ecommerce\Models\Address;
 use Botble\Ecommerce\Models\Brand;
 use Botble\Ecommerce\Models\Currency;
-if (! defined('NOTIFICATION_MODULE_SCREEN_NAME')) {
-    define('NOTIFICATION_MODULE_SCREEN_NAME', 'ecommerce-notification');
-}
-
 use Botble\Ecommerce\Models\Customer;
 use Botble\Ecommerce\Models\Discount;
-use Botble\Ecommerce\Models\Notification;
 use Botble\Ecommerce\Models\FlashSale;
 use Botble\Ecommerce\Models\GlobalOption;
 use Botble\Ecommerce\Models\GlobalOptionValue;
@@ -424,7 +419,6 @@ class EcommerceServiceProvider extends ServiceProvider
                 'product-specification',
                 'api',
                 'ajax',
-                'notification',
             ])
             ->loadAndPublishConfigurations([
                 'general',
@@ -1024,16 +1018,7 @@ class EcommerceServiceProvider extends ServiceProvider
                             'url' => fn () => route('ecommerce.specification-tables.index'),
                             'permissions' => ['ecommerce.specification-tables.index'],
                         ]);
-                })
-                ->registerItem([
-                    'id' => 'cms-plugins-ecommerce-notifications',
-                    'parent_id' => 'cms-plugins-ecommerce',
-                    'priority' => 90,
-                    'name' => 'plugins/ecommerce::ecommerce.notifications' ?: 'Notifications',
-                    'icon' => 'ti ti-bell',
-                    'url' => fn () => route('ecommerce.notifications.index'),
-                    'permissions' => ['ecommerce.notifications.index'],
-                ]);
+                });
         });
 
         DashboardMenu::for('customer')->beforeRetrieving(function (): void {
@@ -1254,14 +1239,6 @@ class EcommerceServiceProvider extends ServiceProvider
 
         $this->app->register(EventServiceProvider::class);
         $this->app->register(CommandServiceProvider::class);
-
-        ProductCategory::deleted(function (ProductCategory $category): void {
-            Notification::query()->where('target_type', 'category')->where('target_id', $category->id)->update(['target_type' => 'none', 'target_id' => null]);
-        });
-
-        ProductCollection::deleted(function (ProductCollection $collection): void {
-            Notification::query()->where('target_type', 'collection')->where('target_id', $collection->id)->update(['target_type' => 'none', 'target_id' => null]);
-        });
     }
 
     protected function registerTaxEngine(): void

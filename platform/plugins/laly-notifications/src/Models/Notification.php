@@ -1,9 +1,11 @@
 <?php
 
-namespace Botble\Ecommerce\Models;
+namespace Botble\LalyNotifications\Models;
 
 use Botble\Base\Casts\SafeContent;
 use Botble\Base\Models\BaseModel;
+use Botble\Ecommerce\Models\ProductCategory;
+use Botble\Ecommerce\Models\ProductCollection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Notification extends BaseModel

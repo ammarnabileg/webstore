@@ -1,9 +1,9 @@
 <?php
 
-namespace Botble\Ecommerce\Services;
+namespace Botble\LalyNotifications\Services;
 
-use Botble\Ecommerce\Models\CustomerFcmToken;
-use Botble\Ecommerce\Models\Notification;
+use Botble\LalyNotifications\Models\CustomerFcmToken;
+use Botble\LalyNotifications\Models\Notification;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -11,17 +11,16 @@ class FirebaseMessagingService
 {
     protected function getServiceAccount(): ?array
     {
-        $base64 = env('FCM_SERVICE_ACCOUNT_BASE64') ?? config('plugins.ecommerce.general.fcm_service_account_base64');
-        if (! $base64) {
-            return null;
+        // Admin setting first (stored encrypted), then FCM_SERVICE_ACCOUNT_BASE64 from .env.
+        $json = laly_notifications_service_account_json();
+
+        if (! $json && ($base64 = config('plugins.laly-notifications.general.service_account_base64'))) {
+            $json = base64_decode($base64, true) ?: null;
         }
 
-        $decoded = base64_decode($base64);
-        if (! $decoded) {
-            return null;
-        }
+        $data = $json ? json_decode($json, true) : null;
 
-        return json_decode($decoded, true);
+        return is_array($data) ? $data : null;
     }
 
     public function getProjectId(): ?string
@@ -34,11 +33,11 @@ class FirebaseMessagingService
     {
         $serviceAccount = $this->getServiceAccount();
         if (! $serviceAccount || ! isset($serviceAccount['client_email']) || ! isset($serviceAccount['private_key'])) {
-            Log::error('FCM Service Account not configured properly in FCM_SERVICE_ACCOUNT_BASE64.');
+            Log::error('FCM service account is not configured (admin push settings or FCM_SERVICE_ACCOUNT_BASE64).');
             return null;
         }
 
-        return Cache::remember('fcm_oauth_access_token', 3500, function () use ($serviceAccount) {
+        return Cache::remember('fcm_oauth_access_token_' . md5($serviceAccount['client_email']), 3500, function () use ($serviceAccount) {
             $header = json_encode(['alg' => 'RS256', 'typ' => 'JWT']);
             $now = time();
             $claim = json_encode([
@@ -53,7 +52,9 @@ class FirebaseMessagingService
             $base64UrlClaim = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($claim));
             $signature = '';
 
-            if (! openssl_sign($base64UrlHeader . '.' . $base64UrlClaim, $signature, $serviceAccount['private_key'], 'SHA256')) {
+            $privateKey = openssl_pkey_get_private($serviceAccount['private_key']);
+
+            if (! $privateKey || ! openssl_sign($base64UrlHeader . '.' . $base64UrlClaim, $signature, $privateKey, 'SHA256')) {
                 Log::error('FCM OpenSSL Sign failed: ' . openssl_error_string());
                 return null;
             }
@@ -73,7 +74,13 @@ class FirebaseMessagingService
             $response = curl_exec($ch);
             curl_close($ch);
 
-            $data = json_decode($response, true);
+            $data = is_string($response) ? json_decode($response, true) : null;
+
+            if (! is_array($data)) {
+                Log::error('FCM OAuth token request failed (no response).');
+
+                return null;
+            }
 
             if (isset($data['error'])) {
                 Log::error('FCM OAuth Token Exchange Failed: ' . json_encode($data));
@@ -169,7 +176,7 @@ class FirebaseMessagingService
                 if (in_array($errorCode, ['UNREGISTERED', 'INVALID_ARGUMENT', 'SENDER_ID_MISMATCH', 'NOT_FOUND', 404])) {
                     $invalidTokens[] = $tokenMap[$index];
                 } else {
-                    Log::warning("FCM Send Error for token {$tokenMap[$index]}: " . json_encode($responseData));
+                    Log::warning('FCM send error: ' . $errorCode);
                 }
             }
         }

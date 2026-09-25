@@ -14,49 +14,7 @@ Theme::registerRoutes(function (): void {
     // Internal Vue API Routes
     Route::group(['prefix' => 'ajax/vue', 'as' => 'public.ajax.vue.', 'middleware' => ['web', 'core']], function (): void {
 
-        Route::get('notifications', function (Request $request) {
-            $isLoggedIn = auth('customer')->check();
-            $query = \Botble\Ecommerce\Models\Notification::query()
-                ->whereIn('status', ['published', 'scheduled'])
-                ->where(function ($q) {
-                    $q->whereNull('scheduled_at')->orWhere('scheduled_at', '<=', now());
-                });
-
-            if ($isLoggedIn) {
-                $query->whereIn('type', ['all', 'logged_in']);
-            } else {
-                $query->whereIn('type', ['all', 'guest']);
-            }
-
-            $notifications = $query->orderByDesc('created_at')->get()->map(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'title' => $item->title,
-                    'description' => $item->description,
-                    'target_url' => $item->target_url,
-                    'created_at' => $item->created_at ? $item->created_at->diffForHumans() : '',
-                ];
-            });
-
-            return response()->json(['data' => $notifications, 'is_logged_in' => $isLoggedIn]);
-        });
-
-        Route::middleware('throttle:fcm-token')->post('fcm-token', function (Request $request) {
-            $validated = $request->validate([
-                'token' => ['required', 'string', 'max:512'],
-                'device_type' => ['nullable', 'in:web,ios,android'],
-            ]);
-
-            $fcmToken = \Botble\Ecommerce\Models\CustomerFcmToken::query()->firstOrNew(['token' => $validated['token']]);
-            // A guest request must not detach a token from the customer it belongs to.
-            if (auth('customer')->check()) {
-                $fcmToken->customer_id = auth('customer')->id();
-            }
-            $fcmToken->device_type = $validated['device_type'] ?? 'web';
-            $fcmToken->save();
-
-            return response()->json(['success' => true]);
-        });
+        // Storefront notifications and FCM token routes live in the laly-notifications plugin.
 
         Route::get('products', function (Request $request, ProductInterface $productRepository) {
             $params = [

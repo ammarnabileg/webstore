@@ -257,14 +257,8 @@ onMounted(() => {
     store.fetchCart();
     checkRoute();
 
-    const firebaseConfig = window.BotbleData?.firebase_config || {
-        apiKey: window.BotbleData?.fcm_api_key || "",
-        projectId: window.BotbleData?.fcm_project_id || "",
-        messagingSenderId: window.BotbleData?.fcm_sender_id || "",
-        appId: window.BotbleData?.fcm_app_id || "",
-        vapidKey: window.BotbleData?.fcm_vapid_key || ""
-    };
-    initFirebase(firebaseConfig);
+    // Refreshes the push token only for visitors who already allowed notifications.
+    initFirebase();
 
     window.showToast = ({ title, message, type = 'info', duration = 4000 }) => {
         store.notify(`${title ? title + ' - ' : ''}${message}`, type, duration);

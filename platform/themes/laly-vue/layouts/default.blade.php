@@ -102,6 +102,7 @@
             customer: @json($customerData),
             loginUrl: @json(route('customer.login')),
             logoutUrl: @json(route('customer.logout')),
+            firebase_config: @json(function_exists('laly_notifications_web_config') && is_plugin_active('laly-notifications') ? laly_notifications_web_config() : null),
             ordersUrl: @json(route('customer.orders')),
             accountUrl: @json(route('customer.edit-account')),
             checkoutUrl: @json(route('public.checkout.information', \Botble\Ecommerce\Facades\OrderHelper::getOrderSessionToken())),

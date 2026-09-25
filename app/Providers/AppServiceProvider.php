@@ -120,8 +120,6 @@ class AppServiceProvider extends ServiceProvider
         // By IP: a session id is free to rotate (drop the cookie), so it would not limit anything.
         RateLimiter::for('coupon', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
         RateLimiter::for('public-forms', fn (Request $request) => Limit::perMinute(5)->by($request->ip()));
-        // Push-token registration runs on every page load of the PWA; keep it off the forms counter.
-        RateLimiter::for('fcm-token', fn (Request $request) => Limit::perMinute(20)->by($request->ip()));
 
         // Stock Botble routes that ship without any throttle: order tracking (code + email
         // brute force to read order details), coupon codes (brute force), contact/newsletter (spam).
