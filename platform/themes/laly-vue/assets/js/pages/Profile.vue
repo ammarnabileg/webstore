@@ -38,6 +38,31 @@
           <div class="pl-text">{{ __('settings') || 'الإعدادات' }}</div>
           <i class="ti ti-chevron-left pl-arrow" :class="{ 'ti-chevron-right': !botbleData.is_rtl }"></i>
         </a>
+        <a v-if="customer && botbleData.addressesUrl" :href="botbleData.addressesUrl" class="pl-item" style="text-decoration: none; color: inherit;">
+          <div class="pl-icon"><i class="ti ti-map-pin"></i></div>
+          <div class="pl-text">{{ __('addresses') || 'العناوين' }}</div>
+          <i class="ti ti-chevron-left pl-arrow" :class="{ 'ti-chevron-right': !botbleData.is_rtl }"></i>
+        </a>
+        <a v-if="botbleData.trackOrderUrl" :href="botbleData.trackOrderUrl" class="pl-item" style="text-decoration: none; color: inherit;">
+          <div class="pl-icon"><i class="ti ti-map-search"></i></div>
+          <div class="pl-text">{{ __('track_order') || 'تتبع الطلب' }}</div>
+          <i class="ti ti-chevron-left pl-arrow" :class="{ 'ti-chevron-right': !botbleData.is_rtl }"></i>
+        </a>
+        <a v-if="customer && botbleData.reviewsUrl" :href="botbleData.reviewsUrl" class="pl-item" style="text-decoration: none; color: inherit;">
+          <div class="pl-icon"><i class="ti ti-star"></i></div>
+          <div class="pl-text">{{ __('my_reviews') || 'تقييماتي' }}</div>
+          <i class="ti ti-chevron-left pl-arrow" :class="{ 'ti-chevron-right': !botbleData.is_rtl }"></i>
+        </a>
+        <a v-if="customer && botbleData.downloadsUrl" :href="botbleData.downloadsUrl" class="pl-item" style="text-decoration: none; color: inherit;">
+          <div class="pl-icon"><i class="ti ti-download"></i></div>
+          <div class="pl-text">{{ __('downloads') || 'التنزيلات' }}</div>
+          <i class="ti ti-chevron-left pl-arrow" :class="{ 'ti-chevron-right': !botbleData.is_rtl }"></i>
+        </a>
+        <a v-if="customer && botbleData.changePasswordUrl" :href="botbleData.changePasswordUrl" class="pl-item" style="text-decoration: none; color: inherit;">
+          <div class="pl-icon"><i class="ti ti-lock"></i></div>
+          <div class="pl-text">{{ __('change_password') || 'تغيير كلمة المرور' }}</div>
+          <i class="ti ti-chevron-left pl-arrow" :class="{ 'ti-chevron-right': !botbleData.is_rtl }"></i>
+        </a>
         <div class="pl-item" @click="toggleDarkMode">
           <div class="pl-icon"><i :class="isDark ? 'ti ti-sun' : 'ti ti-moon'"></i></div>
           <div class="pl-text">{{ __('dark_mode') || 'الوضع الليلي' }}</div>
