@@ -32,12 +32,7 @@
             <i :class="product.stock_status === 'out_of_stock' ? 'ti ti-circle-x' : (product.stock_status === 'on_backorder' ? 'ti ti-clock' : 'ti ti-circle-check')"></i>
             {{ product.stock_status === 'out_of_stock' ? (__('out_of_stock') || 'غير متوفر') : (product.stock_status === 'on_backorder' ? (__('pre_order') || 'طلب مسبق') : (__('in_stock') || 'متوفر')) }}
           </div>
-          
-          <!-- Options Placeholder (If product has variants) -->
-          <div class="qvm-options" v-if="product.variations && product.variations.length > 0">
-            <!-- Render options here if needed later -->
-          </div>
-          
+
           <!-- Actions -->
           <div class="qvm-actions">
             <div class="qty-selector">

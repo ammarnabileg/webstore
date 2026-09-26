@@ -85,7 +85,7 @@
                             <label class="mb-1 text-muted">{{ __('رقم الهاتف') }} <span v-if="botbleData.isPhoneRequired" class="text-danger">*</span><span v-else>({{ __('اختياري') }})</span></label>
                             <div class="d-flex align-items-center form-control form-control-lg p-0" style="border-radius: 12px; height: 50px; overflow: hidden; direction: ltr;">
                                 <span class="px-3 fw-bold" style="background-color: rgba(128,128,128,0.1); height: 100%; display: flex; align-items: center; border-right: 1px solid var(--border-color, var(--line)); white-space: nowrap; color: inherit;">🇰🇼 +965</span>
-                                <input type="text" class="form-control form-control-lg border-0 shadow-none flex-grow-1 px-3 h-100 w-100" v-model="registerForm.phone" :required="botbleData.isPhoneRequired" style="background-color: transparent !important; color: inherit; outline: none;" placeholder="12345678">
+                                <input type="text" class="form-control form-control-lg border-0 shadow-none flex-grow-1 px-3 h-100 w-100" v-model="registerForm.phone" :required="botbleData.isPhoneRequired" style="background-color: transparent !important; color: inherit; outline: none;" :placeholder="__('phone_placeholder')">
                             </div>
                         </div>
                         <div class="form-group mb-3 text-start">
@@ -145,7 +145,7 @@
                     <div class="form-group mb-3">
                         <div class="d-flex align-items-center form-control form-control-lg p-0" style="border-radius: 12px; height: 50px; overflow: hidden; direction: ltr;">
                             <span class="px-3 fw-bold" style="background-color: rgba(128,128,128,0.1); height: 100%; display: flex; align-items: center; border-right: 1px solid var(--border-color, var(--line)); white-space: nowrap; color: inherit;">🇰🇼 +965</span>
-                            <input type="text" class="form-control form-control-lg border-0 shadow-none flex-grow-1 px-3 h-100 w-100 fw-bold" v-model="phone" :placeholder="__('12345678')" style="background-color: transparent !important; color: inherit; outline: none;">
+                            <input type="text" class="form-control form-control-lg border-0 shadow-none flex-grow-1 px-3 h-100 w-100 fw-bold" v-model="phone" :placeholder="__('phone_placeholder')" style="background-color: transparent !important; color: inherit; outline: none;">
                         </div>
                     </div>
                     <button class="btn btn-success btn-lg w-100 mb-3 fw-bold" @click="sendAuthMessage" :disabled="loading" style="border-radius: 12px; height: 50px; background-color: #25D366; border: none;">

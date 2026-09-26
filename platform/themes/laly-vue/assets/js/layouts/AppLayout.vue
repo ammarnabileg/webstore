@@ -165,7 +165,7 @@
       <footer class="desktop-footer">
         <div class="container">
           <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
-            <div>&copy; 2026 {{ siteTitle }}. {{ __('all_rights_reserved') }}</div>
+            <div>&copy; {{ currentYear }} {{ siteTitle }}. {{ __('all_rights_reserved') }}</div>
             <div style="display: flex; gap: 20px;">
               <router-link to="/">{{ __('home') }}</router-link>
               <router-link to="/products">{{ __('products') }}</router-link>
@@ -208,6 +208,7 @@ const siteLogo = window.BotbleData?.logo || '';
 const siteName = window.BotbleData?.site_title || '';
 const topbarLogo = window.BotbleData?.topbarLogo || siteLogo;
 const siteTitle = window.BotbleData?.site_title || 'Laly Kuwait';
+const currentYear = new Date().getFullYear();
 const hotline = window.BotbleData?.hotline || '';
 const email = window.BotbleData?.email || '';
 const address = window.BotbleData?.address || '';

@@ -349,20 +349,6 @@ onUnmounted(() => {
     if (sliderInterval) clearInterval(sliderInterval);
 });
 
-const selectedCategories = ref([]);
-
-const selectCategory = (cat, level) => {
-    if (selectedCategories.value[level] === cat.id) {
-        selectedCategories.value = selectedCategories.value.slice(0, level);
-        const parentId = level > 0 ? selectedCategories.value[level - 1] : null;
-        store.fetchProducts({ category: parentId });
-    } else {
-        selectedCategories.value = selectedCategories.value.slice(0, level);
-        selectedCategories.value.push(cat.id);
-        store.fetchProducts({ category: cat.id });
-    }
-};
-
 const openQuickView = (slug) => {
     router.push(`/product/${slug}`);
 };

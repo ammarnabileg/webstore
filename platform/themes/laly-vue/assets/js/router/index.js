@@ -78,6 +78,10 @@ router.afterEach((to) => {
         case 'Profile': titleKey = 'profile'; break;
         case 'Wishlist': titleKey = 'wishlist'; break;
         case 'Notifications': titleKey = 'notifications'; break;
+        case 'Auth': titleKey = 'login_register'; break;
+        case 'ProductDetail': titleKey = 'product_details'; break;
+        case 'CategoryProducts': titleKey = 'products'; break;
+        case 'SystemWizard': titleKey = 'system_wizard'; break;
     }
     
     if (titleKey) {

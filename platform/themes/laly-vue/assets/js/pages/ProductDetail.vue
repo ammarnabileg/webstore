@@ -136,18 +136,6 @@
 
         <!-- Specifications & Description -->
         <div class="suha-details-section">
-          <!-- Quick Specs List -->
-          <div class="content-block" v-if="product.attributes && product.attributes.length">
-            <h3 class="block-title">{{ __('quick_specs') }}</h3>
-            <ul class="specs-list">
-              <li v-for="attr in product.attributes" :key="attr.id">
-                <i class="ti ti-check text-primary"></i>
-                <span class="spec-name">{{ attr.name }}:</span> 
-                <span class="spec-val">{{ attr.value }}</span>
-              </li>
-            </ul>
-          </div>
-
           <!-- Full HTML Content (Overview / Tech Specs Table) -->
           <div class="content-block" v-if="product.content">
             <h3 class="block-title">{{ __('details') }}</h3>
