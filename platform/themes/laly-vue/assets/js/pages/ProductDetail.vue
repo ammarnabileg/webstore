@@ -170,6 +170,33 @@
             </div>
           </div>
 
+          <!-- Write a review (logged-in customers) -->
+          <div class="content-block" v-if="botbleData.customer">
+            <h3 class="block-title">{{ __('write_review') }}</h3>
+            <div class="review-form">
+              <div class="rating-input" :aria-label="__('your_rating')">
+                <i
+                  v-for="s in 5"
+                  :key="s"
+                  class="ti"
+                  :class="s <= reviewStar ? 'ti-star-filled' : 'ti-star'"
+                  role="button"
+                  :aria-label="s + ''"
+                  @click="reviewStar = s"
+                ></i>
+              </div>
+              <textarea
+                v-model="reviewComment"
+                rows="3"
+                :placeholder="__('review_placeholder')"
+                maxlength="1000"
+              ></textarea>
+              <button class="submit-review-btn" :disabled="submittingReview || !reviewComment.trim()" @click="submitReview">
+                {{ submittingReview ? __('loading') : __('submit_review') }}
+              </button>
+            </div>
+          </div>
+
           <!-- Related Products -->
           <div class="content-block" v-if="relatedProducts && relatedProducts.length">
             <h3 class="block-title">{{ __('related_products') || 'منتجات ذات صلة' }}</h3>
@@ -210,6 +237,11 @@ const product = computed(() => store.currentProduct);
 const activeImage = ref('');
 const relatedProducts = ref([]);
 const reviews = ref([]);
+
+// Write-a-review form state.
+const reviewStar = ref(5);
+const reviewComment = ref('');
+const submittingReview = ref(false);
 
 // --- Variations ---
 // selectedAttrs maps an attribute-set id -> the chosen attribute (value) id.
@@ -358,9 +390,73 @@ const buyNow = async () => {
         store.notify(__('add_to_cart_error') || 'حدث خطأ.', 'error');
     }
 };
+
+const submitReview = async () => {
+    if (!product.value || !reviewComment.value.trim()) return;
+    submittingReview.value = true;
+    try {
+        const res = await store.submitReview({
+            product_id: product.value.id,
+            star: reviewStar.value,
+            comment: reviewComment.value.trim(),
+        });
+        if (res.ok) {
+            store.notify(res.message || __('review_submitted'), 'success');
+            reviewComment.value = '';
+            reviewStar.value = 5;
+            fetchExtras(route.params.slug); // refresh the list (or show pending-approval note)
+        } else {
+            store.notify(res.message || __('review_error'), 'error');
+        }
+    } finally {
+        submittingReview.value = false;
+    }
+};
 </script>
 
 <style scoped>
+/* Write a review */
+.review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.rating-input {
+  display: flex;
+  gap: 6px;
+  font-size: 26px;
+  color: var(--stars, #f2a52b);
+  cursor: pointer;
+}
+.rating-input .ti {
+  cursor: pointer;
+}
+.review-form textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+}
+.submit-review-btn {
+  align-self: flex-start;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  background: var(--primary-strong);
+  color: var(--on-primary);
+  font-weight: 700;
+  cursor: pointer;
+}
+.submit-review-btn:disabled {
+  opacity: .6;
+  cursor: default;
+}
+
 /* Variations */
 .variation-groups {
   margin: 16px 0;

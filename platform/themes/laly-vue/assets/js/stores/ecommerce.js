@@ -194,6 +194,25 @@ export const useEcommerceStore = defineStore('ecommerce', {
             }
             localStorage.setItem('compareList', JSON.stringify(this.compareList));
         },
+        async submitReview({ product_id, star, comment }) {
+            // Post to the top-level review endpoint so Botble's ReviewRequest validation
+            // and purchase/eligibility policy are reused (baseURL override: this route is
+            // not under /ajax/vue). Axios sends the XSRF cookie for CSRF.
+            const match = window.location.pathname.match(/^\/(en|ar)(\/|$)/);
+            const prefix = match ? `/${match[1]}` : '';
+            try {
+                const res = await api.post('/review/create', { product_id, star, comment }, { baseURL: prefix || '/' });
+                if (res.data && !res.data.error) {
+                    return { ok: true, message: res.data.message };
+                }
+                return { ok: false, message: res.data?.message };
+            } catch (err) {
+                const data = err?.response?.data;
+                const msg = data?.message
+                    || (data?.errors ? Object.values(data.errors).flat()[0] : null);
+                return { ok: false, message: msg };
+            }
+        },
         notify(message, type = 'success', duration = 3000) {
             const id = Date.now() + Math.random().toString(36).substr(2, 9);
             this.notifications.push({ id, message, type });
