@@ -43,11 +43,11 @@
           <div class="pl-text">{{ __('addresses') || 'العناوين' }}</div>
           <i class="ti ti-chevron-left pl-arrow" :class="{ 'ti-chevron-right': !botbleData.is_rtl }"></i>
         </a>
-        <a v-if="botbleData.trackOrderUrl" :href="botbleData.trackOrderUrl" class="pl-item" style="text-decoration: none; color: inherit;">
+        <router-link to="/order-tracking" class="pl-item" style="text-decoration: none; color: inherit;">
           <div class="pl-icon"><i class="ti ti-map-search"></i></div>
           <div class="pl-text">{{ __('track_order') || 'تتبع الطلب' }}</div>
           <i class="ti ti-chevron-left pl-arrow" :class="{ 'ti-chevron-right': !botbleData.is_rtl }"></i>
-        </a>
+        </router-link>
         <a v-if="customer && botbleData.reviewsUrl" :href="botbleData.reviewsUrl" class="pl-item" style="text-decoration: none; color: inherit;">
           <div class="pl-icon"><i class="ti ti-star"></i></div>
           <div class="pl-text">{{ __('my_reviews') || 'تقييماتي' }}</div>

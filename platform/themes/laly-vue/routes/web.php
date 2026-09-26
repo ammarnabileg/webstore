@@ -425,6 +425,89 @@ Theme::registerRoutes(function (): void {
             return response()->json(['error' => false, 'data' => ['added' => $added, 'count' => $count]]);
         });
 
+        // Order tracking for the SPA. The stock JSON API lives under api/v1 which is gated by
+        // api_enabled (kept OFF), so the SPA uses this theme wrapper instead. It mirrors the
+        // stock lookup (code + matching email/phone) but returns ONLY non-sensitive fields —
+        // never the address, email, phone or user id — so an enumerated code can't leak PII.
+        Route::get('orders/track/settings', function () {
+            return response()->json(['data' => [
+                'enabled' => \Botble\Ecommerce\Facades\EcommerceHelper::isOrderTrackingEnabled(),
+                'method' => \Botble\Ecommerce\Facades\EcommerceHelper::getOrderTrackingMethod(),
+            ]]);
+        });
+
+        Route::post('orders/track', function (Request $request) {
+            if (! \Botble\Ecommerce\Facades\EcommerceHelper::isOrderTrackingEnabled()) {
+                return response()->json(['error' => true, 'message' => __('Order tracking is not enabled')], 404);
+            }
+
+            $usingPhone = \Botble\Ecommerce\Facades\EcommerceHelper::isOrderTrackingUsingPhone();
+            $request->validate([
+                'code' => ['required', 'string', 'max:50'],
+                'email' => [$usingPhone ? 'nullable' : 'required', 'email', 'max:191'],
+                'phone' => [$usingPhone ? 'required' : 'nullable', 'string', 'max:30'],
+            ]);
+
+            $code = $request->input('code');
+
+            $query = \Botble\Ecommerce\Models\Order::query()
+                ->where(function ($q) use ($code): void {
+                    $q->where('ec_orders.code', $code)->orWhere('ec_orders.code', '#' . $code);
+                })
+                ->with([
+                    'products' => fn ($q) => $q->select(['order_id', 'product_name', 'product_image', 'qty', 'price']),
+                    'histories' => fn ($q) => $q->select(['order_id', 'action', 'description', 'created_at'])->latest(),
+                    'shipment',
+                    'payment',
+                ])
+                ->select('ec_orders.*')
+                ->when($usingPhone, function ($q) use ($request): void {
+                    $q->where(function ($q) use ($request): void {
+                        $q->whereHas('address', fn ($s) => $s->wherePhone($request->input('phone')))
+                            ->orWhereHas('user', fn ($s) => $s->wherePhone($request->input('phone')));
+                    });
+                }, function ($q) use ($request): void {
+                    $q->where(function ($q) use ($request): void {
+                        $q->whereHas('address', fn ($s) => $s->where('email', $request->input('email')))
+                            ->orWhereHas('user', fn ($s) => $s->where('email', $request->input('email')));
+                    });
+                });
+
+            $order = apply_filters('ecommerce_order_tracking_query', $query)->first();
+
+            if (! $order) {
+                return response()->json(['error' => true, 'message' => __('Order not found')], 404);
+            }
+
+            $statusLabel = fn ($status) => $status && is_object($status) && method_exists($status, 'label') ? $status->label() : (string) $status;
+
+            $items = $order->products->map(fn ($p) => [
+                'name' => $p->product_name,
+                'image' => RvMedia::getImageUrl($p->product_image, 'thumb', false, RvMedia::getDefaultImage()),
+                'qty' => (int) $p->qty,
+                'price_format' => format_price($p->price),
+            ])->values();
+
+            $histories = $order->histories->map(fn ($h) => [
+                'action' => $h->action,
+                'description' => $h->description,
+                'created_at' => optional($h->created_at)->toIso8601String(),
+            ])->values();
+
+            return response()->json(['error' => false, 'data' => ['order' => [
+                'code' => $order->code,
+                'status' => $statusLabel($order->status),
+                'created_at' => optional($order->created_at)->toIso8601String(),
+                'amount_format' => format_price($order->amount),
+                'sub_total_format' => format_price($order->sub_total),
+                'shipping_amount_format' => format_price($order->shipping_amount),
+                'items' => $items,
+                'histories' => $histories,
+                'shipment_status' => $order->shipment ? $statusLabel($order->shipment->status) : null,
+                'payment_status' => $order->payment ? $statusLabel($order->payment->status) : null,
+            ]]]);
+        })->middleware('throttle:20,1');
+
         Route::post('cart/add', function (Request $request) {
             $validated = $request->validate([
                 'id' => ['required', 'integer', 'min:1'],

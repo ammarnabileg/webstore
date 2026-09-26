@@ -27,6 +27,7 @@ const routes = [
     { path: '/profile', name: 'Profile', component: Profile },
     { path: '/wishlist', name: 'Wishlist', component: Wishlist },
     { path: '/notifications', name: 'Notifications', component: Notifications },
+    { path: '/order-tracking', name: 'OrderTracking', component: () => import(/* webpackChunkName: "order-tracking" */ '../pages/OrderTracking.vue') },
     { path: '/:slug(.*)*', name: 'CmsPage', component: CmsPage },
 ];
 
@@ -82,6 +83,7 @@ router.afterEach((to) => {
         case 'ProductDetail': titleKey = 'product_details'; break;
         case 'CategoryProducts': titleKey = 'products'; break;
         case 'SystemWizard': titleKey = 'system_wizard'; break;
+        case 'OrderTracking': titleKey = 'track_order'; break;
     }
     
     if (titleKey) {
