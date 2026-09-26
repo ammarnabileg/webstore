@@ -52,7 +52,7 @@
           <div style="font-size: 13px; font-weight: 600; color: var(--primary);">{{ otherLanguage.name }}</div>
         </div>
 
-        <a v-if="customer" :href="botbleData.logoutUrl" class="pl-item" style="text-decoration: none; color: var(--sale);">
+        <a v-if="customer" href="javascript:void(0)" @click="doLogout" class="pl-item" style="text-decoration: none; color: var(--sale);">
           <div class="pl-icon" style="color: var(--sale); background: var(--surface-2);"><i class="ti ti-logout"></i></div>
           <div class="pl-text">{{ __('logout') || 'تسجيل الخروج' }}</div>
         </a>
@@ -79,6 +79,22 @@ const otherLanguage = computed(() => {
 
 const switchLanguage = (url) => {
     window.location.href = url;
+};
+
+const doLogout = async () => {
+    // POST with CSRF instead of a GET anchor, so logout can't be triggered cross-site.
+    try {
+        const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const res = await fetch(botbleData.logoutPostUrl || '/logout', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        });
+        let redirect = botbleData.baseUrl || '/';
+        try { const j = await res.json(); if (j && j.redirect) redirect = j.redirect; } catch (e) {}
+        window.location.href = redirect;
+    } catch (e) {
+        window.location.href = botbleData.logoutUrl || '/';
+    }
 };
 
 onMounted(() => {

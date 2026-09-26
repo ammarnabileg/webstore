@@ -102,6 +102,8 @@
             customer: @json($customerData),
             loginUrl: @json(route('customer.login')),
             logoutUrl: @json(route('customer.logout')),
+            logoutPostUrl: @json(url('logout')),
+            passwordResetUrl: @json(Route::has('customer.password.request') ? route('customer.password.request') : (Route::has('customer.password.reset') ? route('customer.password.reset') : null)),
             firebase_config: @json(function_exists('laly_notifications_web_config') && is_plugin_active('laly-notifications') ? laly_notifications_web_config() : null),
             ordersUrl: @json(route('customer.orders')),
             accountUrl: @json(route('customer.edit-account')),

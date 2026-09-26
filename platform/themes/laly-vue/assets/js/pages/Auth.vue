@@ -24,9 +24,12 @@
                                 <input type="text" class="form-control form-control-lg border-0 shadow-none flex-grow-1 px-3 h-100 w-100" v-model="classicForm.email" @input="checkInputType" required style="background-color: transparent !important; color: inherit; outline: none;" :placeholder="__('Email or Phone')">
                             </div>
                         </div>
-                        <div class="form-group mb-4 text-start">
+                        <div class="form-group mb-2 text-start">
                             <label class="mb-1 text-muted">{{ __('كلمة المرور') }}</label>
                             <input type="password" class="form-control form-control-lg" v-model="classicForm.password" required style="border-radius: 12px; height: 50px;">
+                        </div>
+                        <div class="text-start mb-3" v-if="botbleData.passwordResetUrl">
+                            <a :href="botbleData.passwordResetUrl" class="text-decoration-none small fw-bold" style="color: var(--primary);">{{ __('forgot_password') }}</a>
                         </div>
                         <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold mb-3" :disabled="loading" style="border-radius: 12px; height: 50px; background-color: var(--primary-strong); color: var(--on-primary); border: none;">
                             <span v-if="!loading">{{ __('دخول') }}</span>

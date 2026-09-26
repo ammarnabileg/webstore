@@ -19,6 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // move/delete under storage/app). Guards a vendored package we do not patch directly.
         $middleware->append(\App\Http\Middleware\BlockFileNameTraversal::class);
 
+        // Reject cross-site GETs to state-changing routes (logout, cart remove/destroy, address delete).
+        $middleware->append(\App\Http\Middleware\RejectCrossSiteStateChangingGet::class);
+
         // Trusted proxies are applied in AppServiceProvider::boot(): .env is not loaded yet when
         // this callback runs, so reading TRUSTED_PROXIES here would silently see nothing.
 

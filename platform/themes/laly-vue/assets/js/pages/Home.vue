@@ -149,7 +149,7 @@
       <div class="home-prods" v-if="flashSales.length > 0 && flashSales[0].products.length > 0">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
           <div class="sec-title" style="margin:0;font-size:17px;color:var(--danger);display:flex;align-items:center;gap:5px;">
-             <i class="ti ti-bolt"></i> Cyclone Offer 
+             <i class="ti ti-bolt"></i> {{ __('flash_sale') }} 
           </div>
         </div>
         <div class="prods-grid">
@@ -165,7 +165,7 @@
       <!-- Weekly Best Sellers -->
       <div class="home-prods" v-if="weeklyBestSellers.length > 0">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-          <div class="sec-title" style="margin:0;font-size:17px;">Weekly Best Sellers</div>
+          <div class="sec-title" style="margin:0;font-size:17px;">{{ __('newest_products') }}</div>
         </div>
         <div class="prods-grid">
           <ProductCard 
@@ -180,7 +180,7 @@
       <!-- Top Products -->
       <div class="home-prods" v-if="topProducts.length > 0">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-          <div class="sec-title" style="margin:0;font-size:17px;">Top Products</div>
+          <div class="sec-title" style="margin:0;font-size:17px;">{{ __('top_products') }}</div>
         </div>
         <div class="prods-grid">
           <ProductCard 
@@ -195,7 +195,7 @@
       <!-- Featured Products -->
       <div class="home-prods" v-if="featuredProducts.length > 0">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-          <div class="sec-title" style="margin:0;font-size:17px;">Featured Products</div>
+          <div class="sec-title" style="margin:0;font-size:17px;">{{ __('featured_products') }}</div>
           <span style="font-size:14px;color:var(--primary);cursor:pointer;" @click="$router.push('/products')">{{ __('view_all') || 'عرض الكل' }}</span>
         </div>
         <div class="prods-grid">

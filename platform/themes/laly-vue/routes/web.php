@@ -459,6 +459,15 @@ Theme::registerRoutes(function (): void {
 
     });
 
+    // POST logout so the SPA does not rely on a GET anchor (which is embeddable cross-site).
+    Route::post('logout', function () {
+        auth('customer')->logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+
+        return response()->json(['error' => false, 'redirect' => url('/')]);
+    })->name('public.logout.post');
+
     // SPA Catch-All Routes: Force Botble to return the Vue layout when user manually reloads on these pages
     $spaRoutes = [
         'products' => 'public.products',
