@@ -239,12 +239,14 @@ Theme::registerRoutes(function (): void {
         // Get homepage content
         Route::get('homepage', function () {
             $homepageId = theme_option('homepage_id');
+            // No CMS homepage assigned is a normal state (the SPA renders its own default blocks);
+            // return 200 + null so the storefront does not log a console error on every home load.
             if (!$homepageId) {
-                return response()->json(['message' => 'Homepage not configured'], 404);
+                return response()->json(['data' => null]);
             }
             $page = \Botble\Page\Models\Page::find($homepageId);
             if (!$page || $page->status != 'published') {
-                return response()->json(['message' => 'Homepage not found'], 404);
+                return response()->json(['data' => null]);
             }
 
             return response()->json([
@@ -466,6 +468,9 @@ Theme::registerRoutes(function (): void {
         'profile' => 'public.profile',
         'notifications' => 'public.notifications',
         'project-wizard' => 'public.system-wizard',
+        // NOTE: /wishlist is served by the ecommerce plugin's wishlist/{code?} route (registered
+        // first, so it wins). It is wrapped by the Blade chrome so it is navigable; a true SPA
+        // wishlist with server sync is Tier 2.5.
     ];
     foreach ($spaRoutes as $spaRoute => $name) {
         Route::get($spaRoute, function () {

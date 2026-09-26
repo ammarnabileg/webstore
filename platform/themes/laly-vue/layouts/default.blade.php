@@ -151,7 +151,18 @@
     {!! Theme::header() !!}
 </head>
 <body>
-    {!! Theme::content() !!}
+    @php
+        $themeContent = Theme::content();
+        // SPA views mount into <div id="app">. Everything else is an inherited martfury/Blade page;
+        // wrap those with lightweight chrome so the user is not stranded without navigation.
+        $isSpaView = str_contains($themeContent, 'id="app"');
+    @endphp
+    @if ($isSpaView)
+        {!! $themeContent !!}
+    @else
+        @include(Theme::getThemeNamespace() . '::partials.blade-chrome')
+        <main class="blade-fallback-content">{!! $themeContent !!}</main>
+    @endif
     {!! Theme::footer() !!}
 </body>
 </html>
