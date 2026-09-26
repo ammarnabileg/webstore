@@ -57,6 +57,7 @@ resources/docs
 
 /lang/*
 !/lang/en
+!/lang/ar
 
 /log
 
