@@ -68,7 +68,7 @@ import { inject } from 'vue';
 import { __ } from '../../utils/i18n';
 // Room labels are stable ids (e.g. 'hall','yard') so pricing/zone matching never
 // depends on display text; render them through i18n.
-const roomLabel = (id) => __('room_' + id);
+const roomLabel = (id) => { const key = 'room_' + id; return __(key); };
 
 const { icon, livePkg, pinTypes, pinIcon, sk, roomLabels, zoneType, floorsAvail, floorCount, sketchCams, sketchWiring, skUndo, skClear, generateStarter, stageDown, roomDown, resizeDown, sketchPlacePin, roomClick, delRoom, delSkPin, skPinDrag, labelRoom } = inject('wizard');
 </script>

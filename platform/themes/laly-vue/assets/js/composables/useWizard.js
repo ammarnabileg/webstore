@@ -1,16 +1,17 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import axios from 'axios';
 import { useSketch, startDrag } from './useSketch';
+import { __ } from '../utils/i18n';
 
 // اشتراطات وزارة الداخلية للمنشآت التجارية — راجع النص الرسمي حسب نوع النشاط قبل الإطلاق، والقيم دي config
 const COMMERCIAL_TYPES = ['shop','office','warehouse'];
 const MOI_RETENTION_DAYS = 180;
-const MOI_NOTICE = 'تنويه: تشترط وزارة الداخلية على المنشآت التجارية الاحتفاظ بالتسجيل لمدة 6 أشهر.';
+const MOI_NOTICE = __('wiz_moi_notice');
 
 const TIERS = [
-  { tier:'basic', title:'الباقة الأساسية',  outcome:'تعرف عند وجود حركة، وتراجع التسجيلات متى شئت.' },
-  { tier:'pro',   title:'الباقة الاحترافية',  outcome:'تميّز الوجوه وأرقام السيارات بوضوح، نهارًا وليلًا.', badge:'الأكثر طلبًا' },
-  { tier:'prem',  title:'الباقة المميزة',  outcome:'تفاصيل دقيقة بالألوان حتى في الظلام، وأعلى جودة تخزين.' },
+  { tier:'basic', title:__('wiz_tier_basic_title'),  outcome:__('wiz_tier_basic_outcome') },
+  { tier:'pro',   title:__('wiz_tier_pro_title'),  outcome:__('wiz_tier_pro_outcome'), badge:__('wiz_tier_pro_badge') },
+  { tier:'prem',  title:__('wiz_tier_prem_title'),  outcome:__('wiz_tier_prem_outcome') },
 ];
 
 const ICONS = {
@@ -48,33 +49,35 @@ export function useWizard() {
         const submitted = ref(false);
         const phoneTouched = ref(false);
 
-        const stepNames = ["نوع المكان","تفاصيل المكان","احتياجك","الميزانية","الباقات والتواصل"];
+        const stepNames = [__('wiz_step_place'),__('wiz_step_place_details'),__('wiz_step_needs'),__('wiz_step_budget'),__('wiz_step_packages')];
 
         const placeTypes = [
-          {id:'apartment', label:'شقة',          icon:'apartment'},
-          {id:'villa',     label:'فيلا / بيت',    icon:'villa'},
-          {id:'shop',      label:'محل',          icon:'shop'},
-          {id:'office',    label:'مكتب / شركة',   icon:'office'},
-          {id:'warehouse', label:'مخزن / مصنع',   icon:'warehouse'},
-          {id:'compound',  label:'عمارة / مجمع', icon:'compound'},
+          {id:'apartment', label:__('wiz_place_apartment'), icon:'apartment'},
+          {id:'villa',     label:__('wiz_place_villa'),     icon:'villa'},
+          {id:'shop',      label:__('wiz_place_shop'),      icon:'shop'},
+          {id:'office',    label:__('wiz_place_office'),    icon:'office'},
+          {id:'warehouse', label:__('wiz_place_warehouse'), icon:'warehouse'},
+          {id:'compound',  label:__('wiz_place_compound'),  icon:'compound'},
         ];
 
-        const areaOpts      = [{label:'أقل من 100م²',mid:80},{label:'100–250م²',mid:175},{label:'250–500م²',mid:375},{label:'أكثر من 500م²',mid:650}];
-        const floorOpts     = [{label:'طابق واحد',v:1},{label:'طابقان',v:2},{label:'3 طوابق أو أكثر',v:3}];
+        // NOTE: option arrays are addressed by INDEX server-side (RecommendationService),
+        // so their order/length must never change — only the display label is translated.
+        const areaOpts      = [{label:__('wiz_area_0'),mid:80},{label:__('wiz_area_1'),mid:175},{label:__('wiz_area_2'),mid:375},{label:__('wiz_area_3'),mid:650}];
+        const floorOpts     = [{label:__('wiz_floor_1'),v:1},{label:__('wiz_floor_2'),v:2},{label:__('wiz_floor_3'),v:3}];
         const entranceOpts  = [{label:'1',v:1},{label:'2',v:2},{label:'3',v:3},{label:'4+',v:4}];
-        const conditionOpts = [{label:'قيد الإنشاء',factor:0.9},{label:'في مرحلة التشطيب',factor:1.0},{label:'جاهز ومُشطّب',factor:1.35}];
-        const deviceOpts    = [{label:'أقل من 10'},{label:'10–25'},{label:'أكثر من 25'}];
-        const recordOpts    = [{label:'أسبوع',days:7},{label:'أسبوعين',days:14},{label:'شهر',days:30},{label:'3 أشهر',days:90},{label:'6 أشهر',days:180}];
-        const budgetOpts    = [{label:'أقل من 200 د.ك'},{label:'200–500 د.ك'},{label:'500–1000 د.ك'},{label:'أكثر من 1000 د.ك'}];
-        const brandOpts     = [{label:'Hikvision'},{label:'Dahua'},{label:'Ubiquiti'},{label:'TP-Link'},{label:'انصحوني بالأنسب'}];
+        const conditionOpts = [{label:__('wiz_cond_0'),factor:0.9},{label:__('wiz_cond_1'),factor:1.0},{label:__('wiz_cond_2'),factor:1.35}];
+        const deviceOpts    = [{label:__('wiz_dev_0')},{label:__('wiz_dev_1')},{label:__('wiz_dev_2')}];
+        const recordOpts    = [{label:__('wiz_rec_0'),days:7},{label:__('wiz_rec_1'),days:14},{label:__('wiz_rec_2'),days:30},{label:__('wiz_rec_3'),days:90},{label:__('wiz_rec_4'),days:180}];
+        const budgetOpts    = [{label:__('wiz_budget_0')},{label:__('wiz_budget_1')},{label:__('wiz_budget_2')},{label:__('wiz_budget_3')}];
+        const brandOpts     = [{label:'Hikvision'},{label:'Dahua'},{label:'Ubiquiti'},{label:'TP-Link'},{label:__('wiz_brand_advise')}];
 
         const goals = [
-          {id:'entry',     label:'مراقبة المداخل والأبواب',   sub:'تعرف من دخل وخرج ومتى',      icon:'door'},
-          {id:'indoor',    label:'مراقبة داخلية',             sub:'الصالة، الكاشير، الممرات',      icon:'cam'},
-          {id:'perimeter', label:'تأمين المحيط الخارجي',      sub:'الحوش، الكراج، السور',         icon:'fence'},
-          {id:'wifi',      label:'واي فاي قوي يغطي كل المكان', sub:'دون مناطق ضعيفة',           icon:'wifi'},
-          {id:'intercom',  label:'إنتركم للباب',              sub:'ترى الزائر وترد عليه',       icon:'intercom'},
-          {id:'alarm',     label:'إنذار ضد السرقة',           sub:'تنبيه فوري عند أي حركة غريبة',   icon:'bell'},
+          {id:'entry',     label:__('wiz_goal_entry_label'),     sub:__('wiz_goal_entry_sub'),     icon:'door'},
+          {id:'indoor',    label:__('wiz_goal_indoor_label'),    sub:__('wiz_goal_indoor_sub'),    icon:'cam'},
+          {id:'perimeter', label:__('wiz_goal_perimeter_label'), sub:__('wiz_goal_perimeter_sub'), icon:'fence'},
+          {id:'wifi',      label:__('wiz_goal_wifi_label'),      sub:__('wiz_goal_wifi_sub'),      icon:'wifi'},
+          {id:'intercom',  label:__('wiz_goal_intercom_label'),  sub:__('wiz_goal_intercom_sub'),  icon:'intercom'},
+          {id:'alarm',     label:__('wiz_goal_alarm_label'),     sub:__('wiz_goal_alarm_sub'),     icon:'bell'},
         ];
 
         const a = reactive({
@@ -88,12 +91,12 @@ export function useWizard() {
     // ---- المخطط الاختياري: صورة + دبابيس {t, x%, y%} ----
     const plan = reactive({ img:null, pins:[], tool:'cam', err:'' });
     const pinTypes = [
-      {id:'cam',  label:'كاميرا',      icon:'cam'},
-      {id:'ap',   label:'أكسس',       icon:'wifi'},
-      {id:'net',  label:'نقطة نت',    icon:'net'},
-      {id:'tv',   label:'تلفزيون',    icon:'tv'},
-      {id:'rack', label:'الكبينة',    icon:'rack'},
-      {id:'note', label:'ملاحظة',     icon:'pin'},
+      {id:'cam',  label:__('wiz_pin_cam'),  icon:'cam'},
+      {id:'ap',   label:__('wiz_pin_ap'),   icon:'wifi'},
+      {id:'net',  label:__('wiz_pin_net'),  icon:'net'},
+      {id:'tv',   label:__('wiz_pin_tv'),   icon:'tv'},
+      {id:'rack', label:__('wiz_pin_rack'), icon:'rack'},
+      {id:'note', label:__('wiz_pin_note'), icon:'pin'},
     ];
     const pinIcon  = t => (pinTypes.find(x=>x.id===t)||{}).icon || 'pin';
     const pinLabel = t => (pinTypes.find(x=>x.id===t)||{}).label || '';
