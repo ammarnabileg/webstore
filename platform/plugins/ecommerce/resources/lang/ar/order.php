@@ -455,4 +455,6 @@ return [
     'customer_details' => 'تفاصيل العميل',
     'tax_information' => 'معلومات الضريبة',
     'order_summary' => 'ملخص الطلب',
+    'enter_new_billing_address' => 'أدخل عنوان فوترة جديد...',
+    'add_billing_information' => 'إضافة معلومات الفوترة',
 ];

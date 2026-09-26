@@ -116,4 +116,6 @@ return [
     'close' => 'إغلاق',
     'coupon_code_label' => 'رمز الكوبون: :code',
     'enter_coupon_code_placeholder' => 'أدخل رمز الكوبون...',
+    'enter_coupon_code' => 'أدخل رمز الكوبون',
+    'or_select_coupon' => 'أو اختر كوبونًا',
 ];

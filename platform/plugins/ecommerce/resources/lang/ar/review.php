@@ -109,4 +109,5 @@ return [
         'images_mimes' => 'يجب أن تكون الصور بتنسيق JPG أو JPEG أو PNG.',
         'images_file_max' => 'لا يمكن أن يتجاوز حجم كل صورة :max كيلوبايت.',
     ],
+    'cancel' => 'إلغاء',
 ];

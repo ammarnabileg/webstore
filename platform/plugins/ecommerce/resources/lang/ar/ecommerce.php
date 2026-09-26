@@ -190,5 +190,6 @@ return [
     'checkout' => 'إتمام الشراء',
     'complete_order' => 'إكمال الطلب',
     'agree_terms_and_policy_error' => 'يجب عليك الموافقة على الشروط والأحكام وسياسة الخصوصية.',
+    'optional' => 'اختياري',
 ];
 
