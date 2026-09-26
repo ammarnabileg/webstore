@@ -242,7 +242,6 @@
     "Enter the order ID": "أدخل رقم الطلب",
     "Enter your business email address where invoices and tax documents will be sent (e.g., billing@company.com).": "أدخل عنوان بريدك الإلكتروني للأعمال حيث سيتم إرسال الفواتير والمستندات الضريبية (مثل: billing@company.com).",
     "Enter your business tax identification number such as Tax ID, VAT number, or EIN (e.g., 12-3456789, VAT123456789, EIN 12-3456789).": "أدخل رقم التعريف الضريبي لنشاطك التجاري مثل الرقم الضريبي أو رقم ضريبة القيمة المضافة أو EIN (مثل: 12-3456789، VAT123456789، EIN 12-3456789).",
-    "Enter your complete business address including street, city, state, and postal code (e.g., 123 Business Street, Suite 100, City, State 12345).": "أدخل عنوان نشاطك التجاري الكامل بما في ذلك الشارع والمدينة والولاية والرمز البريدي (مثل: 123 شارع الأعمال، جناح 100، المدينة، الولاية 12345).",
     "Enter your current password": "أدخل كلمة المرور الحالية",
     "Enter your email": "أدخل بريدك الإلكتروني",
     "Enter your phone number": "أدخل رقم هاتفك",
@@ -834,5 +833,11 @@
     "Payment failed or invalid order.": "فشل الدفع أو الطلب غير صالح.",
     "Payment processed successfully.": "تمت معالجة الدفع بنجاح.",
     "Payment was cancelled or failed.": "تم إلغاء الدفع أو فشل.",
-    "Your payment is being confirmed. You will be notified once it is approved.": "جارٍ تأكيد الدفع. سيتم إشعارك بمجرد الموافقة عليه."
+    "Your payment is being confirmed. You will be notified once it is approved.": "جارٍ تأكيد الدفع. سيتم إشعارك بمجرد الموافقة عليه.",
+    "Enter your registered business or company name as it appears on official documents (e.g., Al Salem Trading Co.).": "أدخل الاسم المسجّل لنشاطك أو شركتك كما يظهر في المستندات الرسمية (مثال: شركة السالم التجارية).",
+    "Enter your complete business address including block, street, and building number (e.g., Block 4, Street 12, Building 7, Salmiya, Hawalli Governorate).": "أدخل عنوان نشاطك الكامل متضمناً القطعة والشارع ورقم المبنى (مثال: قطعة 4، شارع 12، مبنى 7، السالمية، محافظة حولي).",
+    "Enter your business tax identification number, such as your Commercial Registration or Tax ID (e.g., 123456789).": "أدخل رقم التعريف الضريبي لنشاطك، مثل رقم السجل التجاري أو الرقم الضريبي (مثال: 123456789).",
+    "Enter your business email address where invoices and tax documents will be sent (e.g., billing@yourcompany.com.kw).": "أدخل البريد الإلكتروني لنشاطك حيث تُرسَل الفواتير والمستندات الضريبية (مثال: billing@yourcompany.com.kw).",
+    "Frequently Bought Together": "يُشترى معاً كثيراً",
+    "Customers who viewed this item also bought": "العملاء الذين شاهدوا هذا المنتج اشتروا أيضاً"
 }

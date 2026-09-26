@@ -123,7 +123,8 @@ class PublicSystemWizardController extends BaseController
         dispatch(function () use ($lead, $adminEmail): void {
             try {
                 Mail::send('plugins/system-wizard::emails.lead', ['lead' => $lead], function ($message) use ($adminEmail): void {
-                    $message->to($adminEmail)->subject('طلب نظام مراقبة جديد - ' . config('app.name'));
+                    $storeName = (function_exists('theme_option') ? theme_option('site_title') : null) ?: config('app.name');
+                    $message->to($adminEmail)->subject('طلب نظام مراقبة جديد - ' . $storeName);
                 });
             } catch (\Throwable $e) {
                 Log::error('Failed to send lead email: ' . $e->getMessage());

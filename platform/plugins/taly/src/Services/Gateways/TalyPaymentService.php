@@ -43,7 +43,10 @@ class TalyPaymentService
                 'customer' => [
                     'firstName' => $data['address']['first_name'] ?? 'Customer',
                     'lastName' => $data['address']['last_name'] ?? 'Taly',
-                    'email' => $data['address']['email'] ?? 'customer@example.com',
+                    // Prefer the checkout email, then the order's own email; never a fake placeholder.
+                    'email' => $data['address']['email']
+                        ?? \Botble\Ecommerce\Models\Order::query()->whereKey($data['order_id'])->value('email')
+                        ?? 'noreply@' . (parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'store.local'),
                     'mobile' => $data['address']['phone'] ?? '0000000000',
                 ],
             ]);
