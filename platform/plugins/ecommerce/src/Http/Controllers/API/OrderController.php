@@ -67,7 +67,7 @@ class OrderController extends BaseApiController
         }
 
         $orders = $query->latest()
-            ->paginate($request->integer('per_page', 10));
+            ->paginate(min(max($request->integer('per_page', 10), 1), 100));
 
         return $this
             ->httpResponse()
@@ -376,7 +376,7 @@ class OrderController extends BaseApiController
 
         $file = $request->file('file');
 
-        $proofFilePath = $storage->putFileAs('proofs', $file, sprintf('%s-%s', $order->getKey(), $file->getClientOriginalName()));
+        $proofFilePath = $storage->putFileAs('proofs', $file, sprintf('%s-%s.%s', $order->getKey(), \Illuminate\Support\Str::random(32), $file->guessExtension() ?: 'bin'));
 
         $order->update([
             'proof_file' => $proofFilePath,

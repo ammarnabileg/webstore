@@ -11,14 +11,14 @@ class TalyPaymentService
 {
     use PaymentErrorTrait;
 
-    protected string $merchantId;
-    protected string $secretKey;
+    protected ?string $merchantId;
+    protected ?string $secretKey;
     protected string $url;
     protected bool $isTestMode;
 
     public function __construct()
     {
-        $this->isTestMode = get_payment_setting('mode', 'taly', true);
+        $this->isTestMode = (bool) get_payment_setting('mode', 'taly', true);
         $this->merchantId = get_payment_setting('merchant_id', 'taly');
         $this->secretKey = get_payment_setting('secret_key', 'taly');
         $this->url = !$this->isTestMode
@@ -32,17 +32,21 @@ class TalyPaymentService
             $response = Http::withHeaders([
                 'X-Merchant-Id' => $this->merchantId,
                 'Content-Type' => 'application/json',
-            ])->withoutVerifying()->post($this->url . '/order/initiate', [
+            ])->timeout(20)->post($this->url . '/order/initiate', [
                 'amount' => $data['amount'],
                 'currency' => strtoupper($data['currency']) == 'KWD' || $data['currency'] == 'دينار كويتي' ? 'KWD' : $data['currency'],
                 'merchantOrderId' => $data['order_id'],
-                'successUrl' => $data['callback_url'],
-                'failUrl' => $data['callback_url'],
+                // The return URL carries the order's secret checkout token, never the sequential id.
+                'successUrl' => $data['callback_url'] . '?result=success&t=' . urlencode((string) \Botble\Ecommerce\Models\Order::query()->whereKey($data['order_id'])->value('token')),
+                'failUrl' => $data['callback_url'] . '?result=failed&t=' . urlencode((string) \Botble\Ecommerce\Models\Order::query()->whereKey($data['order_id'])->value('token')),
                 'postBackUrl' => route('payments.taly.webhook'),
                 'customer' => [
                     'firstName' => $data['address']['first_name'] ?? 'Customer',
                     'lastName' => $data['address']['last_name'] ?? 'Taly',
-                    'email' => $data['address']['email'] ?? 'customer@example.com',
+                    // Prefer the checkout email, then the order's own email; never a fake placeholder.
+                    'email' => $data['address']['email']
+                        ?? \Botble\Ecommerce\Models\Order::query()->whereKey($data['order_id'])->value('email')
+                        ?? 'noreply@' . (parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'store.local'),
                     'mobile' => $data['address']['phone'] ?? '0000000000',
                 ],
             ]);
@@ -69,15 +73,27 @@ class TalyPaymentService
 
     public function verifySignature(array $payload, string $signature): bool
     {
-        // 1. Sort the keys of JSON object in ascending order.
+        if (empty($this->secretKey)) {
+            return false;
+        }
+
+        // Taly: sort keys ascending, join the values with '&', HMAC-SHA256 with the secret key.
         ksort($payload);
 
-        // 2. Concatenate the values present against the keys, separated by ‘&’.
-        $concatenatedString = implode('&', array_values($payload));
+        $values = [];
+        foreach ($payload as $value) {
+            if (is_array($value)) {
+                // Nested values are not part of Taly's flat signature format; refuse rather than guess.
+                return false;
+            }
 
-        // 3. Compute the HMAC-SHA256 signature using the provided secretKey.
-        $computedSignature = hash_hmac('sha256', $concatenatedString, $this->secretKey);
+            $values[] = is_bool($value) ? ($value ? 'true' : 'false') : (string) $value;
+        }
 
-        return hash_equals($computedSignature, $signature);
+        $computedSignature = hash_hmac('sha256', implode('&', $values), $this->secretKey);
+
+        $signature = trim($signature);
+
+        return hash_equals($computedSignature, ctype_xdigit($signature) ? strtolower($signature) : $signature);
     }
 }

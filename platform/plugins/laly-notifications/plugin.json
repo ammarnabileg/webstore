@@ -1,0 +1,13 @@
+{
+    "id": "laly-notifications",
+    "name": "Laly Push Notifications",
+    "namespace": "Botble\\LalyNotifications\\",
+    "provider": "Botble\\LalyNotifications\\Providers\\LalyNotificationsServiceProvider",
+    "author": "Brilliant",
+    "url": "https://brilliant-kw.com",
+    "version": "1.0.0",
+    "description": "Storefront notifications list and Firebase (FCM) web push for the laly-vue theme.",
+    "require": [
+        "botble/ecommerce"
+    ]
+}

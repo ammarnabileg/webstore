@@ -6,7 +6,7 @@
       <div class="cat-item animated-card" v-for="cat in store.featuredRootCategories" :key="cat.id" @click="goToCategory(cat)">
         <div class="cat-card-inner">
           <div class="cat-img">
-            <img v-if="cat.image" :src="cat.image" :alt="cat.name">
+            <img loading="lazy" v-if="cat.image" :src="cat.image" :alt="cat.name">
             <i v-else class="ti ti-category"></i>
           </div>
           <span class="cat-name">{{ cat.name }}</span>
@@ -21,6 +21,7 @@
 </template>
 
 <script setup>
+import { __ } from '../../utils/i18n';
 import { inject } from 'vue';
 import { useRouter } from 'vue-router';
 import { useEcommerceStore } from '../../stores/ecommerce';
@@ -34,7 +35,6 @@ const props = defineProps({
 
 const store = useEcommerceStore();
 const router = useRouter();
-const __ = inject('__') || window?.BotbleData?.i18n || ((key) => key);
 
 const goToCategory = (cat) => {
   router.push(`/products?category=${cat.id}`);
@@ -53,7 +53,7 @@ const goToCategory = (cat) => {
   height: 4px;
 }
 .cats-scroll::-webkit-scrollbar-thumb {
-  background: #ddd;
+  background: var(--line);
   border-radius: 4px;
 }
 .cat-item {
@@ -64,8 +64,8 @@ const goToCategory = (cat) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: #fff;
-  border: 1px solid #eee;
+  background: var(--surface);
+  border: 1px solid var(--line);
   padding: 15px 20px;
   border-radius: 12px;
   min-width: 100px;
@@ -83,7 +83,7 @@ const goToCategory = (cat) => {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #f9f9f9;
+  background: var(--surface-2);
 }
 .cat-img img {
   max-width: 30px;
@@ -98,6 +98,6 @@ const goToCategory = (cat) => {
   font-size: 13px;
   font-weight: 500;
   text-align: center;
-  color: #333;
+  color: var(--ink);
 }
 </style>

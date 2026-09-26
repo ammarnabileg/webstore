@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <div class="nbar">
-      <div class="nbar-title">السلة</div>
+      <div class="nbar-title">{{ __('cart') }}</div>
     </div>
     
     <div class="scroll" style="padding: 16px;">
@@ -11,27 +11,27 @@
 
       <div v-else-if="store.cartCount === 0" class="empty-cart">
         <div class="ec-icon"><i class="ti ti-shopping-cart-x"></i></div>
-        <h3>سلة المشتريات فارغة</h3>
-        <p>لم تقم بإضافة أي منتجات إلى السلة بعد.</p>
-        <button class="ec-btn" @click="$router.push('/products')">تصفح المنتجات</button>
+        <h3>{{ __('cart_empty_title') }}</h3>
+        <p>{{ __('cart_empty_sub') }}</p>
+        <button class="ec-btn" @click="$router.push('/products')">{{ __('browse_products') }}</button>
       </div>
 
       <div v-else class="cart-wrapper">
         <div class="cart-items">
           <div class="cart-item" v-for="item in store.cart.items" :key="item.id">
             <div class="ci-img">
-              <img :src="item.product_image || botbleData?.placeholderImage || 'https://via.placeholder.com/80'" :alt="item.name">
+              <img loading="lazy" :src="item.product_image || botbleData?.placeholderImage" :alt="item.name">
             </div>
             <div class="ci-info">
               <div class="ci-name">{{ item.name }}</div>
               <div class="ci-price">{{ item.price_format }}</div>
               <div class="ci-actions">
                 <div class="qty-selector">
-                  <button class="qty-btn" @click="updateQty(item, -1)" :disabled="item.qty <= 1"><i class="ti ti-minus"></i></button>
+                  <button class="qty-btn" @click="updateQty(item, -1)" :disabled="item.qty <= 1" :aria-label="__('decrease_qty')"><i class="ti ti-minus"></i></button>
                   <span class="qty-text">{{ item.qty }}</span>
-                  <button class="qty-btn" @click="updateQty(item, 1)"><i class="ti ti-plus"></i></button>
+                  <button class="qty-btn" @click="updateQty(item, 1)" :aria-label="__('increase_qty')"><i class="ti ti-plus"></i></button>
                 </div>
-                <button class="ci-remove" @click="removeItem(item.rowId)">
+                <button class="ci-remove" @click="removeItem(item.rowId)" :aria-label="__('remove')">
                   <i class="ti ti-trash"></i>
                 </button>
               </div>
@@ -41,18 +41,18 @@
 
         <div class="cart-summary">
           <div class="cs-row">
-            <span>المجموع الفرعي</span>
+            <span>{{ __('sub_total') }}</span>
             <span>{{ store.cart.sub_total_format }}</span>
           </div>
           <div class="cs-row" v-if="store.cart.tax_amount > 0">
-            <span>الضريبة</span>
+            <span>{{ __('tax') }}</span>
             <span>{{ store.cart.tax_amount_format }}</span>
           </div>
           <div class="cs-row cs-total">
-            <span>الإجمالي</span>
+            <span>{{ __('cart_total') }}</span>
             <span>{{ store.cart.total_format }}</span>
           </div>
-          <button class="checkout-btn" @click="goToCheckout">إتمام الطلب</button>
+          <button class="checkout-btn" @click="goToCheckout">{{ __('checkout') }}</button>
         </div>
       </div>
       
@@ -96,12 +96,12 @@ const updateQty = async (item, change) => {
 }
 .ec-icon {
   font-size: 60px;
-  color: #ddd;
+  color: var(--line);
   margin-bottom: 20px;
 }
 .ec-btn {
-  background: #172B85;
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
   border: none;
   padding: 12px 30px;
   border-radius: 25px;
@@ -112,7 +112,7 @@ const updateQty = async (item, change) => {
 }
 .cart-item {
   display: flex;
-  background: #fff;
+  background: var(--surface);
   padding: 15px;
   border-radius: 15px;
   margin-bottom: 15px;
@@ -123,7 +123,7 @@ const updateQty = async (item, change) => {
   height: 80px;
   margin-inline-end: 15px;
   border-radius: 10px;
-  background: #f9f9f9;
+  background: var(--surface-2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -140,10 +140,10 @@ const updateQty = async (item, change) => {
 }
 .ci-name {
   font-weight: bold;
-  color: #333;
+  color: var(--ink);
 }
 .ci-price {
-  color: #172B85;
+  color: var(--primary-strong);
   font-weight: bold;
 }
 .ci-actions {
@@ -154,7 +154,7 @@ const updateQty = async (item, change) => {
 .qty-selector {
   display: flex;
   align-items: center;
-  background: #f5f5f5;
+  background: var(--surface-2);
   border-radius: 20px;
   padding: 5px 10px;
   gap: 15px;
@@ -162,7 +162,7 @@ const updateQty = async (item, change) => {
 .qty-btn {
   background: none;
   border: none;
-  color: #555;
+  color: var(--ink-2);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -176,17 +176,17 @@ const updateQty = async (item, change) => {
 .qty-text {
   font-weight: bold;
   font-size: 15px;
-  color: #333;
+  color: var(--ink);
 }
 .ci-remove {
   background: none;
   border: none;
-  color: #ff3b30;
+  color: var(--sale);
   cursor: pointer;
   padding: 5px;
 }
 .cart-summary {
-  background: #fff;
+  background: var(--surface);
   padding: 20px;
   border-radius: 15px;
   margin-top: 20px;
@@ -196,20 +196,20 @@ const updateQty = async (item, change) => {
   display: flex;
   justify-content: space-between;
   margin-bottom: 10px;
-  color: #666;
+  color: var(--ink-2);
 }
 .cs-total {
   font-size: 18px;
   font-weight: bold;
-  color: #333;
-  border-top: 1px solid #eee;
+  color: var(--ink);
+  border-top: 1px solid var(--line);
   padding-top: 15px;
   margin-top: 15px;
 }
 .checkout-btn {
   width: 100%;
-  background: #172B85;
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
   border: none;
   padding: 15px;
   border-radius: 25px;

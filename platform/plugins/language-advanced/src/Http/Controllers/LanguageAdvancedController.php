@@ -17,7 +17,9 @@ class LanguageAdvancedController extends BaseController
     {
         $model = $request->input('model');
 
-        abort_unless(class_exists($model), 404);
+        // Constrain the caller-supplied model to the registered translatable allowlist so this
+        // endpoint cannot be pointed at an arbitrary class.
+        abort_unless(class_exists($model) && LanguageAdvancedManager::isSupported($model), 404);
 
         $data = (new $model())->findOrFail($id);
 

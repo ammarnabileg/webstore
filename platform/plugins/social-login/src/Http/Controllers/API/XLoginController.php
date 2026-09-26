@@ -105,6 +105,13 @@ class XLoginController extends BaseApiController
             $account = $this->socialLoginService->findUserByEmail($email, $model::class);
             $socialLoginUser = $this->socialLoginService->findUserByProvider('x', $xId);
 
+            if (! $this->socialLoginService->mayLinkExistingAccount($account, $socialLoginUser, false)) {
+                return $this->httpResponse()
+                    ->setError()
+                    ->setMessage(trans('plugins/social-login::social-login.account_exists_login_with_password'))
+                    ->toApiResponse();
+            }
+
             if ($socialLoginUser && ! $account) {
                 $account = $socialLoginUser->user;
             }

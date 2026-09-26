@@ -55,7 +55,7 @@
 <html lang="{{ app()->getLocale() }}" dir="{{ $isRTL ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @if (!empty($languages))
         @foreach ($languages as $language)
@@ -70,7 +70,7 @@
     @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.48.0/dist/tabler-icons.min.css">
     <script>
         @php
             $socialLogins = [];
@@ -101,6 +101,17 @@
             email: @json(theme_option('email')),
             customer: @json($customerData),
             loginUrl: @json(route('customer.login')),
+            logoutUrl: @json(route('customer.logout')),
+            logoutPostUrl: @json(url('logout')),
+            passwordResetUrl: @json(Route::has('customer.password.request') ? route('customer.password.request') : (Route::has('customer.password.reset') ? route('customer.password.reset') : null)),
+            firebase_config: @json(function_exists('laly_notifications_web_config') && is_plugin_active('laly-notifications') ? laly_notifications_web_config() : null),
+            ordersUrl: @json(route('customer.orders')),
+            accountUrl: @json(route('customer.edit-account')),
+            addressesUrl: @json(route('customer.address')),
+            changePasswordUrl: @json(route('customer.change-password')),
+            downloadsUrl: @json(route('customer.downloads')),
+            reviewsUrl: @json(route('customer.product-reviews')),
+            trackOrderUrl: @json(route('public.orders.tracking')),
             checkoutUrl: @json(route('public.checkout.information', \Botble\Ecommerce\Facades\OrderHelper::getOrderSessionToken())),
             isPhoneLoginEnabled: @json(\Botble\Ecommerce\Facades\EcommerceHelper::isLoginUsingPhone()),
             isPhoneRequired: @json(\Botble\Ecommerce\Facades\EcommerceHelper::isLoginUsingPhone() || get_ecommerce_setting('make_customer_phone_number_required', false)),
@@ -143,12 +154,22 @@
             publicKey: @json(theme_option('deema_public_key', ''))
         };
     </script>
-    <script src="https://widget.deema.me"></script>
+    <script src="https://widget.deema.me" defer></script>
     {!! Theme::header() !!}
 </head>
 <body>
-    {!! Theme::content() !!}
+    @php
+        $themeContent = Theme::content();
+        // SPA views mount into <div id="app">. Everything else is an inherited martfury/Blade page;
+        // wrap those with lightweight chrome so the user is not stranded without navigation.
+        $isSpaView = str_contains($themeContent, 'id="app"');
+    @endphp
+    @if ($isSpaView)
+        {!! $themeContent !!}
+    @else
+        @include(Theme::getThemeNamespace() . '::partials.blade-chrome')
+        <main class="blade-fallback-content">{!! $themeContent !!}</main>
+    @endif
     {!! Theme::footer() !!}
-    <script src="{{ Theme::asset()->url('js/app.js') }}?v={{ time() }}"></script>
 </body>
 </html>

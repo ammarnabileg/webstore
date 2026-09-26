@@ -8,8 +8,10 @@ Route::group(['namespace' => 'Botble\PWA\Http\Controllers', 'middleware' => ['we
     // Admin routes
     Route::group(['prefix' => BaseHelper::getAdminPrefix(), 'middleware' => 'auth'], function () {
         Route::group(['prefix' => 'pwa', 'as' => 'pwa.'], function () {
-            Route::get('settings', [PWAController::class, 'getSettings'])->name('settings');
-            Route::post('settings', [PWAController::class, 'postSettings']);
+            // Same permission as Botble's own settings pages; plain 'auth' let any back-office role
+            // change the app name/icons shown on customers' home screens.
+            Route::get('settings', [PWAController::class, 'getSettings'])->name('settings')->permission('settings.options');
+            Route::post('settings', [PWAController::class, 'postSettings'])->name('settings.update')->permission('settings.options');
         });
     });
 

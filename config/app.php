@@ -15,6 +15,13 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    // Enforce the Content-Security-Policy (App\Http\Middleware\SecurityHeaders) instead of report-only.
+    // Behind a CDN/load balancer, its IP ranges (comma separated) so rate limits and logs see the
+    // real client IP. Empty = trust nobody (X-Forwarded-For ignored).
+    'trusted_proxies' => env('TRUSTED_PROXIES', ''),
+
+    'csp_enforce' => (bool) env('SECURITY_CSP_ENFORCE', false),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

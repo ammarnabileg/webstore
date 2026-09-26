@@ -8,7 +8,7 @@
       
       <div class="profile-header">
         <div class="ph-avatar">
-          <img v-if="customer?.avatar" :src="customer.avatar" alt="User Avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" />
+          <img loading="lazy" v-if="customer?.avatar" :src="customer.avatar" alt="User Avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;" />
           <i v-else class="ti ti-user"></i>
         </div>
         <div class="ph-info">
@@ -28,14 +28,39 @@
           <div class="pl-text">{{ __('wishlist') || 'المفضلة' }}</div>
           <i class="ti ti-chevron-left pl-arrow" :class="{ 'ti-chevron-right': !botbleData.is_rtl }"></i>
         </router-link>
-        <a v-if="customer" href="/customer/orders" class="pl-item" style="text-decoration: none; color: inherit;">
+        <a v-if="customer" :href="botbleData.ordersUrl" class="pl-item" style="text-decoration: none; color: inherit;">
           <div class="pl-icon"><i class="ti ti-truck"></i></div>
           <div class="pl-text">{{ __('my_orders') || 'طلباتي' }}</div>
           <i class="ti ti-chevron-left pl-arrow" :class="{ 'ti-chevron-right': !botbleData.is_rtl }"></i>
         </a>
-        <a v-if="customer" href="/customer/edit-account" class="pl-item" style="text-decoration: none; color: inherit;">
+        <a v-if="customer" :href="botbleData.accountUrl" class="pl-item" style="text-decoration: none; color: inherit;">
           <div class="pl-icon"><i class="ti ti-settings"></i></div>
           <div class="pl-text">{{ __('settings') || 'الإعدادات' }}</div>
+          <i class="ti ti-chevron-left pl-arrow" :class="{ 'ti-chevron-right': !botbleData.is_rtl }"></i>
+        </a>
+        <a v-if="customer && botbleData.addressesUrl" :href="botbleData.addressesUrl" class="pl-item" style="text-decoration: none; color: inherit;">
+          <div class="pl-icon"><i class="ti ti-map-pin"></i></div>
+          <div class="pl-text">{{ __('addresses') || 'العناوين' }}</div>
+          <i class="ti ti-chevron-left pl-arrow" :class="{ 'ti-chevron-right': !botbleData.is_rtl }"></i>
+        </a>
+        <router-link to="/order-tracking" class="pl-item" style="text-decoration: none; color: inherit;">
+          <div class="pl-icon"><i class="ti ti-map-search"></i></div>
+          <div class="pl-text">{{ __('track_order') || 'تتبع الطلب' }}</div>
+          <i class="ti ti-chevron-left pl-arrow" :class="{ 'ti-chevron-right': !botbleData.is_rtl }"></i>
+        </router-link>
+        <a v-if="customer && botbleData.reviewsUrl" :href="botbleData.reviewsUrl" class="pl-item" style="text-decoration: none; color: inherit;">
+          <div class="pl-icon"><i class="ti ti-star"></i></div>
+          <div class="pl-text">{{ __('my_reviews') || 'تقييماتي' }}</div>
+          <i class="ti ti-chevron-left pl-arrow" :class="{ 'ti-chevron-right': !botbleData.is_rtl }"></i>
+        </a>
+        <a v-if="customer && botbleData.downloadsUrl" :href="botbleData.downloadsUrl" class="pl-item" style="text-decoration: none; color: inherit;">
+          <div class="pl-icon"><i class="ti ti-download"></i></div>
+          <div class="pl-text">{{ __('downloads') || 'التنزيلات' }}</div>
+          <i class="ti ti-chevron-left pl-arrow" :class="{ 'ti-chevron-right': !botbleData.is_rtl }"></i>
+        </a>
+        <a v-if="customer && botbleData.changePasswordUrl" :href="botbleData.changePasswordUrl" class="pl-item" style="text-decoration: none; color: inherit;">
+          <div class="pl-icon"><i class="ti ti-lock"></i></div>
+          <div class="pl-text">{{ __('change_password') || 'تغيير كلمة المرور' }}</div>
           <i class="ti ti-chevron-left pl-arrow" :class="{ 'ti-chevron-right': !botbleData.is_rtl }"></i>
         </a>
         <div class="pl-item" @click="toggleDarkMode">
@@ -52,11 +77,8 @@
           <div style="font-size: 13px; font-weight: 600; color: var(--primary);">{{ otherLanguage.name }}</div>
         </div>
 
-        <form v-if="customer" method="POST" :action="botbleData.logoutUrl" style="margin: 0;">
-          <!-- Since it's a native logout we need CSRF token, but for now we can just redirect to the logout route or use a GET via a form. Usually Laravel logout is POST. Wait, Botble has GET logout? Actually Botble's customer logout is GET typically, or we can use an a tag. Let's use a tag first -->
-        </form>
-        <a v-if="customer" :href="botbleData.logoutUrl" class="pl-item" style="text-decoration: none; color: #dc3545;">
-          <div class="pl-icon" style="color: #dc3545; background: #ffebee;"><i class="ti ti-logout"></i></div>
+        <a v-if="customer" href="javascript:void(0)" @click="doLogout" class="pl-item" style="text-decoration: none; color: var(--sale);">
+          <div class="pl-icon" style="color: var(--sale); background: var(--surface-2);"><i class="ti ti-logout"></i></div>
           <div class="pl-text">{{ __('logout') || 'تسجيل الخروج' }}</div>
         </a>
       </div>
@@ -67,10 +89,10 @@
 </template>
 
 <script setup>
+import { __ } from '../utils/i18n';
 import { ref, onMounted, computed, inject } from 'vue';
 
 const botbleData = window?.BotbleData || {};
-const __ = inject('__') || botbleData?.i18n || ((key) => key);
 const customer = botbleData.customer;
 
 const isDark = ref(false);
@@ -82,6 +104,22 @@ const otherLanguage = computed(() => {
 
 const switchLanguage = (url) => {
     window.location.href = url;
+};
+
+const doLogout = async () => {
+    // POST with CSRF instead of a GET anchor, so logout can't be triggered cross-site.
+    try {
+        const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const res = await fetch(botbleData.logoutPostUrl || '/logout', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        });
+        let redirect = botbleData.baseUrl || '/';
+        try { const j = await res.json(); if (j && j.redirect) redirect = j.redirect; } catch (e) {}
+        window.location.href = redirect;
+    } catch (e) {
+        window.location.href = botbleData.logoutUrl || '/';
+    }
 };
 
 onMounted(() => {
@@ -185,7 +223,7 @@ const toggleDarkMode = () => {
   transition: all 0.3s;
 }
 .toggle-switch.active {
-  background: var(--primary);
+  background: var(--primary-strong);
 }
 .toggle-knob {
   width: 20px;

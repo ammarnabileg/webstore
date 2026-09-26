@@ -16,6 +16,8 @@ use Symfony\Component\ErrorHandler\Exception\FlattenException;
 use Throwable;
 use TijsVerkoyen\CssToInlineStyles\CssToInlineStyles;
 use Twig\Extension\DebugExtension;
+use Twig\Extension\SandboxExtension;
+use Twig\Sandbox\SecurityPolicy;
 use Twig\TwigFilter;
 
 class EmailHandler
@@ -335,6 +337,72 @@ class EmailHandler
         return $value;
     }
 
+    /**
+     * Breaks Twig delimiters with an invisible zero-width space so text can never be parsed
+     * as a template by a later compile pass. Rendering is visually unchanged.
+     */
+    public static function neutralizeTwig(string $value): string
+    {
+        return preg_replace('/\{(?=[{%#])/u', "{\u{200B}", $value);
+    }
+
+    /**
+     * Recursively sandbox-compile and neutralize every string leaf of a variable value.
+     * Arrays are walked so a string nested inside an array (e.g. a contact custom-field
+     * list, an address array) cannot bypass neutralization and land in the later
+     * unsandboxed compile as live Twig. Non-string scalars/objects are returned unchanged.
+     */
+    protected function neutralizeValue(mixed $value, TwigCompiler $valueCompiler, array $data): mixed
+    {
+        if (is_array($value)) {
+            foreach ($value as $key => $item) {
+                $value[$key] = $this->neutralizeValue($item, $valueCompiler, $data);
+            }
+
+            return $value;
+        }
+
+        if (! is_string($value) || $value === '') {
+            return $value;
+        }
+
+        try {
+            $value = $valueCompiler->compile($value, $data);
+        } catch (Throwable) {
+            // Keep the raw value; it is still neutralized below.
+        }
+
+        return static::neutralizeTwig($value);
+    }
+
+    protected function sandboxedValueCompiler(TwigCompiler $base): TwigCompiler
+    {
+        $compiler = new TwigCompiler([
+            'autoescape' => false,
+            'debug' => false,
+        ]);
+
+        // Reuse the filters/functions Botble and plugins registered (trans, price_format...).
+        foreach ($base->getExtensions() as $extension) {
+            if (! $compiler->hasExtension($extension::class)) {
+                $compiler->addExtension($extension);
+            }
+        }
+
+        $compiler->addExtension(new SandboxExtension(new SecurityPolicy(
+            // Values only need simple interpolation: no loops/range (memory DoS), no format
+            // (padding DoS), no trans (its locale argument reaches a file require).
+            ['if'],
+            ['escape', 'e', 'upper', 'lower', 'title', 'capitalize', 'trim', 'nl2br', 'striptags', 'raw',
+                'default', 'length', 'join', 'first', 'last', 'replace', 'date', 'number_format', 'price_format'],
+            [],
+            [],
+            []
+        ), true));
+
+        return $compiler;
+    }
+
     protected function replaceVariableValue(array $variables, ?string $module, string $content): string
     {
         do_action('email_variable_value');
@@ -351,12 +419,17 @@ class EmailHandler
 
         $twigCompiler = apply_filters('cms_twig_compiler', $this->twigCompiler);
 
+        // Variable values can contain customer input (name, address, notes...). They are
+        // compiled in a sandbox so a value like {{ ['x']|map('system') }} cannot call PHP
+        // functions (server-side template injection). Only the admin-authored template
+        // below is compiled with the full environment.
+        $valueCompiler = $this->sandboxedValueCompiler($twigCompiler);
+
         foreach ($data as $key => $value) {
-            try {
-                $data[$key] = $value && is_string($value) ? $twigCompiler->compile($value, $data) : $value;
-            } catch (Throwable) {
-                $data[$key] = $value;
-            }
+            // Walk every value (including arrays/nested arrays) so a string buried inside an
+            // array cannot skip the sandbox compile + neutralize and reach the later
+            // unsandboxed pass as live Twig (server-side template injection -> RCE).
+            $data[$key] = $this->neutralizeValue($value, $valueCompiler, $data);
         }
 
         if (empty($data) || empty($content)) {
@@ -478,7 +551,8 @@ class EmailHandler
         try {
             $ex = FlattenException::createFromThrowable($throwable);
 
-            $url = URL::full();
+            // Attacker-controlled URL: neutralize before send() compiles the rendered view.
+            $url = static::neutralizeTwig(URL::full());
             $error = $this->renderException($throwable);
 
             $this->send(

@@ -2,11 +2,10 @@
 
 namespace Botble\Deema\Services\Gateways;
 
-use Botble\Payment\Enums\PaymentStatusEnum;
 use Botble\Payment\Services\Traits\PaymentErrorTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class DeemaPaymentService
 {
@@ -26,34 +25,38 @@ class DeemaPaymentService
 
     public function makePayment(Request $request)
     {
-        $amount = $request->input('amount');
-        $currency = strtoupper($request->input('currency'));
-        
-        // Deema requires KWD
-        if ($currency != 'KWD' && $currency == 'دينار كويتي') {
-            $currency = 'KWD';
+        // Amount, order and customer come from the server-side order, never from the checkout form.
+        $paymentData = apply_filters(PAYMENT_FILTER_PAYMENT_DATA, [], $request);
+        $orderIds = (array) ($paymentData['order_id'] ?? []);
+        $orderId = reset($orderIds);
+
+        if (! $orderId || ! isset($paymentData['amount'])) {
+            $this->setErrorMessage(__('Invalid order.'));
+
+            return null;
         }
 
-        $orderId = $request->input('order_id');
-        $callbackUrl = $request->input('callback_url');
-        $checkoutData = $request->input('checkout_data', []);
+        $callbackUrl = route('deema.callback');
+        $orderToken = \Botble\Ecommerce\Models\Order::query()->whereKey($orderId)->value('token');
+        $address = $paymentData['address'] ?? [];
 
         try {
             $response = Http::withToken($this->apiKey)
-                ->withoutVerifying()
+                ->timeout(20)
                 ->post($this->url . 'checkouts', [
-                    'amount'      => (float)$amount,
+                    'amount'      => (float) $paymentData['amount'],
                     'currency'    => 'KWD',
-                    'order_id'    => (string)$orderId,
-                    'success_url' => $callbackUrl . '?status=success&order_id=' . $orderId,
-                    'cancel_url'  => $callbackUrl . '?status=cancel&order_id=' . $orderId,
+                    'order_id'    => (string) $orderId,
+                    // The return URL carries the order's secret checkout token, never the sequential id.
+                    'success_url' => $callbackUrl . '?status=success&t=' . urlencode((string) $orderToken),
+                    'cancel_url'  => $callbackUrl . '?status=cancel&t=' . urlencode((string) $orderToken),
                     'customer'    => [
-                        'first_name' => $checkoutData['name'] ?? 'Guest',
+                        'first_name' => $address['name'] ?? 'Guest',
                         'last_name'  => '',
-                        'email'      => $checkoutData['email'] ?? '',
-                        'phone'      => $checkoutData['phone'] ?? '',
+                        'email'      => $address['email'] ?? '',
+                        'phone'      => $address['phone'] ?? '',
                     ],
-                    'items' => [] // Optional in most cases, but can be filled if needed
+                    'items' => [],
                 ]);
 
             $result = $response->json();
@@ -62,41 +65,13 @@ class DeemaPaymentService
                 return $result['checkout_url'];
             }
 
-            \Log::error('Deema payment failed: ' . json_encode($result));
+            Log::error('Deema payment failed', ['status' => $response->status(), 'order_id' => $orderId]);
+
             return null;
         } catch (\Exception $e) {
-            \Log::error('Deema payment exception: ' . $e->getMessage());
+            Log::error('Deema payment exception: ' . $e->getMessage());
+
             return null;
         }
-    }
-
-    public function afterMakePayment(Request $request)
-    {
-        $status = $request->input('status');
-        $orderId = $request->input('order_id');
-
-        if ($status == 'success') {
-            return $this->updatePaymentStatus($orderId, PaymentStatusEnum::COMPLETED);
-        }
-
-        return false;
-    }
-
-    protected function updatePaymentStatus($orderId, $status)
-    {
-        $payment = \Botble\Payment\Models\Payment::where('order_id', $orderId)->first();
-        if ($payment) {
-            $payment->status = $status;
-            $payment->save();
-            
-            do_action(PAYMENT_ACTION_PAYMENT_PROCESSED, [
-                'order_id' => $orderId,
-                'payment_id' => $payment->id,
-                'status' => $status,
-            ]);
-            
-            return true;
-        }
-        return false;
     }
 }

@@ -4,6 +4,7 @@ namespace Botble\Klickpay\Services\Gateways;
 
 use Botble\Payment\Services\Traits\PaymentErrorTrait;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -34,7 +35,7 @@ class KlickpayPaymentService
             return trim($this->staticToken);
         }
         try {
-            $response = Http::withHeaders([
+            $response = Http::timeout(20)->withHeaders([
                 'client-id' => $this->clientId,
                 'client-secret' => $this->clientSecret,
                 'Accept' => 'application/json',
@@ -47,7 +48,7 @@ class KlickpayPaymentService
                     ?? $data['access_token'] ?? $data['bearer_token'] ?? $data['token'] ?? null;
             }
             
-            Log::error('klickpay Get Token Failed: ' . $response->body());
+            Log::error('klickpay Get Token Failed', ['status' => $response->status()]);
         } catch (\Exception $e) {
             Log::error('klickpay Get Token Exception: ' . $e->getMessage());
         }
@@ -84,6 +85,7 @@ class KlickpayPaymentService
             }
             
             $orderIdStr = (string)$data['order_id'];
+            $orderToken = \Botble\Ecommerce\Models\Order::query()->whereKey($data['order_id'])->value('token');
             $amount = (float)str_replace(',', '', (string)$data['amount']);
             
             $payload = [
@@ -92,8 +94,9 @@ class KlickpayPaymentService
                 'client_phone' => $clientPhone,
                 'transction_reference' => 'ORD-' . $orderIdStr,
                 'transction_amount' => $amount,
-                'success_page' => $data['callback_url'] . '?status=success&order_id=' . $orderIdStr,
-                'error_page' => $data['callback_url'] . '?status=error&order_id=' . $orderIdStr,
+                // The return URL carries the order's secret checkout token, never the sequential id.
+                'success_page' => $data['callback_url'] . '?status=success&t=' . urlencode((string) $orderToken),
+                'error_page' => $data['callback_url'] . '?status=error&t=' . urlencode((string) $orderToken),
                 'source' => 'web_app',
                 'transaction_details' => [
                     'total_items' => 1,
@@ -114,7 +117,7 @@ class KlickpayPaymentService
                 ]
             ];
 
-            $response = Http::withHeaders([
+            $response = Http::timeout(20)->withHeaders([
                 'Authorization' => 'Bearer ' . $token,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
@@ -126,7 +129,10 @@ class KlickpayPaymentService
                 $paymentId = Arr::get($result, 'data.payment_id');
                 
                 if ($paymentId) {
+                    // Kept server-side so the return page can verify this payment with KlickPay
+                    // instead of trusting ids from the URL.
                     session(['klickpay_payment_id_' . $orderIdStr => $paymentId]);
+                    Cache::put('klickpay_payment_id_' . $orderIdStr, $paymentId, now()->addDays(2));
                 }
                 
                 return $paymentUrl;
@@ -149,7 +155,7 @@ class KlickpayPaymentService
         if (! $token) return null;
 
         try {
-            $response = Http::withHeaders([
+            $response = Http::timeout(20)->withHeaders([
                 'Authorization' => 'Bearer ' . $token,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',

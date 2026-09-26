@@ -21,6 +21,7 @@
 </template>
 
 <script setup>
+import { __ } from '../../utils/i18n';
 import { ref, onMounted, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../../services/api';
@@ -35,7 +36,6 @@ const props = defineProps({
 
 defineEmits(['quickview']);
 
-const __ = inject('__') || window?.BotbleData?.i18n || ((key) => key);
 const router = useRouter();
 const products = ref([]);
 const loading = ref(true);

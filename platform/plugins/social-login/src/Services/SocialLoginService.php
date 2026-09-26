@@ -128,6 +128,40 @@ class SocialLoginService
         return $modelClass::query()->where('email', $email)->first();
     }
 
+    /**
+     * An existing account may only be signed into through a social identity that is already
+     * linked to it, or when the provider asserts the email address is verified. Otherwise an
+     * attacker who controls an OAuth identity claiming someone else's email (unverified
+     * Google Workspace / X / GitHub emails...) would log straight into that customer's account.
+     */
+    public function mayLinkExistingAccount(?Model $account, ?Model $socialLoginUser, bool $emailVerified): bool
+    {
+        if (! $account) {
+            return true;
+        }
+
+        // Same class too: a customer and an admin user can share a numeric id.
+        if ($socialLoginUser && $socialLoginUser::class === $account::class && $socialLoginUser->getKey() === $account->getKey()) {
+            return true;
+        }
+
+        return $emailVerified;
+    }
+
+    /**
+     * Providers whose OAuth email we treat as verified (web flow, Socialite raw user data).
+     */
+    public function oauthEmailIsVerified(string $provider, array $raw): bool
+    {
+        return match ($provider) {
+            'google' => filter_var($raw['email_verified'] ?? $raw['verified_email'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'apple' => filter_var($raw['email_verified'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            // Facebook only returns confirmed email addresses.
+            'facebook' => true,
+            default => false,
+        };
+    }
+
     public function createSocialLoginData(array $oAuthData): array
     {
         return [

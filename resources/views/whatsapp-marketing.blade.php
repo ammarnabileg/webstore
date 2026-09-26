@@ -11,6 +11,12 @@
                     @if(session('success_msg'))
                         <div class="alert alert-success">{{ session('success_msg') }}</div>
                     @endif
+                    @if(session('error_msg'))
+                        <div class="alert alert-danger">{{ session('error_msg') }}</div>
+                    @endif
+                    @if($queueIsSync)
+                        <div class="alert alert-warning">QUEUE_CONNECTION=sync: الإرسال الجماعي متوقف. اضبطه على database وأضف cron لـ <code>php artisan schedule:run</code> كل دقيقة.</div>
+                    @endif
 
                     <div class="alert alert-info">
                         <strong>{{ $customersCount }}</strong> {{ trans('customers with valid phone numbers will receive this message.') }}
@@ -34,15 +40,44 @@
             </div>
         </div>
 
+        <div class="col-12 mt-3 order-last">
+            <div class="widget meta-boxes">
+                <div class="widget-title">
+                    <h4><i class="ti ti-history"></i> آخر الرسائل الجماعية</h4>
+                </div>
+                <div class="widget-body">
+                    @if($broadcasts->isEmpty())
+                        <p class="text-muted mb-0">لا توجد رسائل جماعية بعد.</p>
+                    @else
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr><th>#</th><th>الرسالة</th><th>الحالة</th><th>المستلمون</th><th>اتبعتت</th><th>فشلت</th><th>التاريخ</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach($broadcasts as $broadcast)
+                                    <tr>
+                                        <td>{{ $broadcast->id }}</td>
+                                        <td>{{ \Illuminate\Support\Str::limit($broadcast->message, 60) }}</td>
+                                        <td>{{ ['queued' => 'في الطابور', 'sending' => 'بيتبعت', 'done' => 'خلص'][$broadcast->status] ?? $broadcast->status }}</td>
+                                        <td>{{ $broadcast->total }}</td>
+                                        <td class="text-success">{{ $broadcast->sent }}</td>
+                                        <td class="text-danger">{{ $broadcast->failed }}</td>
+                                        <td>{{ $broadcast->created_at?->format('Y-m-d H:i') }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @endif
+                </div>
+            </div>
+        </div>
+
         <div class="col-md-4">
             <div class="widget meta-boxes">
                 <div class="widget-title">
                     <h4><i class="ti ti-test-pipe"></i> {{ trans('Test WhatsApp Message') }}</h4>
                 </div>
                 <div class="widget-body">
-                    @if(session('error_msg'))
-                        <div class="alert alert-danger">{{ session('error_msg') }}</div>
-                    @endif
                     <p class="text-muted">{{ trans('Send a test message to your own number to verify the API connection.') }}</p>
 
                     <form action="{{ route('whatsapp.marketing.test') }}" method="POST">

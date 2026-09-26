@@ -9,8 +9,6 @@ import Search from '../pages/Search.vue';
 import Profile from '../pages/Profile.vue';
 import Wishlist from '../pages/Wishlist.vue';
 import Notifications from '../pages/Notifications.vue';
-import SystemWizard from '../pages/SystemWizard.vue';
-import NotFound from '../pages/NotFound.vue';
 import CmsPage from '../pages/CmsPage.vue';
 
 import Auth from '../pages/Auth.vue';
@@ -18,7 +16,8 @@ import Auth from '../pages/Auth.vue';
 const routes = [
     { path: '/', name: 'Home', component: Home },
     { path: '/login', alias: '/register', name: 'Auth', component: Auth },
-    { path: '/project-wizard', name: 'SystemWizard', component: SystemWizard },
+    // Loaded on demand: the wizard is large and most visitors never open it.
+    { path: '/project-wizard', name: 'SystemWizard', component: () => import(/* webpackChunkName: "wizard" */ '../pages/SystemWizard.vue') },
     { path: '/categories', name: 'Categories', component: Categories },
     { path: '/products', name: 'Products', component: Products },
     { path: '/product-categories/:slug', name: 'CategoryProducts', component: Products },
@@ -28,6 +27,7 @@ const routes = [
     { path: '/profile', name: 'Profile', component: Profile },
     { path: '/wishlist', name: 'Wishlist', component: Wishlist },
     { path: '/notifications', name: 'Notifications', component: Notifications },
+    { path: '/order-tracking', name: 'OrderTracking', component: () => import(/* webpackChunkName: "order-tracking" */ '../pages/OrderTracking.vue') },
     { path: '/:slug(.*)*', name: 'CmsPage', component: CmsPage },
 ];
 
@@ -64,7 +64,7 @@ const router = createRouter({
     }
 });
 
-const SITE_NAME = window.themeOptions?.site_title || 'Laly Kuwait';
+const SITE_NAME = window.BotbleData?.site_title || 'Laly Kuwait';
 
 router.afterEach((to) => {
     let routeName = to.name;
@@ -79,6 +79,11 @@ router.afterEach((to) => {
         case 'Profile': titleKey = 'profile'; break;
         case 'Wishlist': titleKey = 'wishlist'; break;
         case 'Notifications': titleKey = 'notifications'; break;
+        case 'Auth': titleKey = 'login_register'; break;
+        case 'ProductDetail': titleKey = 'product_details'; break;
+        case 'CategoryProducts': titleKey = 'products'; break;
+        case 'SystemWizard': titleKey = 'system_wizard'; break;
+        case 'OrderTracking': titleKey = 'track_order'; break;
     }
     
     if (titleKey) {

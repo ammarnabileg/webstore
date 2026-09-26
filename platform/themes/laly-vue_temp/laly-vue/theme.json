@@ -1,8 +1,0 @@
-{
-    "name": "Laly Vue",
-    "author": "Developer",
-    "url": "http://localhost",
-    "version": "1.0.0",
-    "description": "Vue 3 SPA PWA Theme",
-    "namespace": "Theme\\LalyVue\\"
-}

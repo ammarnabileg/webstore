@@ -393,7 +393,7 @@ class ProductController extends BaseApiController
             ->firstOrFail();
 
         $star = $request->integer('star');
-        $perPage = $request->integer('per_page', 10);
+        $perPage = min(max($request->integer('per_page', 10), 1), 100);
         $search = $request->string('search', '');
         $sortBy = $request->string('sort_by', 'newest');
 

@@ -17,13 +17,13 @@
           <div class="mm-item-inner">
             <div class="mm-item-left">
               <template v-if="cat.icon_image">
-                <img :src="cat.icon_image" alt="" class="mm-icon-img">
+                <img loading="lazy" :src="cat.icon_image" alt="" class="mm-icon-img">
               </template>
               <i v-else-if="cat.icon" :class="[cat.icon, 'mm-icon']"></i>
               <i v-else class="ti ti-category mm-icon"></i>
               <span class="mm-label" v-show="!isCollapsed">{{ cat.name }}</span>
             </div>
-            <i class="ti ti-chevron-left mm-chevron" v-if="store.getChildren(cat.id).length > 0" v-show="!isCollapsed"></i>
+            <i class="ti mm-chevron" :class="isRtl ? 'ti-chevron-left' : 'ti-chevron-right'" v-if="store.getChildren(cat.id).length > 0" v-show="!isCollapsed"></i>
           </div>
 
           <!-- Flyout Panel -->
@@ -47,6 +47,7 @@
 </template>
 
 <script setup>
+const isRtl = window.BotbleData?.is_rtl !== false;
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useEcommerceStore } from '../stores/ecommerce';
@@ -199,7 +200,7 @@ html[dir="rtl"] .mega-menu {
     align-items: center;
     justify-content: center;
     font-size: 26px;
-    color: #888; 
+    color: var(--ink-2); 
     flex-shrink: 0;
 }
 .mm-icon-img {
@@ -313,7 +314,7 @@ html[dir="ltr"] .mega-menu.is-collapsed .mm-flyout {
 .mm-sub-label {
     font-size: 14px;
     font-weight: 500;
-    color: #555;
+    color: var(--ink-2);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

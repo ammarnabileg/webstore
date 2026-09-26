@@ -72,7 +72,7 @@ class GuestPaymentProofController extends BaseController
 
         $file = $request->file('file');
 
-        $proofFilePath = $storage->putFileAs('proofs', $file, sprintf('%s-%s', $order->getKey(), $file->getClientOriginalName()));
+        $proofFilePath = $storage->putFileAs('proofs', $file, sprintf('%s-%s.%s', $order->getKey(), \Illuminate\Support\Str::random(32), $file->guessExtension() ?: 'bin'));
 
         $order->update([
             'proof_file' => $proofFilePath,

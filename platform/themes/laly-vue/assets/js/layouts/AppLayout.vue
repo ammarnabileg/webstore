@@ -21,12 +21,12 @@
       <div class="container-fluid">
         <div class="dh-top">
             <div class="dh-logo" @click="$router.push('/')">
-              <img :src="siteLogo" alt="">
+              <img :src="siteLogo" :alt="siteName">
             </div>
             
             <div class="dh-search" style="position: relative;">
               <input type="text" v-model="searchQuery" :placeholder="__('search_placeholder')" @keyup.enter="doSearch()" @input="onSearchInput" @focus="showLiveSearch = true" @blur="hideLiveSearchDelay" />
-              <button @click="doSearch()"><i class="ti ti-search"></i></button>
+              <button @click="doSearch()" :aria-label="__('search')"><i class="ti ti-search"></i></button>
               
               <!-- Live Search Dropdown - Tech Mega Search -->
               <div class="live-search-dropdown tech-search-dropdown" v-if="showLiveSearch && (searchQuery.length > 1)">
@@ -37,18 +37,21 @@
                 <div v-else-if="liveSearchResults.length > 0" class="ls-mega-layout">
                   <!-- Suggested Brands / Categories Panel -->
                   <div class="ls-sidebar">
-                    <div class="ls-sidebar-title"><i class="ti ti-tags"></i> ذو صلة</div>
+                    <div class="ls-sidebar-title"><i class="ti ti-tags"></i> {{ __('categories') }}</div>
                     <div class="ls-badges">
-                       <span class="ls-badge" @click="searchQuery = 'Asus'">Asus</span>
-                       <span class="ls-badge" @click="searchQuery = 'RTX 4090'">RTX 4090</span>
-                       <span class="ls-badge" @click="searchQuery = 'Canon'">Canon EOS</span>
-                       <span class="ls-badge" @click="searchQuery = 'DDR5'">DDR5</span>
+                       <router-link
+                         v-for="category in store.rootCategories.slice(0, 6)"
+                         :key="category.id"
+                         :to="`/product-categories/${category.slug}`"
+                         class="ls-badge"
+                         @click="showLiveSearch = false"
+                       >{{ category.name }}</router-link>
                     </div>
                   </div>
                   <!-- Products Panel -->
                   <div class="ls-products-panel">
                     <div class="ls-item" v-for="product in liveSearchResults" :key="product.id" @click.stop="goToProduct(product.slug)">
-                      <img :src="product.image || botbleData?.placeholderImage || 'https://via.placeholder.com/50'" :alt="product.name" />
+                      <img loading="lazy" :src="product.image || botbleData?.placeholderImage" :alt="product.name" />
                       <div class="ls-info">
                         <div class="ls-name">{{ product.name }}</div>
                         <div class="ls-specs" v-if="product.sku">SKU: {{ product.sku }}</div>
@@ -61,7 +64,7 @@
                   </div>
                 </div>
                 <div v-else class="ls-empty">
-                  لا توجد نتائج مطابقة لبحثك. جرب البحث بمواصفات أخرى.
+                  {{ __('no_search_results_hint') }}
                 </div>
               </div>
             </div>
@@ -83,7 +86,7 @@
               </div>
 
               <!-- Dark Mode Switcher -->
-              <a href="javascript:void(0)" class="dh-icon dh-dark-btn" @click.prevent="toggleDarkMode" title="تغيير المظهر">
+              <a href="javascript:void(0)" class="dh-icon dh-dark-btn" @click.prevent="toggleDarkMode" :title="__('toggle_theme')" :aria-label="__('toggle_theme')">
                 <i class="ti" :class="isDarkMode ? 'ti-sun' : 'ti-moon'"></i>
               </a>
 
@@ -162,7 +165,7 @@
       <footer class="desktop-footer">
         <div class="container">
           <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
-            <div>&copy; 2026 {{ siteTitle }}. {{ __('all_rights_reserved') }}</div>
+            <div>&copy; {{ currentYear }} {{ siteTitle }}. {{ __('all_rights_reserved') }}</div>
             <div style="display: flex; gap: 20px;">
               <router-link to="/">{{ __('home') }}</router-link>
               <router-link to="/products">{{ __('products') }}</router-link>
@@ -185,6 +188,7 @@
 
 <script setup>
 import { onMounted, ref, watch } from 'vue';
+import api from '../services/api';
 import { useRouter, useRoute } from 'vue-router';
 import { useEcommerceStore } from '../stores/ecommerce';
 import MegaMenu from '../components/MegaMenu.vue';
@@ -200,9 +204,11 @@ const router = useRouter();
 const route = useRoute();
 const store = useEcommerceStore();
 
-const siteLogo = window.BotbleData?.logo || 'https://brilliant-kw.com/storage/logo.png';
+const siteLogo = window.BotbleData?.logo || '';
+const siteName = window.BotbleData?.site_title || '';
 const topbarLogo = window.BotbleData?.topbarLogo || siteLogo;
 const siteTitle = window.BotbleData?.site_title || 'Laly Kuwait';
+const currentYear = new Date().getFullYear();
 const hotline = window.BotbleData?.hotline || '';
 const email = window.BotbleData?.email || '';
 const address = window.BotbleData?.address || '';
@@ -252,14 +258,8 @@ onMounted(() => {
     store.fetchCart();
     checkRoute();
 
-    const firebaseConfig = window.BotbleData?.firebase_config || {
-        apiKey: window.BotbleData?.fcm_api_key || "",
-        projectId: window.BotbleData?.fcm_project_id || "",
-        messagingSenderId: window.BotbleData?.fcm_sender_id || "",
-        appId: window.BotbleData?.fcm_app_id || "",
-        vapidKey: window.BotbleData?.fcm_vapid_key || ""
-    };
-    initFirebase(firebaseConfig);
+    // Refreshes the push token only for visitors who already allowed notifications.
+    initFirebase();
 
     window.showToast = ({ title, message, type = 'info', duration = 4000 }) => {
         store.notify(`${title ? title + ' - ' : ''}${message}`, type, duration);
@@ -311,9 +311,8 @@ const onSearchInput = () => {
         searchTimeout = setTimeout(async () => {
             try {
                 // we can fetch a small number of products
-                const response = await fetch(`/ajax/vue/products?q=${encodeURIComponent(searchQuery.value)}&per_page=5`);
-                const data = await response.json();
-                liveSearchResults.value = data.data || [];
+                const response = await api.get('/products', { params: { q: searchQuery.value, per_page: 5 } });
+                liveSearchResults.value = response.data?.data || [];
             } catch (err) {
                 console.error(err);
             } finally {
@@ -402,8 +401,8 @@ const doSearch = () => {
   color: var(--text2);
 }
 .ls-badge:hover {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
   border-color: var(--primary);
 }
 .ls-products-panel {

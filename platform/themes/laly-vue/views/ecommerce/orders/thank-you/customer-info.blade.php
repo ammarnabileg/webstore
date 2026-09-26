@@ -45,7 +45,7 @@
 
             @if ($order->full_address || ($userInfo->name && !in_array('address', EcommerceHelper::getHiddenFieldsAtCheckout())))
                 <div class="info-block">
-                    <h4 class="info-block-title">{{ $hasShippingInfo ? trans('plugins/ecommerce::order.checkout.shipping_address') : trans('plugins/ecommerce::order.customer_details') }}</h4>
+                    <h4 class="info-block-title">{{ $hasShippingInfo ? trans('plugins/ecommerce::order.shipping_address') : trans('plugins/ecommerce::order.customer_details') }}</h4>
                     <div class="info-block-content">
                         @if ($userInfo->name)
                             <p class="info-item">{{ $userInfo->name }}</p>
@@ -118,19 +118,19 @@
             <div class="info-block info-block-full">
                 <div class="tax-info-grid">
                     <div class="tax-info-item">
-                        <span class="tax-label">{{ trans('plugins/ecommerce::order.checkout.company_name') }}</span>
+                        <span class="tax-label">{{ trans('plugins/ecommerce::order.tax_info.company_name') }}</span>
                         <span class="tax-value">{{ $tax->company_name }}</span>
                     </div>
                     <div class="tax-info-item">
-                        <span class="tax-label">{{ trans('plugins/ecommerce::order.checkout.company_tax_code') }}</span>
+                        <span class="tax-label">{{ trans('plugins/ecommerce::order.tax_info.company_tax_code') }}</span>
                         <span class="tax-value">{{ $tax->company_tax_code }}</span>
                     </div>
                     <div class="tax-info-item">
-                        <span class="tax-label">{{ trans('plugins/ecommerce::order.checkout.company_email') }}</span>
+                        <span class="tax-label">{{ trans('plugins/ecommerce::order.tax_info.company_email') }}</span>
                         <span class="tax-value">{{ $tax->company_email }}</span>
                     </div>
                     <div class="tax-info-item">
-                        <span class="tax-label">{{ trans('plugins/ecommerce::order.checkout.company_address') }}</span>
+                        <span class="tax-label">{{ trans('plugins/ecommerce::order.tax_info.company_address') }}</span>
                         <span class="tax-value">{{ $tax->company_address }}</span>
                     </div>
                 </div>

@@ -33,7 +33,7 @@
             >
               <picture>
                 <source :srcset="slider.image" media="(min-width: 768px)" />
-                <img :src="slider.mobile_image || slider.image" :alt="slider.title || ''" class="hero-img" />
+                <img loading="lazy" :src="slider.mobile_image || slider.image" :alt="slider.title || ''" class="hero-img" />
               </picture>
             </div>
           </div>
@@ -88,6 +88,16 @@
         </div>
       </div>
 
+      <!-- Entry point to the "Know your system" lead wizard -->
+      <router-link to="/project-wizard" class="wizard-cta">
+        <i class="ti ti-device-cctv" aria-hidden="true"></i>
+        <span class="wizard-cta-text">
+          <strong>{{ __('wizard_cta_title') }}</strong>
+          <small>{{ __('wizard_cta_sub') }}</small>
+        </span>
+        <i class="ti ti-chevron-left wizard-cta-arrow" aria-hidden="true"></i>
+      </router-link>
+
       <!-- Categories Hierarchy -->
       <div class="sblock home-cats">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -106,7 +116,7 @@
             <router-link :to="`/product-categories/${cat.slug}`" class="cat-item animated-card" v-for="cat in store.featuredRootCategories" :key="cat.id" style="text-decoration: none; color: inherit;">
               <div class="cat-card-inner">
                 <div class="cat-img">
-                  <img v-if="cat.image" :src="cat.image" :alt="cat.name">
+                  <img loading="lazy" v-if="cat.image" :src="cat.image" :alt="cat.name">
                   <i v-else class="ti ti-category"></i>
                 </div>
                 <span class="cat-name">{{ cat.name }}</span>
@@ -129,7 +139,7 @@
         <div class="row gx-3">
           <div class="col-md-6 mb-3 mb-md-0" v-for="(banner, index) in homeBanners" :key="'banner-'+index" v-show="banner && banner.image">
              <a :href="(banner && banner.link) ? banner.link : 'javascript:void(0)'" class="banner-link banners-box">
-               <img :src="banner ? banner.image : ''" :alt="'Banner ' + (index + 1)" class="img-fluid banner-img">
+               <img loading="lazy" :src="banner ? banner.image : ''" :alt="'Banner ' + (index + 1)" class="img-fluid banner-img">
              </a>
           </div>
         </div>
@@ -139,7 +149,7 @@
       <div class="home-prods" v-if="flashSales.length > 0 && flashSales[0].products.length > 0">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
           <div class="sec-title" style="margin:0;font-size:17px;color:var(--danger);display:flex;align-items:center;gap:5px;">
-             <i class="ti ti-bolt"></i> Cyclone Offer 
+             <i class="ti ti-bolt"></i> {{ __('flash_sale') }} 
           </div>
         </div>
         <div class="prods-grid">
@@ -155,7 +165,7 @@
       <!-- Weekly Best Sellers -->
       <div class="home-prods" v-if="weeklyBestSellers.length > 0">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-          <div class="sec-title" style="margin:0;font-size:17px;">Weekly Best Sellers</div>
+          <div class="sec-title" style="margin:0;font-size:17px;">{{ __('newest_products') }}</div>
         </div>
         <div class="prods-grid">
           <ProductCard 
@@ -170,7 +180,7 @@
       <!-- Top Products -->
       <div class="home-prods" v-if="topProducts.length > 0">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-          <div class="sec-title" style="margin:0;font-size:17px;">Top Products</div>
+          <div class="sec-title" style="margin:0;font-size:17px;">{{ __('top_products') }}</div>
         </div>
         <div class="prods-grid">
           <ProductCard 
@@ -185,7 +195,7 @@
       <!-- Featured Products -->
       <div class="home-prods" v-if="featuredProducts.length > 0">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-          <div class="sec-title" style="margin:0;font-size:17px;">Featured Products</div>
+          <div class="sec-title" style="margin:0;font-size:17px;">{{ __('featured_products') }}</div>
           <span style="font-size:14px;color:var(--primary);cursor:pointer;" @click="$router.push('/products')">{{ __('view_all') || 'عرض الكل' }}</span>
         </div>
         <div class="prods-grid">
@@ -233,7 +243,7 @@ import SkeletonLoader from '../components/SkeletonLoader.vue';
 const store = useEcommerceStore();
 const router = useRouter();
 const siteTitle = (window.BotbleData && window.BotbleData.site_title) ? window.BotbleData.site_title : 'Laly Kuwait';
-const siteLogo = (window.BotbleData && window.BotbleData.logo) ? window.BotbleData.logo : '/themes/laly/images/logo.png';
+const siteLogo = window.BotbleData?.logo || '';
 const homeSliders = (window.BotbleData && window.BotbleData.homeSliders) ? window.BotbleData.homeSliders : [];
 const homeBanners = (window.BotbleData && window.BotbleData.homeBanners) ? window.BotbleData.homeBanners : [];
 const isRtl = (window.BotbleData && window.BotbleData.is_rtl !== undefined) ? window.BotbleData.is_rtl : true;
@@ -318,7 +328,7 @@ const loadHomeCollections = async () => {
 onMounted(async () => {
     // Fetch CMS Homepage content
     try {
-        const response = await api.get('/ajax/vue/homepage');
+        const response = await api.get('/homepage');
         if (response.data && response.data.data && response.data.data.content) {
             pageBlocks.value = parseShortcodes(response.data.data.content);
         }
@@ -338,20 +348,6 @@ onMounted(async () => {
 onUnmounted(() => {
     if (sliderInterval) clearInterval(sliderInterval);
 });
-
-const selectedCategories = ref([]);
-
-const selectCategory = (cat, level) => {
-    if (selectedCategories.value[level] === cat.id) {
-        selectedCategories.value = selectedCategories.value.slice(0, level);
-        const parentId = level > 0 ? selectedCategories.value[level - 1] : null;
-        store.fetchProducts({ category: parentId });
-    } else {
-        selectedCategories.value = selectedCategories.value.slice(0, level);
-        selectedCategories.value.push(cat.id);
-        store.fetchProducts({ category: cat.id });
-    }
-};
 
 const openQuickView = (slug) => {
     router.push(`/product/${slug}`);
@@ -473,7 +469,7 @@ const openQuickView = (slug) => {
 .hero-dot.active {
   width: 24px;
   border-radius: 4px;
-  background-color: #fff;
+  background-color: var(--surface);
 }
 .trust-item p {
   font-size: 9px;
@@ -527,8 +523,8 @@ const openQuickView = (slug) => {
   opacity: 0.8;
 }
 .cat-nav-btn:hover {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
   opacity: 1;
   border-color: var(--primary);
 }
@@ -562,5 +558,35 @@ html[dir="rtl"] .cat-nav-next {
   .cat-nav-btn {
     display: none !important;
   }
+}
+.wizard-cta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-4);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--primary-soft);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+}
+.wizard-cta > .ti-device-cctv {
+  font-size: 28px;
+  color: var(--primary-strong);
+}
+.wizard-cta-text {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+}
+.wizard-cta-text small {
+  color: var(--ink-2);
+}
+.wizard-cta-arrow {
+  color: var(--primary-strong);
+}
+[dir="ltr"] .wizard-cta-arrow {
+  transform: scaleX(-1);
 }
 </style>

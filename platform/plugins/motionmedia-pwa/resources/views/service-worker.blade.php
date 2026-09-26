@@ -1,8 +1,8 @@
 const CACHE_NAME = '{{ $cacheName }}';
 const OFFLINE_URL = '/offline';
 
+// Only the offline page: the home page HTML embeds the logged-in customer's details.
 const PRECACHE_URLS = [
-    '/',
     '/offline'
 ];
 
@@ -49,17 +49,22 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Skip chrome extensions and admin panel
-    if (event.request.url.includes('chrome-extension') || 
-        event.request.url.includes('/admin')) {
+    const url = new URL(event.request.url);
+
+    // Only same-origin requests; never touch the admin panel.
+    if (url.origin !== self.location.origin || url.pathname.startsWith('/{{ trim(BaseHelper::getAdminPrefix(), '/') }}')) {
         return;
     }
+
+    // Only static assets are cached. Pages (account, orders, checkout, cart) may contain personal
+    // data and must not stay on shared devices after logout.
+    const isStaticAsset = ['style', 'script', 'image', 'font'].includes(event.request.destination)
+        || /\.(css|js|png|jpe?g|gif|webp|svg|ico|woff2?|ttf)$/i.test(url.pathname);
 
     event.respondWith(
         fetch(event.request)
             .then(response => {
-                // Cache successful responses
-                if (response && response.status === 200 && response.type === 'basic') {
+                if (isStaticAsset && response && response.status === 200 && response.type === 'basic') {
                     const responseToCache = response.clone();
                     caches.open(CACHE_NAME).then(cache => {
                         cache.put(event.request, responseToCache);

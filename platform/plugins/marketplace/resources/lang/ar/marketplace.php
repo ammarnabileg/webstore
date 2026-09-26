@@ -284,7 +284,7 @@ return  [
     'total_amount' => 'المبلغ الإجمالي',
     'store_revenues' => 'إيرادات المتجر',
     'sale_commissions' => 'عمولات البيع',
-    'fee' => 'الرسوم (:رمز)',
+    'fee' => 'الرسوم (:symbol)',
     'amount' => 'المبلغ (:symbol)',
     'top_performing_stores' => 'أفضل المتاجر أداءً',
     'store_growth' => 'نمو المتجر',

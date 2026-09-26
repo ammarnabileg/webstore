@@ -33,6 +33,7 @@
 </template>
 
 <script setup>
+import { __ } from '../../utils/i18n';
 import { ref, onMounted, inject } from 'vue';
 import api from '../../services/api';
 import ProductCard from '../ProductCard.vue';
@@ -46,7 +47,6 @@ const props = defineProps({
 
 defineEmits(['quickview']);
 
-const __ = inject('__') || window?.BotbleData?.i18n || ((key) => key);
 const collections = ref([]);
 const activeCollection = ref(null);
 const products = ref([]);
@@ -98,7 +98,7 @@ const selectCollection = async (collectionId) => {
   overflow-x: auto;
   gap: 15px;
   margin-bottom: 20px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--line);
   padding-bottom: 5px;
 }
 .collection-tabs::-webkit-scrollbar {
@@ -107,7 +107,7 @@ const selectCollection = async (collectionId) => {
 .tab-item {
   font-size: 15px;
   font-weight: 500;
-  color: #666;
+  color: var(--ink-2);
   cursor: pointer;
   padding: 5px 0;
   white-space: nowrap;
@@ -124,7 +124,7 @@ const selectCollection = async (collectionId) => {
   left: 0;
   width: 100%;
   height: 2px;
-  background: var(--primary);
+  background: var(--primary-strong);
   border-radius: 2px;
 }
 .prods-grid {

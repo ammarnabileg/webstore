@@ -5,6 +5,7 @@ namespace App\Services;
 use Botble\Ecommerce\Models\Product;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Support\SafeUrlFetcher;
 
 class AiSeoGeneratorService
 {
@@ -30,14 +31,14 @@ class AiSeoGeneratorService
             }
         }
 
-        $brandName = theme_option('site_title') ?: env('APP_NAME', 'Laly Kuwait');
-        $outputLanguage = env('AI_OUTPUT_LANGUAGE', 'ar');
+        $brandName = theme_option('site_title') ?: config('app.name', 'Laly Kuwait');
+        $outputLanguage = config('services.ai.output_language', 'ar');
 
         $fetchedPageText = 'Not Available';
         if ($sourceUrl) {
             // Simple fetch logic for v1.1
             try {
-                $response = Http::timeout(5)->get($sourceUrl);
+                $response = SafeUrlFetcher::get($sourceUrl, 5);
                 if ($response->successful()) {
                     // Very simple extraction for now, limiting to 1000 chars to avoid token explosion
                     $html = strip_tags($response->body());
@@ -94,9 +95,9 @@ MANAGER NOTES (verified local facts — warranty, delivery): Not Available
 ---
 Generate the JSON now.";
 
-        $apiKey = env('AI_API_KEY') ?: env('OPENROUTER_API_KEY');
-        $baseUrl = env('AI_BASE_URL', 'https://openrouter.ai/api/v1/chat/completions');
-        $model = env('AI_MODEL') ?: env('OPENROUTER_MODEL', 'qwen/qwen3-235b-a22b'); // We will append /no_think below if using openrouter
+        $apiKey = config('services.ai.key');
+        $baseUrl = config('services.ai.base_url');
+        $model = config('services.ai.model'); // We will append /no_think below if using openrouter
 
         if (empty($apiKey)) {
             throw new \Exception("API Key is missing. Please set AI_API_KEY or OPENROUTER_API_KEY in .env file.", 422);
@@ -138,7 +139,7 @@ Generate the JSON now.";
                     'status' => $response->status(),
                     'body' => $response->body()
                 ]);
-                throw new \Exception("API Error: " . $response->body(), 500);
+                throw new \Exception("AI provider request failed (HTTP {$response->status()}).", 500);
             }
             
             return $response;

@@ -1,7 +1,7 @@
 <template>
   <div v-if="isOpen" class="qvm-overlay" @click="closeModal">
     <div class="qvm-container" @click.stop :class="{ 'rtl': botbleData?.is_rtl }">
-      <button class="qvm-close" @click="closeModal"><i class="ti ti-x"></i></button>
+      <button class="qvm-close" @click="closeModal" :aria-label="__('close')"><i class="ti ti-x"></i></button>
       
       <div v-if="loading" class="qvm-loading">
         <div class="spinner"></div>
@@ -10,8 +10,8 @@
       <div v-else-if="product" class="qvm-content">
         <!-- Product Image -->
         <div class="qvm-img-wrap">
-          <img :src="product.image || botbleData?.placeholderImage || 'https://via.placeholder.com/400'" :alt="product.name" class="qvm-img" />
-          <div v-if="product.front_sale_price" class="pcard-badge sale-badge" style="position:absolute; top:15px; right:15px;">{{ __('sale') || 'خصم' }}</div>
+          <img loading="lazy" :src="product.image || botbleData?.placeholderImage" :alt="product.name" class="qvm-img" />
+          <div v-if="product.is_on_sale" class="pcard-badge sale-badge" style="position:absolute; top:15px; right:15px;">{{ __('sale') || 'خصم' }}</div>
         </div>
         
         <!-- Product Details -->
@@ -25,25 +25,20 @@
           
           <div class="qvm-price">
             <span class="current-price">{{ product.front_sale_price_format || product.price_format || product.price }}</span>
-            <span v-if="product.front_sale_price_format" class="old-price">{{ product.price_format }}</span>
+            <span v-if="product.is_on_sale" class="old-price">{{ product.price_format }}</span>
           </div>
           
           <div class="qvm-stock" :class="{'in-stock': product.stock_status === 'in_stock' || !product.stock_status, 'out-of-stock': product.stock_status === 'out_of_stock', 'backorder': product.stock_status === 'on_backorder'}">
             <i :class="product.stock_status === 'out_of_stock' ? 'ti ti-circle-x' : (product.stock_status === 'on_backorder' ? 'ti ti-clock' : 'ti ti-circle-check')"></i>
             {{ product.stock_status === 'out_of_stock' ? (__('out_of_stock') || 'غير متوفر') : (product.stock_status === 'on_backorder' ? (__('pre_order') || 'طلب مسبق') : (__('in_stock') || 'متوفر')) }}
           </div>
-          
-          <!-- Options Placeholder (If product has variants) -->
-          <div class="qvm-options" v-if="product.variations && product.variations.length > 0">
-            <!-- Render options here if needed later -->
-          </div>
-          
+
           <!-- Actions -->
           <div class="qvm-actions">
             <div class="qty-selector">
               <button @click="qty > 1 ? qty-- : null"><i class="ti ti-minus"></i></button>
               <input type="number" v-model="qty" min="1" readonly />
-              <button @click="qty++"><i class="ti ti-plus"></i></button>
+              <button @click="qty++" :aria-label="__('increase_qty')"><i class="ti ti-plus"></i></button>
             </div>
             
             <button class="btn btn-primary qvm-add-btn" @click="addToCart" :disabled="product.stock_status === 'out_of_stock'">
@@ -67,22 +62,22 @@
 </template>
 
 <script setup>
+import { __ } from '../utils/i18n';
 import { ref, computed, inject } from 'vue';
 import { useEcommerceStore } from '../stores/ecommerce';
 
 const store = useEcommerceStore();
 const botbleData = window?.BotbleData || {};
-const __ = inject('__') || botbleData?.i18n || ((key) => key);
 
 const qty = ref(1);
 
 const isOpen = computed(() => store.quickViewOpen);
-const loading = computed(() => store.loading);
-const product = computed(() => store.currentProduct);
+const loading = computed(() => store.quickViewLoading);
+const product = computed(() => store.quickViewProduct);
 
 const closeModal = () => {
     store.quickViewOpen = false;
-    setTimeout(() => { store.currentProduct = null; }, 300); // Clear after animation
+    setTimeout(() => { store.quickViewProduct = null; }, 300); // Clear after animation
     qty.value = 1;
 };
 
@@ -112,7 +107,7 @@ const addToCart = async () => {
   animation: fadeIn 0.2s;
 }
 .qvm-container {
-  background: #fff;
+  background: var(--surface);
   border-radius: 20px;
   width: 90%;
   max-width: 800px;
@@ -138,14 +133,14 @@ const addToCart = async () => {
   position: absolute;
   top: 15px; right: 15px;
   width: 36px; height: 36px;
-  background: #f5f5f5;
+  background: var(--surface-2);
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px; color: #555;
+  font-size: 18px; color: var(--ink-2);
   z-index: 10; transition: background 0.2s;
 }
 .qvm-container.rtl .qvm-close { right: auto; left: 15px; }
-.qvm-close:hover { background: #e0e0e0; }
+.qvm-close:hover { background: var(--line); }
 
 .qvm-loading { padding: 50px; display: flex; justify-content: center; width: 100%; }
 
@@ -154,7 +149,7 @@ const addToCart = async () => {
 
 .qvm-img-wrap {
   width: 45%; padding: 30px;
-  background: #fcfcfc;
+  background: var(--surface-2);
   display: flex; align-items: center; justify-content: center;
   position: relative;
 }
@@ -168,10 +163,10 @@ const addToCart = async () => {
 @media (max-width: 767px) { .qvm-details { width: 100%; padding: 20px; } }
 
 .qvm-meta { font-size: 12px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 8px; }
-.qvm-title { font-size: 22px; font-weight: 800; color: #222; margin-bottom: 12px; line-height: 1.3; }
+.qvm-title { font-size: 22px; font-weight: 800; color: var(--ink); margin-bottom: 12px; line-height: 1.3; }
 .qvm-price { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
 .qvm-price .current-price { font-size: 22px; font-weight: 800; color: var(--primary); }
-.qvm-price .old-price { font-size: 15px; color: #999; text-decoration: line-through; }
+.qvm-price .old-price { font-size: 15px; color: var(--ink-2); text-decoration: line-through; }
 
 .qvm-stock { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; color: var(--danger); margin-bottom: 25px; }
 .qvm-stock.in-stock { color: var(--success-text); }
@@ -179,13 +174,13 @@ const addToCart = async () => {
 .qvm-actions { display: flex; gap: 15px; margin-bottom: 20px; }
 @media (max-width: 767px) { .qvm-actions { flex-direction: column; } }
 
-.qty-selector { display: flex; align-items: center; background: #f5f5f5; border-radius: 8px; padding: 5px; height: 46px; }
-.qty-selector button { width: 36px; height: 100%; display: flex; align-items: center; justify-content: center; color: #555; }
+.qty-selector { display: flex; align-items: center; background: var(--surface-2); border-radius: 8px; padding: 5px; height: 46px; }
+.qty-selector button { width: 36px; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--ink-2); }
 .qty-selector input { width: 40px; height: 100%; text-align: center; border: none; background: transparent; font-weight: bold; }
 
 .qvm-add-btn { flex: 1; height: 46px; border-radius: 8px; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
-.qvm-full-details { display: inline-flex; align-items: center; gap: 5px; font-size: 14px; color: #666; font-weight: 600; margin-top: auto; transition: color 0.2s; }
+.qvm-full-details { display: inline-flex; align-items: center; gap: 5px; font-size: 14px; color: var(--ink-2); font-weight: 600; margin-top: auto; transition: color 0.2s; }
 .qvm-full-details:hover { color: var(--primary); }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

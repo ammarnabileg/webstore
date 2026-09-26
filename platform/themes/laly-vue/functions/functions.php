@@ -4,12 +4,7 @@ register_page_template([
     'default' => 'Default',
 ]);
 
-add_filter('ecommerce_checkout_header', function ($html) {
-    $cssUrl = Theme::asset()->url('css/checkout.css');
-    return $html . '<link rel="stylesheet" href="' . $cssUrl . '?v=' . time() . '">';
-}, 120);
 
-Log::info('Laly-vue functions.php loaded');
 
 require_once __DIR__ . '/bnpl-meta-boxes.php';
 
@@ -269,3 +264,148 @@ add_filter('social_login_providers', function ($providers) {
     return $providers;
 }, 120);
 
+
+if (! function_exists('laly_vue_product_card')) {
+    /**
+     * Product fields shared by every storefront list (listing, search, home sections).
+     * Sale/stock/rating flags are computed here so the Vue cards never have to guess.
+     */
+    function laly_vue_product_card($product): array
+    {
+        $price = (float) $product->price;
+        // front_sale_price runs the whole price pipeline (sales, flash sales, discounts) on every read.
+        $salePrice = $product->front_sale_price;
+        $finalPrice = (float) $salePrice;
+        $isOutOfStock = method_exists($product, 'isOutOfStock') ? $product->isOutOfStock() : false;
+
+        return [
+            'id' => $product->id,
+            'name' => html_entity_decode($product->name),
+            'slug' => $product->slug,
+            'image' => RvMedia::getImageUrl($product->image, 'medium', false, RvMedia::getDefaultImage()),
+            'price' => $product->price,
+            'price_format' => format_price($product->price),
+            'front_sale_price' => $salePrice,
+            'front_sale_price_format' => format_price($salePrice),
+            // front_sale_price is always the final price; it is a discount only when lower than price.
+            'is_on_sale' => $finalPrice > 0 && $finalPrice < $price,
+            'is_out_of_stock' => $isOutOfStock,
+            'stock_status' => $isOutOfStock ? 'out_of_stock' : (string) $product->stock_status,
+            'reviews_avg' => round((float) $product->reviews_avg, 1),
+            'reviews_count' => (int) $product->reviews_count,
+            'labels' => $product->productLabels
+                ? $product->productLabels->map(fn ($label) => ['id' => $label->id, 'name' => $label->name, 'color' => $label->color])
+                : [],
+            'accepts_taly' => $product->getMetaData('accepts_taly', true) == 1,
+            'accepts_deema' => $product->getMetaData('accepts_deema', true) == 1,
+        ];
+    }
+}
+
+if (! function_exists('laly_vue_variation_info')) {
+    /**
+     * Variation data for a configurable (parent) product, shaped for the Vue SPA.
+     *
+     * Returns the attribute swatch groups (only values actually used by this
+     * product's published variations), the full per-variation map so the client
+     * can resolve a swatch selection to a variation without a round-trip, and the
+     * default variation's attribute ids for the initial selection. Returns null
+     * for simple products (no variations) and for variation children themselves.
+     */
+    function laly_vue_variation_info($product): ?array
+    {
+        $product->loadMissing([
+            'variations.product',
+            'variations.productAttributes.productAttributeSet',
+            'defaultVariation.productAttributes',
+        ]);
+
+        if ($product->is_variation || $product->variations->isEmpty()) {
+            return null;
+        }
+
+        $usedAttributeIds = [];
+        $variationsOut = [];
+
+        foreach ($product->variations as $variation) {
+            $variationProduct = $variation->product;
+            if (! $variationProduct || $variationProduct->status != \Botble\Base\Enums\BaseStatusEnum::PUBLISHED) {
+                continue;
+            }
+
+            $attrIds = $variation->productAttributes
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->values()
+                ->all();
+
+            foreach ($attrIds as $attrId) {
+                $usedAttributeIds[$attrId] = true;
+            }
+
+            $card = laly_vue_product_card($variationProduct);
+
+            $variationsOut[] = [
+                'id' => $variationProduct->id,
+                'attribute_ids' => $attrIds,
+                'price' => $card['price'],
+                'price_format' => $card['price_format'],
+                'front_sale_price' => $card['front_sale_price'],
+                'front_sale_price_format' => $card['front_sale_price_format'],
+                'is_on_sale' => $card['is_on_sale'],
+                'is_out_of_stock' => $card['is_out_of_stock'],
+                'stock_status' => $card['stock_status'],
+                'image' => $card['image'],
+                'sku' => $variationProduct->sku,
+            ];
+        }
+
+        if (empty($variationsOut)) {
+            return null;
+        }
+
+        $sets = [];
+        foreach (\Botble\Ecommerce\Models\ProductAttributeSet::getByProductId($product->id) as $set) {
+            $values = [];
+            foreach ($set->attributes as $attribute) {
+                if (! isset($usedAttributeIds[$attribute->id])) {
+                    continue;
+                }
+                $values[] = [
+                    'id' => (int) $attribute->id,
+                    'title' => $attribute->title,
+                    'slug' => $attribute->slug,
+                    'color' => $attribute->color,
+                    'is_default' => (bool) $attribute->is_default,
+                ];
+            }
+            if (! empty($values)) {
+                $sets[] = [
+                    'id' => (int) $set->id,
+                    'title' => $set->title,
+                    'slug' => $set->slug,
+                    'display_layout' => $set->display_layout,
+                    'values' => $values,
+                ];
+            }
+        }
+
+        if (empty($sets)) {
+            return null;
+        }
+
+        $defaultAttributeIds = $product->defaultVariation
+            ? $product->defaultVariation->productAttributes
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->values()
+                ->all()
+            : [];
+
+        return [
+            'attribute_sets' => $sets,
+            'variations' => $variationsOut,
+            'default_attribute_ids' => $defaultAttributeIds,
+        ];
+    }
+}

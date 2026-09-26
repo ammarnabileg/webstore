@@ -29,22 +29,22 @@
             </div>
             <div class="row">
                 <span class="label">الباقة المختارة:</span>
-                <span class="val">{{ strtoupper($lead->package_tier) }}</span>
+                <span class="val">{{ \Botble\SystemWizard\Models\ProjectLead::TIER_LABELS[$lead->package_tier] ?? $lead->package_tier }}</span>
             </div>
             <div class="row">
                 <span class="label">التكلفة التقديرية:</span>
-                <span class="val">{{ $lead->estimate }} د.ك</span>
+                <span class="val">{{ $lead->estimate !== null ? $lead->estimate . ' د.ك (تقديري)' : '—' }}</span>
             </div>
             
             @php
-                $bom = json_decode($lead->bom, true);
+                $bom = $lead->bomData();
             @endphp
             @if($bom)
             <div class="row">
                 <span class="label">المكونات (BOM):</span>
                 <ul style="margin-top:5px; padding-right:20px;">
                     @foreach($bom as $item)
-                        <li>{{ $item['qty'] }}x {{ $item['name'] }} ({{ $item['total'] }} د.ك)</li>
+                        <li>{{ $item['qty'] ?? 1 }}x {{ $item['name'] ?? '' }}</li>
                     @endforeach
                 </ul>
             </div>

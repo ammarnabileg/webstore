@@ -1,0 +1,10 @@
+{
+  "_note": "LOCAL-ONLY credentials created by tests/e2e/fixtures/seed.php. Never valid on production.",
+  "customer1": { "email": "customer_1@example.com", "password": "12345678", "phone": "96550000101" },
+  "customer2": { "email": "customer_2@example.com", "password": "12345678", "phone": "96550000102" },
+  "admin": { "email": "qa@example.com", "password": "Qa-Local-Only-9" },
+  "coupon": "E2E10",
+  "variableProductSlug": "e2e-variable",
+  "simpleProductSlug": "cam",
+  "cmsPageSlug": "e2e-page"
+}

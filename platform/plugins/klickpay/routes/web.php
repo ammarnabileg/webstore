@@ -7,13 +7,12 @@ Route::group(['namespace' => 'Botble\Klickpay\Http\Controllers', 'middleware' =>
         Route::get('status', [
             'as' => 'payments.klickpay.status',
             'uses' => 'KlickpayController@status',
-        ]);
-        
-        // Disable CSRF for webhook since it's an external POST
+        ])->middleware('throttle:payment-return');
+
+        // Server-to-server call authenticated by HMAC; CSRF is excluded in bootstrap/app.php.
         Route::post('webhook', [
             'as' => 'payments.klickpay.webhook',
             'uses' => 'KlickpayController@webhook',
-            'middleware' => ['api'],
-        ]);
+        ])->middleware('throttle:webhooks');
     });
 });

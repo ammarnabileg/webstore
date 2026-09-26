@@ -23,6 +23,12 @@ Route::group(['namespace' => 'Botble\SystemWizard\Http\Controllers', 'middleware
                 'uses' => 'SystemWizardController@saveSettings',
                 'permission' => 'system-wizard.settings',
             ]);
+
+            Route::post('leads/{id}/status', [
+                'as'   => 'leads.status',
+                'uses' => 'SystemWizardController@updateStatus',
+                'permission' => 'system-wizard.edit',
+            ])->whereNumber('id');
         });
     });
 
@@ -36,11 +42,11 @@ Route::group(['namespace' => 'Botble\SystemWizard\Http\Controllers', 'middleware
         Route::post('project-leads', [
             'as'   => 'store-lead',
             'uses' => 'PublicSystemWizardController@storeLead',
-        ]);
-        
+        ])->middleware('throttle:wizard-leads');
+
         Route::post('wizard-events', [
             'as'   => 'events',
             'uses' => 'SystemWizardEventController@store',
-        ]);
+        ])->middleware('throttle:wizard-events');
     });
 });

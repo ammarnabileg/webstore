@@ -1,30 +1,35 @@
+/* Firebase Cloud Messaging worker for background push.
+ * The storefront registers it as /firebase-messaging-sw.js?apiKey=...&projectId=... with the
+ * public web-app config from the admin "Firebase push settings" page (laly-notifications plugin). */
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
-firebase.initializeApp({
-  messagingSenderId: "1234567890"
-});
+const params = new URL(self.location.href).searchParams;
+const config = {
+  apiKey: params.get('apiKey'),
+  authDomain: params.get('authDomain') || undefined,
+  projectId: params.get('projectId'),
+  messagingSenderId: params.get('messagingSenderId'),
+  appId: params.get('appId'),
+};
 
-const messaging = firebase.messaging();
+if (config.apiKey && config.projectId && config.messagingSenderId && config.appId) {
+  firebase.initializeApp(config);
 
-messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  const notificationTitle = payload.notification?.title || payload.data?.title || 'إشعار جديد';
-  const notificationOptions = {
-    body: payload.notification?.body || payload.data?.body || '',
-    icon: '/storage/logo.png',
-    data: {
-      url: payload.fcmOptions?.link || payload.data?.url || '/'
-    }
-  };
+  firebase.messaging().onBackgroundMessage((payload) => {
+    const title = payload.notification?.title || payload.data?.title || '';
+    self.registration.showNotification(title, {
+      body: payload.notification?.body || payload.data?.body || '',
+      icon: '/storage/pwa-icon-192.png',
+      data: { url: payload.fcmOptions?.link || payload.data?.url || '/' },
+    });
+  });
+}
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
-});
-
-self.addEventListener('notificationclick', function(event) {
+self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = event.notification.data?.url || '/';
-  event.waitUntil(
-    clients.openWindow(targetUrl)
-  );
+  // Admin-set links may point to other sites; only http(s) is opened.
+  const target = new URL(event.notification.data?.url || '/', self.location.origin);
+  const url = /^https?:$/.test(target.protocol) ? target.href : self.location.origin + '/';
+  event.waitUntil(clients.openWindow(url));
 });

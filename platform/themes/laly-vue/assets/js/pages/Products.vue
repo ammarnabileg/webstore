@@ -1,14 +1,14 @@
 <template>
   <div class="page">
     <div class="nbar">
-      <button class="nbar-back" @click="$router.back()"><i class="ti ti-arrow-right" :class="{ 'ti-arrow-left': !botbleData?.is_rtl }"></i></button>
+      <button class="nbar-back" @click="$router.back()" :aria-label="__('back')"><i class="ti ti-arrow-right" :class="{ 'ti-arrow-left': !botbleData?.is_rtl }"></i></button>
       <div class="nbar-title">{{ __('products') || 'المنتجات' }}</div>
       <div class="nbar-actions">
         <button @click="viewMode = viewMode === 'grid' ? 'list' : 'grid'">
           <i :class="viewMode === 'grid' ? 'ti ti-list' : 'ti ti-layout-grid'"></i>
         </button>
-        <button @click="showFilters = true"><i class="ti ti-filter"></i></button>
-        <button @click="$router.push('/search')"><i class="ti ti-search"></i></button>
+        <button @click="showFilters = true" :aria-label="__('filters')"><i class="ti ti-filter"></i></button>
+        <button @click="$router.push('/search')" :aria-label="__('search')"><i class="ti ti-search"></i></button>
       </div>
     </div>
     
@@ -16,33 +16,53 @@
       
       <div v-if="(store.loading || initializing) && store.products.length === 0" class="loading-state">
         <div class="spinner"></div>
-        <p>جاري التحميل...</p>
+        <p>{{ __('loading') }}</p>
       </div>
       
       <div v-else>
         <!-- Desktop Toolbar (visible only on desktop, or we can just make it responsive) -->
         <div class="desktop-toolbar" style="max-width: 1200px; margin: 0 auto 20px auto; display: flex; justify-content: flex-end; align-items: center; padding: 0 16px;">
           <div class="toolbar-actions desktop-only">
-            <button class="btn-icon" @click="viewMode = viewMode === 'grid' ? 'list' : 'grid'" :title="botbleData?.locale === 'ar' ? 'طريقة العرض' : 'View Mode'">
+            <button class="btn-icon" @click="viewMode = viewMode === 'grid' ? 'list' : 'grid'" :title="__('view_mode')">
               <i :class="viewMode === 'grid' ? 'ti ti-list' : 'ti ti-layout-grid'"></i>
             </button>
-            <button class="btn-icon" @click="showFilters = true" :title="botbleData?.locale === 'ar' ? 'الفلاتر' : 'Filters'">
-              <i class="ti ti-filter"></i> {{ botbleData?.locale === 'ar' ? 'الفلاتر' : 'Filters' }}
+            <button class="btn-icon" @click="showFilters = true" :title="__('filters')">
+              <i class="ti ti-filter"></i> {{ __('filters') }}
             </button>
           </div>
         </div>
 
+        <div class="sort-bar">
+          <span class="sort-count" v-if="store.productsMeta">{{ store.productsMeta.total }} {{ __('products') }}</span>
+          <label class="sort-select">
+            <span>{{ __('sort_by') }}:</span>
+            <select v-model="sortBy" @change="applyFilters">
+              <option value="">{{ __('sort_default') }}</option>
+              <option value="newest">{{ __('sort_newest') }}</option>
+              <option value="price_asc">{{ __('sort_price_asc') }}</option>
+              <option value="price_desc">{{ __('sort_price_desc') }}</option>
+              <option value="popular">{{ __('sort_popular') }}</option>
+            </select>
+          </label>
+        </div>
+
         <div class="plist" :class="{ 'plist-list': viewMode === 'list' }">
-          <ProductCard 
+          <ProductCard
             v-for="product in store.products" 
             :key="product.id" 
             :product="product" 
           />
         </div>
 
+        <div v-if="hasMore" class="load-more-wrap">
+          <button class="load-more-btn" :disabled="store.loadingMore" @click="loadMore">
+            {{ store.loadingMore ? __('loading') : __('load_more') }}
+          </button>
+        </div>
+
         <div v-if="store.products.length === 0" class="empty-state" style="text-align: center; margin-top: 50px;">
           <img v-if="botbleData?.logo" :src="botbleData.logo" alt="Logo" style="max-height: 60px; margin-bottom: 20px; opacity: 0.6;" />
-          <i v-else class="ti ti-package-off" style="font-size: 40px; color: #ccc;"></i>
+          <i v-else class="ti ti-package-off" style="font-size: 40px; color: var(--line);"></i>
           <p>{{ __('no_products') || 'لا توجد منتجات حالياً' }}</p>
         </div>
       </div>
@@ -55,7 +75,7 @@
     <div class="filter-drawer" :class="{ 'open': showFilters, 'rtl': botbleData?.is_rtl }">
       <div class="drawer-header">
         <h3>{{ __('filters') || 'الفلاتر' }}</h3>
-        <button class="close-btn" @click="showFilters = false"><i class="ti ti-x"></i></button>
+        <button class="close-btn" @click="showFilters = false" :aria-label="__('close')"><i class="ti ti-x"></i></button>
       </div>
       <div class="drawer-body">
         <!-- Categories Filter -->
@@ -86,7 +106,7 @@
           <div class="filter-options" style="display:flex; flex-wrap:wrap; gap:10px;">
             <label v-for="attr in filterSet.attributes" :key="attr.id" class="filter-label" style="display:inline-flex; align-items:center; gap: 5px;">
               <input type="checkbox" :value="attr.id" v-model="selectedAttributes">
-              <span v-if="attr.color" :style="{ backgroundColor: attr.color, width: '24px', height: '24px', borderRadius: '50%', display: 'inline-block', border: '1px solid #ddd' }" :title="attr.title"></span>
+              <span v-if="attr.color" :style="{ backgroundColor: attr.color, width: '24px', height: '24px', borderRadius: '50%', display: 'inline-block', border: '1px solid var(--line)' }" :title="attr.title"></span>
               <span v-else>{{ attr.title }}</span>
             </label>
           </div>
@@ -103,6 +123,16 @@
           </div>
         </div>
 
+        <!-- Price Range -->
+        <div class="filter-section">
+          <h4>{{ __('price_range') }}</h4>
+          <div class="price-range-inputs">
+            <input type="number" min="0" inputmode="numeric" v-model="minPrice" :placeholder="__('min')" :aria-label="__('min')" />
+            <span class="price-dash">–</span>
+            <input type="number" min="0" inputmode="numeric" v-model="maxPrice" :placeholder="__('max')" :aria-label="__('max')" />
+          </div>
+        </div>
+
         <button class="apply-filters-btn" @click="applyFilters">
           {{ __('apply') || 'تطبيق الفلاتر' }}
         </button>
@@ -113,12 +143,14 @@
 </template>
 
 <script setup>
-import { onMounted, watch, ref, inject } from 'vue';
-import { useRoute } from 'vue-router';
+import { __ } from '../utils/i18n';
+import { onMounted, watch, ref, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useEcommerceStore } from '../stores/ecommerce';
 import ProductCard from '../components/ProductCard.vue';
 
 const route = useRoute();
+const router = useRouter();
 const store = useEcommerceStore();
 const viewMode = ref('grid');
 const showFilters = ref(false);
@@ -126,9 +158,22 @@ const selectedCategories = ref([]);
 const selectedAttributes = ref([]);
 const selectedCollections = ref([]);
 const selectedTags = ref([]);
+const sortBy = ref('');
+const minPrice = ref('');
+const maxPrice = ref('');
 const initializing = ref(true);
 const botbleData = window?.BotbleData || {};
-const __ = inject('__') || botbleData?.i18n || ((key) => key);
+
+// Seed sort/price from the URL so a shared/bookmarked link restores the view.
+const seedFromQuery = () => {
+    const allowedSorts = ['newest', 'price_asc', 'price_desc', 'popular'];
+    sortBy.value = allowedSorts.includes(route.query.sort) ? route.query.sort : '';
+    minPrice.value = route.query.min_price != null ? String(route.query.min_price) : '';
+    maxPrice.value = route.query.max_price != null ? String(route.query.max_price) : '';
+    if (route.query.tags) selectedTags.value = String(route.query.tags).split(',').map(Number).filter(Boolean);
+    if (route.query.collections) selectedCollections.value = String(route.query.collections).split(',').map(Number).filter(Boolean);
+    if (route.query.attributes) selectedAttributes.value = String(route.query.attributes).split(',').map(Number).filter(Boolean);
+};
 
 const getRouteCategoryIds = async () => {
     let catIds = [...selectedCategories.value];
@@ -137,6 +182,11 @@ const getRouteCategoryIds = async () => {
         await store.fetchCategories();
     }
     
+    // /products?category=<id> links come from home-page shortcodes.
+    if (catIds.length === 0 && route.query.category) {
+        catIds = String(route.query.category).split(',').map(Number).filter(Boolean);
+    }
+
     if (route.name === 'CategoryProducts' && route.params.slug && catIds.length === 0) {
         const cat = store.categories.find(c => c.slug === route.params.slug);
         if (cat) {
@@ -154,9 +204,24 @@ const getRouteCategoryIds = async () => {
     return catIds;
 };
 
+const PER_PAGE = 20;
+const currentParams = ref({});
+const hasMore = computed(() => {
+    const meta = store.productsMeta;
+    return !!meta && meta.current_page < meta.last_page;
+});
+
+const loadMore = async () => {
+    if (!hasMore.value || store.loadingMore) return;
+    await store.fetchProducts(
+        { ...currentParams.value, page: store.productsMeta.current_page + 1 },
+        { append: true }
+    );
+};
+
 const applyFilters = async () => {
     showFilters.value = false;
-    let params = { per_page: 20 };
+    let params = { per_page: PER_PAGE };
     
     let catIds = await getRouteCategoryIds();
     
@@ -173,7 +238,27 @@ const applyFilters = async () => {
     if (selectedTags.value.length > 0) {
         params.tags = selectedTags.value.join(',');
     }
-    
+    if (sortBy.value) {
+        params.sort = sortBy.value;
+    }
+    const min = parseFloat(minPrice.value);
+    const max = parseFloat(maxPrice.value);
+    if (!isNaN(min) && min >= 0) params.min_price = min;
+    if (!isNaN(max) && max >= 0) params.max_price = max;
+
+    currentParams.value = params;
+
+    // Persist filter/sort state to the URL (without category, which is already in the path/query).
+    const query = { ...route.query };
+    for (const key of ['sort', 'min_price', 'max_price', 'tags', 'collections', 'attributes']) {
+        if (params[key] != null && params[key] !== '') {
+            query[key] = params[key];
+        } else {
+            delete query[key];
+        }
+    }
+    router.replace({ query }).catch(() => {});
+
     await store.fetchProducts(params);
     initializing.value = false;
 };
@@ -188,11 +273,12 @@ const refreshFilters = async () => {
 };
 
 onMounted(() => {
+    seedFromQuery();
     refreshFilters();
     applyFilters();
 });
 
-watch(() => route.params.slug, () => {
+watch(() => [route.params.slug, route.query.category], () => {
     // Clear selection when navigating to a different category
     selectedCategories.value = [];
     selectedAttributes.value = [];
@@ -205,28 +291,69 @@ watch(() => selectedCategories.value, () => {
     refreshFilters();
 });
 
-const addToCart = async (id) => {
-    const success = await store.addToCart(id, 1);
-    if (success) {
-        // Optional: show a toast notification
-        console.log('Product added to cart!');
-    }
-};
 </script>
 
 <style scoped>
+.sort-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 1200px;
+  margin: 0 auto 14px auto;
+  flex-wrap: wrap;
+}
+.sort-count {
+  font-size: 13px;
+  color: var(--text2, var(--ink-2));
+}
+.sort-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text2, var(--ink-2));
+  margin-inline-start: auto;
+}
+.sort-select select {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.price-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.price-range-inputs input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+}
+.price-dash {
+  color: var(--text2, var(--ink-2));
+}
 .filter-btn {
   padding: 8px 16px;
   border-radius: 20px;
-  border: 1px solid #ddd;
-  background: #fff;
+  border: 1px solid var(--line);
+  background: var(--surface);
   white-space: nowrap;
   font-family: inherit;
   cursor: pointer;
 }
 .filter-btn.active {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
   border-color: var(--primary);
 }
 
@@ -274,11 +401,11 @@ const addToCart = async (id) => {
   align-items: center;
   justify-content: center;
   height: 200px;
-  color: #666;
+  color: var(--ink-2);
 }
 .spinner {
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #172B85;
+  border: 3px solid var(--line);
+  border-top: 3px solid var(--primary-strong);
   border-radius: 50%;
   width: 30px;
   height: 30px;
@@ -291,7 +418,7 @@ const addToCart = async (id) => {
 }
 .old-price {
   text-decoration: line-through;
-  color: #999;
+  color: var(--ink-2);
   font-size: 12px;
   margin-left: 5px;
 }
@@ -404,7 +531,7 @@ const addToCart = async (id) => {
   width: 35px;
   height: 35px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--surface);
   border: none;
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   display: flex;
@@ -416,8 +543,8 @@ const addToCart = async (id) => {
   transition: all 0.2s;
 }
 .pcard-floating-actions button:hover {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
 }
 .pcard-floating-actions button.active {
   color: var(--danger);
@@ -441,8 +568,8 @@ const addToCart = async (id) => {
   transition: all 0.2s;
 }
 .tag-chip.active {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
   border-color: var(--primary);
 }
 
@@ -501,8 +628,8 @@ const addToCart = async (id) => {
 .qv-price { font-size: 22px; font-weight: bold; color: var(--primary); margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
 .qv-desc { font-size: 14px; color: var(--text2); line-height: 1.6; margin-bottom: 20px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .qv-add-btn {
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
   border: none;
   width: 100%;
   padding: 12px;
@@ -602,13 +729,32 @@ const addToCart = async (id) => {
 .apply-filters-btn {
   width: 100%;
   padding: 12px;
-  background: var(--primary);
-  color: #fff;
+  background: var(--primary-strong);
+  color: var(--on-primary);
   border: none;
   border-radius: 8px;
   font-weight: 700;
   font-size: 16px;
   cursor: pointer;
   margin-top: 10px;
+}
+.load-more-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 16px 0 8px;
+}
+.load-more-btn {
+    min-width: 180px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: 1px solid var(--primary);
+    background: transparent;
+    color: var(--primary);
+    font-weight: 700;
+    cursor: pointer;
+}
+.load-more-btn:disabled {
+    opacity: .6;
+    cursor: default;
 }
 </style>

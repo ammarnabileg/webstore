@@ -20,8 +20,10 @@ class SystemWizardServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->setNamespace('plugins/system-wizard')
+            ->loadAndPublishConfigurations(['permissions'])
             ->loadAndPublishViews()
             ->loadAndPublishTranslations()
+            ->loadMigrations()
             ->loadRoutes();
 
         Event::listen(RouteMatched::class, function () {

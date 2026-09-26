@@ -4,17 +4,23 @@ import api from '../services/api';
 export const useEcommerceStore = defineStore('ecommerce', {
     state: () => ({
         products: [],
+        productsMeta: null,
+        loadingMore: false,
         categories: [],
         cart: null,
         cartCount: 0,
         currentProduct: null,
         searchResults: [],
+        searchMeta: null,
         filters: { attributes: [], collections: [], tags: [] },
         wishlist: JSON.parse(localStorage.getItem('wishlist') || '[]'),
         compareList: JSON.parse(localStorage.getItem('compareList') || '[]'),
         loading: false,
         notifications: [],
         quickViewOpen: false,
+        // Kept separate from currentProduct so opening quick view never replaces the product page.
+        quickViewProduct: null,
+        quickViewLoading: false,
     }),
     getters: {
         rootCategories: (state) => state.categories.filter(c => !c.parent_id),
@@ -30,15 +36,22 @@ export const useEcommerceStore = defineStore('ecommerce', {
                 console.error('Error fetching filters:', err);
             }
         },
-        async fetchProducts(params = {}) {
-            this.loading = true;
+        async fetchProducts(params = {}, { append = false } = {}) {
+            if (append) {
+                this.loadingMore = true;
+            } else {
+                this.loading = true;
+            }
             try {
                 const response = await api.get('/products', { params });
-                this.products = response.data.data || [];
+                const items = response.data.data || [];
+                this.products = append ? [...this.products, ...items] : items;
+                this.productsMeta = response.data.meta || null;
             } catch (err) {
                 console.error('Error fetching products:', err);
             } finally {
                 this.loading = false;
+                this.loadingMore = false;
             }
         },
         async fetchCategories() {
@@ -62,17 +75,33 @@ export const useEcommerceStore = defineStore('ecommerce', {
         },
         async openQuickView(slug) {
             this.quickViewOpen = true;
-            await this.fetchProductBySlug(slug);
-        },
-        async searchProducts(query) {
-            this.loading = true;
+            this.quickViewLoading = true;
+            this.quickViewProduct = null;
             try {
-                const response = await api.get('/products', { params: { q: query } });
-                this.searchResults = response.data.data || [];
+                const response = await api.get(`/products/${slug}`);
+                this.quickViewProduct = response.data.data || null;
+            } catch (err) {
+                console.error('Error fetching quick view product:', err);
+            } finally {
+                this.quickViewLoading = false;
+            }
+        },
+        async searchProducts(query, { append = false, page = 1 } = {}) {
+            if (append) {
+                this.loadingMore = true;
+            } else {
+                this.loading = true;
+            }
+            try {
+                const response = await api.get('/products', { params: { q: query, per_page: 20, page } });
+                const items = response.data.data || [];
+                this.searchResults = append ? [...this.searchResults, ...items] : items;
+                this.searchMeta = response.data.meta || null;
             } catch (err) {
                 console.error('Error searching products:', err);
             } finally {
                 this.loading = false;
+                this.loadingMore = false;
             }
         },
         async fetchCart() {
@@ -118,7 +147,8 @@ export const useEcommerceStore = defineStore('ecommerce', {
                 return false;
             }
         },
-        toggleWishlist(product) {
+        async toggleWishlist(product) {
+            // Optimistic local update (keeps the heart responsive and works offline).
             const index = this.wishlist.findIndex(item => item.id === product.id);
             if (index > -1) {
                 this.wishlist.splice(index, 1);
@@ -126,6 +156,34 @@ export const useEcommerceStore = defineStore('ecommerce', {
                 this.wishlist.push(product);
             }
             localStorage.setItem('wishlist', JSON.stringify(this.wishlist));
+            // Persist to the server (server-side toggle) so it survives reloads and,
+            // for signed-in customers, syncs across devices.
+            try {
+                await api.post(`/wishlist/${product.id}`);
+            } catch (err) {
+                console.error('Error syncing wishlist:', err);
+            }
+        },
+        async fetchWishlist() {
+            try {
+                const response = await api.get('/wishlist');
+                const serverItems = response.data.data || [];
+                const serverIds = new Set(serverItems.map(i => i.id));
+                // One-time migration: push any localStorage-only items up to the server.
+                const localOnly = this.wishlist.filter(i => !serverIds.has(i.id));
+                for (const item of localOnly) {
+                    try { await api.post(`/wishlist/${item.id}`); } catch (e) { /* keep going */ }
+                }
+                if (localOnly.length) {
+                    const merged = await api.get('/wishlist');
+                    this.wishlist = merged.data.data || serverItems;
+                } else {
+                    this.wishlist = serverItems;
+                }
+                localStorage.setItem('wishlist', JSON.stringify(this.wishlist));
+            } catch (err) {
+                console.error('Error fetching wishlist:', err);
+            }
         },
         toggleCompare(product) {
             const index = this.compareList.findIndex(item => item.id === product.id);
@@ -135,6 +193,25 @@ export const useEcommerceStore = defineStore('ecommerce', {
                 this.compareList.push(product);
             }
             localStorage.setItem('compareList', JSON.stringify(this.compareList));
+        },
+        async submitReview({ product_id, star, comment }) {
+            // Post to the top-level review endpoint so Botble's ReviewRequest validation
+            // and purchase/eligibility policy are reused (baseURL override: this route is
+            // not under /ajax/vue). Axios sends the XSRF cookie for CSRF.
+            const match = window.location.pathname.match(/^\/(en|ar)(\/|$)/);
+            const prefix = match ? `/${match[1]}` : '';
+            try {
+                const res = await api.post('/review/create', { product_id, star, comment }, { baseURL: prefix || '/' });
+                if (res.data && !res.data.error) {
+                    return { ok: true, message: res.data.message };
+                }
+                return { ok: false, message: res.data?.message };
+            } catch (err) {
+                const data = err?.response?.data;
+                const msg = data?.message
+                    || (data?.errors ? Object.values(data.errors).flat()[0] : null);
+                return { ok: false, message: msg };
+            }
         },
         notify(message, type = 'success', duration = 3000) {
             const id = Date.now() + Math.random().toString(36).substr(2, 9);

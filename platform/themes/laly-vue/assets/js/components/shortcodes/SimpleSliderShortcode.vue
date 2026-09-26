@@ -8,7 +8,7 @@
         @click="slider.link ? window.location.href = slider.link : null"
       >
         <picture>
-          <img :src="slider.image" :alt="slider.title || 'banner'" class="hero-img" />
+          <img loading="lazy" :src="slider.image" :alt="slider.title || 'banner'" class="hero-img" />
         </picture>
         <div class="hero-content" v-if="slider.title || slider.description">
           <h2 v-if="slider.title">{{ slider.title }}</h2>
@@ -23,6 +23,7 @@
 </template>
 
 <script setup>
+import { __ } from '../../utils/i18n';
 import { ref, onMounted, inject } from 'vue';
 import api from '../../services/api';
 
@@ -33,7 +34,6 @@ const props = defineProps({
   }
 });
 
-const __ = inject('__') || window?.BotbleData?.i18n || ((key) => key);
 const slides = ref([]);
 const loading = ref(true);
 
@@ -107,9 +107,9 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
+  background: var(--surface-2);
   border-radius: 12px;
-  color: #888;
+  color: var(--ink-2);
 }
 
 @media (min-width: 768px) {

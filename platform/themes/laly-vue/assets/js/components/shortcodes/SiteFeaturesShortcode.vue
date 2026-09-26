@@ -48,7 +48,7 @@ const features = computed(() => {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
-  background: #fff;
+  background: var(--surface);
   padding: 30px;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.03);
@@ -73,12 +73,12 @@ const features = computed(() => {
   margin: 0 0 5px 0;
   font-size: 15px;
   font-weight: 600;
-  color: #333;
+  color: var(--ink);
 }
 .f-content p {
   margin: 0;
   font-size: 13px;
-  color: #777;
+  color: var(--ink-2);
 }
 
 @media (max-width: 991px) {
@@ -94,7 +94,7 @@ const features = computed(() => {
   }
   .feature-item {
     padding-bottom: 15px;
-    border-bottom: 1px solid #f5f5f5;
+    border-bottom: 1px solid var(--line);
   }
   .feature-item:last-child {
     padding-bottom: 0;

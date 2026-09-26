@@ -14,62 +14,22 @@ Theme::registerRoutes(function (): void {
     // Internal Vue API Routes
     Route::group(['prefix' => 'ajax/vue', 'as' => 'public.ajax.vue.', 'middleware' => ['web', 'core']], function (): void {
 
-        Route::get('notifications', function (Request $request) {
-            $isLoggedIn = auth('customer')->check();
-            $query = \Botble\Ecommerce\Models\Notification::query()
-                ->whereIn('status', ['published', 'scheduled'])
-                ->where(function ($q) {
-                    $q->whereNull('scheduled_at')->orWhere('scheduled_at', '<=', now());
-                });
-
-            if ($isLoggedIn) {
-                $query->whereIn('type', ['all', 'logged_in']);
-            } else {
-                $query->whereIn('type', ['all', 'guest']);
-            }
-
-            $notifications = $query->orderByDesc('created_at')->get()->map(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'title' => $item->title,
-                    'description' => $item->description,
-                    'target_url' => $item->target_url,
-                    'created_at' => $item->created_at ? $item->created_at->diffForHumans() : '',
-                ];
-            });
-
-            return response()->json(['data' => $notifications, 'is_logged_in' => $isLoggedIn]);
-        });
-
-        Route::post('fcm-token', function (Request $request) {
-            $token = $request->input('token');
-            $deviceType = $request->input('device_type', 'web');
-            if (!$token) {
-                return response()->json(['success' => false, 'message' => 'Token missing'], 400);
-            }
-
-            $fcmToken = \Botble\Ecommerce\Models\CustomerFcmToken::query()->firstOrNew(['token' => $token]);
-            $fcmToken->customer_id = auth('customer')->check() ? auth('customer')->id() : null;
-            $fcmToken->device_type = $deviceType;
-            $fcmToken->save();
-
-            return response()->json(['success' => true, 'customer_id' => $fcmToken->customer_id]);
-        });
+        // Storefront notifications and FCM token routes live in the laly-notifications plugin.
 
         Route::get('products', function (Request $request, ProductInterface $productRepository) {
             $params = [
                 'paginate' => [
-                    'per_page' => $request->integer('per_page', 10),
+                    'per_page' => min(max($request->integer('per_page', 10), 1), 60),
                     'current_paged' => $request->integer('page', 1),
                 ],
-                'with' => ['slugable', 'productLabels', 'productCollections', 'tags'],
+                'with' => ['slugable', 'productLabels', 'productCollections', 'tags', 'metadata'],
             ];
 
             $filters = [];
 
             // Keyword Search
-            if ($request->filled('q')) {
-                $filters['keyword'] = $request->input('q');
+            if ($request->filled('q') && is_string($request->input('q'))) {
+                $filters['keyword'] = mb_substr($request->input('q'), 0, 100);
             }
 
             // Category Filter
@@ -78,10 +38,39 @@ Theme::registerRoutes(function (): void {
                 $filters['categories'] = is_array($categoryInput) ? $categoryInput : explode(',', $categoryInput);
             }
 
+            // Collection / tag filters (ids, comma-separated or array). collection_id is used by shortcodes.
+            foreach (['collections' => 'collections', 'collection_id' => 'collections', 'tags' => 'tags'] as $input => $filterKey) {
+                if ($request->filled($input)) {
+                    $value = $request->input($input);
+                    $ids = array_values(array_filter(array_map('intval', is_array($value) ? $value : explode(',', (string) $value))));
+                    $filters[$filterKey] = array_values(array_unique(array_merge($filters[$filterKey] ?? [], $ids)));
+                }
+            }
+
+            // Sorting
+            $sorts = [
+                'newest' => ['ec_products.created_at' => 'DESC'],
+                'price_asc' => ['ec_products.price' => 'ASC'],
+                'price_desc' => ['ec_products.price' => 'DESC'],
+                'popular' => ['ec_products.views' => 'DESC'],
+            ];
+            $sort = is_string($request->input('sort')) ? $request->input('sort') : '';
+            if (isset($sorts[$sort])) {
+                $params['order_by'] = $sorts[$sort];
+            }
+
             // Attribute Filter
             if ($request->filled('attributes')) {
                 $attrsInput = $request->input('attributes');
                 $filters['attributes'] = is_array($attrsInput) ? $attrsInput : explode(',', $attrsInput);
+            }
+
+            // Price range (values are in the display currency; the repository converts to the base rate).
+            if ($request->filled('min_price') && is_numeric($request->input('min_price'))) {
+                $filters['min_price'] = max(0, (float) $request->input('min_price'));
+            }
+            if ($request->filled('max_price') && is_numeric($request->input('max_price'))) {
+                $filters['max_price'] = max(0, (float) $request->input('max_price'));
             }
 
             // Use getProducts to properly apply the filters with default conditions
@@ -89,30 +78,23 @@ Theme::registerRoutes(function (): void {
 
             $data = [];
             foreach ($products as $product) {
-                $data[] = [
-                    'id' => $product->id,
-                    'name' => html_entity_decode($product->name),
-                    'slug' => $product->slug,
-                    'image' => RvMedia::getImageUrl($product->image, 'medium', false, RvMedia::getDefaultImage()),
-                    'price' => $product->price,
-                    'price_format' => format_price($product->price),
-                    'front_sale_price' => $product->front_sale_price,
-                    'front_sale_price_format' => format_price($product->front_sale_price),
-                    'is_out_of_stock' => $product->isOutOfStock(),
-                    'labels' => $product->productLabels->map(function ($label) {
-                        return ['id' => $label->id, 'name' => $label->name, 'color' => $label->color];
-                    }),
+                $data[] = laly_vue_product_card($product) + [
                     'tags' => $product->tags->map(function ($tag) {
                         return ['id' => $tag->id, 'name' => $tag->name];
                     }),
                     'collections' => $product->productCollections->map(function ($col) {
                         return ['id' => $col->id, 'name' => $col->name];
                     }),
-                    'accepts_taly' => $product->getMetaData('accepts_taly', true) == 1,
-                    'accepts_deema' => $product->getMetaData('accepts_deema', true) == 1,
                 ];
             }
-            return response()->json(['data' => $data]);
+            $meta = method_exists($products, 'currentPage') ? [
+                'current_page' => $products->currentPage(),
+                'last_page' => $products->lastPage(),
+                'per_page' => $products->perPage(),
+                'total' => $products->total(),
+            ] : null;
+
+            return response()->json(['data' => $data, 'meta' => $meta]);
         });
 
         // Get single product by slug
@@ -122,40 +104,77 @@ Theme::registerRoutes(function (): void {
                 return response()->json(['message' => 'Product not found'], 404);
             }
             $product = $productRepository->findById($slugModel->reference_id, ['slugable', 'productLabels', 'productCollections', 'tags']);
-            if (!$product) {
+            if (!$product || $product->status != \Botble\Base\Enums\BaseStatusEnum::PUBLISHED) {
                 return response()->json(['message' => 'Product not found'], 404);
             }
 
+            $variationInfo = laly_vue_variation_info($product);
+
             return response()->json([
-                'data' => [
-                    'id' => $product->id,
-                    'name' => html_entity_decode($product->name),
-                    'slug' => $product->slug,
-                    'image' => RvMedia::getImageUrl($product->image, 'medium', false, RvMedia::getDefaultImage()),
+                'data' => laly_vue_product_card($product) + [
+                    'has_variations' => $variationInfo !== null,
+                    'variation_info' => $variationInfo,
                     'images' => array_map(function ($img) {
                         return RvMedia::getImageUrl($img, null, false, RvMedia::getDefaultImage());
                     }, is_array($product->images) ? $product->images : []),
-                    'price' => $product->price,
-                    'price_format' => format_price($product->price),
-                    'front_sale_price' => $product->front_sale_price,
-                    'front_sale_price_format' => format_price($product->front_sale_price),
-                    'is_out_of_stock' => $product->isOutOfStock(),
-                    'stock_status' => (string) $product->stock_status,
-                    'description' => $product->description,
-                    'content' => $product->content,
-                    'labels' => $product->productLabels->map(function ($label) {
-                        return ['id' => $label->id, 'name' => $label->name, 'color' => $label->color];
-                    }),
+                    'description' => BaseHelper::clean($product->description),
+                    'content' => BaseHelper::clean($product->content),
                     'tags' => $product->tags->map(function ($tag) {
                         return ['id' => $tag->id, 'name' => $tag->name];
                     }),
                     'collections' => $product->productCollections->map(function ($col) {
                         return ['id' => $col->id, 'name' => $col->name];
                     }),
-                    'accepts_taly' => $product->getMetaData('accepts_taly', true) == 1,
-                    'accepts_deema' => $product->getMetaData('accepts_deema', true) == 1,
-                ]
+                ],
             ]);
+        });
+
+        $findPublishedProductBySlug = function (string $slug) {
+            $slugModel = SlugHelper::getSlug($slug, SlugHelper::getPrefix(\Botble\Ecommerce\Models\Product::class), \Botble\Ecommerce\Models\Product::class);
+
+            return $slugModel
+                ? \Botble\Ecommerce\Models\Product::query()
+                    ->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
+                    ->find($slugModel->reference_id)
+                : null;
+        };
+
+        Route::get('products/{slug}/related', function (string $slug) use ($findPublishedProductBySlug) {
+            $product = $findPublishedProductBySlug($slug);
+            if (!$product) {
+                return response()->json(['data' => []]);
+            }
+
+            $related = collect(get_related_products($product, 8) ?? []);
+            // Cards read labels and payment metadata: load them in one query each, not per product.
+            if ($related->isNotEmpty()) {
+                (new \Illuminate\Database\Eloquent\Collection($related->all()))->loadMissing(['productLabels', 'metadata']);
+            }
+
+            return response()->json(['data' => collect($related)->map(fn ($item) => laly_vue_product_card($item))->values()]);
+        });
+
+        Route::get('products/{slug}/reviews', function (string $slug) use ($findPublishedProductBySlug) {
+            $product = $findPublishedProductBySlug($slug);
+            if (!$product || !\Botble\Ecommerce\Facades\EcommerceHelper::isReviewEnabled()) {
+                return response()->json(['data' => []]);
+            }
+
+            $reviews = \Botble\Ecommerce\Models\Review::query()
+                ->with('user')
+                ->where('product_id', $product->id)
+                ->where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
+                ->latest()
+                ->limit(20)
+                ->get();
+
+            return response()->json(['data' => $reviews->map(fn ($review) => [
+                'id' => $review->id,
+                'customer_name' => $review->user_name ?: $review->customer_name,
+                'star' => (int) $review->star,
+                'comment' => $review->comment,
+                'created_at' => $review->created_at?->toDateString(),
+            ])->values()]);
         });
 
         // Get slider by key
@@ -192,30 +211,12 @@ Theme::registerRoutes(function (): void {
         Route::get('home-collections', function () {
             $data = [];
             
-            $formatProduct = function ($product) {
-                return [
-                    'id' => $product->id,
-                    'name' => html_entity_decode($product->name),
-                    'slug' => $product->slug,
-                    'image' => RvMedia::getImageUrl($product->image, 'medium', false, RvMedia::getDefaultImage()),
-                    'price' => $product->price,
-                    'price_format' => format_price($product->price),
-                    'front_sale_price' => $product->front_sale_price,
-                    'front_sale_price_format' => format_price($product->front_sale_price),
-                    'is_out_of_stock' => method_exists($product, 'isOutOfStock') ? $product->isOutOfStock() : false,
-                    'stock_status' => (string) $product->stock_status,
-                    'labels' => $product->productLabels ? $product->productLabels->map(function ($label) {
-                        return ['id' => $label->id, 'name' => $label->name, 'color' => $label->color];
-                    }) : [],
-                    'accepts_taly' => $product->getMetaData('accepts_taly', true) == 1,
-                    'accepts_deema' => $product->getMetaData('accepts_deema', true) == 1,
-                ];
-            };
+            $formatProduct = fn ($product) => laly_vue_product_card($product);
 
             $baseQuery = \Botble\Ecommerce\Models\Product::query()
                 ->where('status', 'published')
                 ->where('is_variation', false)
-                ->with(['slugable', 'productLabels']);
+                ->with(['slugable', 'productLabels', 'metadata']);
 
             $featured = (clone $baseQuery)->where('is_featured', 1)->orderByDesc('created_at')->limit(8)->get();
             $data['featured_products'] = $featured->map($formatProduct);
@@ -231,7 +232,7 @@ Theme::registerRoutes(function (): void {
                 ->where('status', 'published')
                 ->where('end_date', '>', now())
                 ->with(['products' => function ($query) {
-                    $query->where('status', 'published')->where('is_variation', false)->with(['slugable', 'productLabels']);
+                    $query->where('status', 'published')->where('is_variation', false)->with(['slugable', 'productLabels', 'metadata']);
                 }])
                 ->get();
                 
@@ -250,12 +251,14 @@ Theme::registerRoutes(function (): void {
         // Get homepage content
         Route::get('homepage', function () {
             $homepageId = theme_option('homepage_id');
+            // No CMS homepage assigned is a normal state (the SPA renders its own default blocks);
+            // return 200 + null so the storefront does not log a console error on every home load.
             if (!$homepageId) {
-                return response()->json(['message' => 'Homepage not configured'], 404);
+                return response()->json(['data' => null]);
             }
             $page = \Botble\Page\Models\Page::find($homepageId);
             if (!$page || $page->status != 'published') {
-                return response()->json(['message' => 'Homepage not found'], 404);
+                return response()->json(['data' => null]);
             }
 
             return response()->json([
@@ -386,24 +389,166 @@ Theme::registerRoutes(function (): void {
             ]);
         });
 
-        Route::post('cart/add', function (Request $request, ProductInterface $productRepository) {
-            $productId = $request->input('id');
-            $qty = $request->input('qty', 1);
+        // Server-backed wishlist for the SPA. Guests use the wishlist cart instance,
+        // logged-in customers use their persisted wishlist, so the heart state matches
+        // the server /wishlist page and syncs across devices for signed-in users.
+        Route::get('wishlist', function (ProductInterface $productRepository) {
+            $params = ['paginate' => ['per_page' => 100, 'current_paged' => 1], 'with' => ['slugable', 'productLabels', 'metadata']];
 
-            $product = $productRepository->findById($productId);
-            if (!$product) {
+            if (auth('customer')->check()) {
+                $products = $productRepository->getProductsWishlist(auth('customer')->id(), $params);
+            } else {
+                $itemIds = Cart::instance('wishlist')->content()->pluck('id')->unique()->all();
+                $products = $itemIds ? $productRepository->getProductsByIds($itemIds, $params) : collect();
+            }
+
+            $data = [];
+            foreach ($products as $product) {
+                $data[] = laly_vue_product_card($product);
+            }
+
+            return response()->json(['data' => $data]);
+        });
+
+        // Toggle: adds when absent, removes when present (mirrors the stock wishlist service).
+        Route::post('wishlist/{id}', function (int $id) {
+            $product = \Botble\Ecommerce\Models\Product::query()->find($id);
+            if (!$product || $product->status != \Botble\Base\Enums\BaseStatusEnum::PUBLISHED) {
                 return response()->json(['error' => true, 'message' => 'Product not found'], 404);
             }
 
-            $price = $product->front_sale_price ?: $product->price;
+            $added = app(\Botble\Ecommerce\Services\ProductWishlistService::class)->handle($product);
+            $count = auth('customer')->check()
+                ? auth('customer')->user()->wishlist()->count()
+                : Cart::instance('wishlist')->count();
 
-            Cart::instance('cart')->add(
-                $product->id,
-                $product->name,
-                $qty,
-                $price,
-                ['image' => $product->image]
-            );
+            return response()->json(['error' => false, 'data' => ['added' => $added, 'count' => $count]]);
+        });
+
+        // Order tracking for the SPA. The stock JSON API lives under api/v1 which is gated by
+        // api_enabled (kept OFF), so the SPA uses this theme wrapper instead. It mirrors the
+        // stock lookup (code + matching email/phone) but returns ONLY non-sensitive fields —
+        // never the address, email, phone or user id — so an enumerated code can't leak PII.
+        Route::get('orders/track/settings', function () {
+            return response()->json(['data' => [
+                'enabled' => \Botble\Ecommerce\Facades\EcommerceHelper::isOrderTrackingEnabled(),
+                'method' => \Botble\Ecommerce\Facades\EcommerceHelper::getOrderTrackingMethod(),
+            ]]);
+        });
+
+        Route::post('orders/track', function (Request $request) {
+            if (! \Botble\Ecommerce\Facades\EcommerceHelper::isOrderTrackingEnabled()) {
+                return response()->json(['error' => true, 'message' => __('Order tracking is not enabled')], 404);
+            }
+
+            $usingPhone = \Botble\Ecommerce\Facades\EcommerceHelper::isOrderTrackingUsingPhone();
+            $request->validate([
+                'code' => ['required', 'string', 'max:50'],
+                'email' => [$usingPhone ? 'nullable' : 'required', 'email', 'max:191'],
+                'phone' => [$usingPhone ? 'required' : 'nullable', 'string', 'max:30'],
+            ]);
+
+            $code = $request->input('code');
+
+            $query = \Botble\Ecommerce\Models\Order::query()
+                ->where(function ($q) use ($code): void {
+                    $q->where('ec_orders.code', $code)->orWhere('ec_orders.code', '#' . $code);
+                })
+                ->with([
+                    'products' => fn ($q) => $q->select(['order_id', 'product_name', 'product_image', 'qty', 'price']),
+                    'histories' => fn ($q) => $q->select(['order_id', 'action', 'description', 'created_at'])->latest(),
+                    'shipment',
+                    'payment',
+                ])
+                ->select('ec_orders.*')
+                ->when($usingPhone, function ($q) use ($request): void {
+                    $q->where(function ($q) use ($request): void {
+                        $q->whereHas('address', fn ($s) => $s->wherePhone($request->input('phone')))
+                            ->orWhereHas('user', fn ($s) => $s->wherePhone($request->input('phone')));
+                    });
+                }, function ($q) use ($request): void {
+                    $q->where(function ($q) use ($request): void {
+                        $q->whereHas('address', fn ($s) => $s->where('email', $request->input('email')))
+                            ->orWhereHas('user', fn ($s) => $s->where('email', $request->input('email')));
+                    });
+                });
+
+            $order = apply_filters('ecommerce_order_tracking_query', $query)->first();
+
+            if (! $order) {
+                return response()->json(['error' => true, 'message' => __('Order not found')], 404);
+            }
+
+            $statusLabel = fn ($status) => $status && is_object($status) && method_exists($status, 'label') ? $status->label() : (string) $status;
+
+            $items = $order->products->map(fn ($p) => [
+                'name' => $p->product_name,
+                'image' => RvMedia::getImageUrl($p->product_image, 'thumb', false, RvMedia::getDefaultImage()),
+                'qty' => (int) $p->qty,
+                'price_format' => format_price($p->price),
+            ])->values();
+
+            $histories = $order->histories->map(fn ($h) => [
+                'action' => $h->action,
+                'description' => $h->description,
+                'created_at' => optional($h->created_at)->toIso8601String(),
+            ])->values();
+
+            return response()->json(['error' => false, 'data' => ['order' => [
+                'code' => $order->code,
+                'status' => $statusLabel($order->status),
+                'created_at' => optional($order->created_at)->toIso8601String(),
+                'amount_format' => format_price($order->amount),
+                'sub_total_format' => format_price($order->sub_total),
+                'shipping_amount_format' => format_price($order->shipping_amount),
+                'items' => $items,
+                'histories' => $histories,
+                'shipment_status' => $order->shipment ? $statusLabel($order->shipment->status) : null,
+                'payment_status' => $order->payment ? $statusLabel($order->payment->status) : null,
+            ]]]);
+        })->middleware('throttle:20,1');
+
+        Route::post('cart/add', function (Request $request) {
+            $validated = $request->validate([
+                'id' => ['required', 'integer', 'min:1'],
+                'qty' => ['nullable', 'integer', 'min:1', 'max:100'],
+            ]);
+            $qty = (int) ($validated['qty'] ?? 1);
+
+            $product = \Botble\Ecommerce\Models\Product::query()->find($validated['id']);
+            if (!$product || $product->status != \Botble\Base\Enums\BaseStatusEnum::PUBLISHED) {
+                return response()->json(['error' => true, 'message' => 'Product not found'], 404);
+            }
+
+            // Same rule as the stock cart: a parent product with variations is added as its default variation.
+            if ($product->variations->isNotEmpty() && !$product->is_variation && $product->defaultVariation?->product) {
+                $product = $product->defaultVariation->product;
+            }
+
+            // A variation id must not bypass the parent's draft/pending status.
+            $parent = $product->is_variation ? $product->original_product : $product;
+            if (!$parent || $parent->status != \Botble\Base\Enums\BaseStatusEnum::PUBLISHED) {
+                return response()->json(['error' => true, 'message' => 'Product not found'], 404);
+            }
+
+            if ($product->isOutOfStock()) {
+                return response()->json(['error' => true, 'message' => 'Product is out of stock'], 422);
+            }
+
+            if ($product->with_storehouse_management && !$product->allow_checkout_when_out_of_stock) {
+                $inCart = Cart::instance('cart')->content()->where('id', $product->id)->sum('qty');
+                if ($inCart + $qty > $product->quantity) {
+                    return response()->json(['error' => true, 'message' => 'Not enough stock'], 422);
+                }
+            }
+
+            // Delegate to Botble so price, tax, SKU and variation data are computed server-side.
+            // Only qty is forwarded; client-supplied options/extras are not trusted here.
+            try {
+                \Botble\Ecommerce\Facades\OrderHelper::handleAddCart($product, new Request(['qty' => $qty]));
+            } catch (\Throwable $e) {
+                return response()->json(['error' => true, 'message' => 'Could not add product to cart'], 422);
+            }
 
             return response()->json(['error' => false, 'message' => 'Added to cart']);
         });
@@ -414,13 +559,45 @@ Theme::registerRoutes(function (): void {
         });
 
         Route::post('cart/update', function (Request $request) {
-            $rowId = $request->input('rowId');
-            $qty = $request->input('qty');
-            Cart::instance('cart')->update($rowId, $qty);
+            $validated = $request->validate([
+                'rowId' => ['required', 'string', 'max:64'],
+                'qty' => ['required', 'integer', 'min:1', 'max:100'],
+            ]);
+            $item = Cart::instance('cart')->content()->get($validated['rowId']);
+            if (!$item) {
+                return response()->json(['error' => true, 'message' => 'Item not found'], 404);
+            }
+            // Same stock rule as cart/add.
+            $product = \Botble\Ecommerce\Models\Product::query()->find($item->id);
+            if (!$product || $product->isOutOfStock()) {
+                return response()->json(['error' => true, 'message' => 'Product is out of stock'], 422);
+            }
+            $parent = $product->is_variation ? $product->original_product : $product;
+            if (!$parent || $parent->status != \Botble\Base\Enums\BaseStatusEnum::PUBLISHED) {
+                return response()->json(['error' => true, 'message' => 'Product is not available'], 422);
+            }
+            if ($product->with_storehouse_management && !$product->allow_checkout_when_out_of_stock) {
+                $otherRows = Cart::instance('cart')->content()
+                    ->filter(fn ($row) => $row->id == $product->id && $row->rowId !== $item->rowId)
+                    ->sum('qty');
+                if ($otherRows + (int) $validated['qty'] > $product->quantity) {
+                    return response()->json(['error' => true, 'message' => 'Not enough stock'], 422);
+                }
+            }
+            Cart::instance('cart')->update($validated['rowId'], (int) $validated['qty']);
             return response()->json(['error' => false, 'message' => 'Cart updated']);
         });
 
     });
+
+    // POST logout so the SPA does not rely on a GET anchor (which is embeddable cross-site).
+    Route::post('logout', function () {
+        auth('customer')->logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+
+        return response()->json(['error' => false, 'redirect' => url('/')]);
+    })->name('public.logout.post');
 
     // SPA Catch-All Routes: Force Botble to return the Vue layout when user manually reloads on these pages
     $spaRoutes = [
@@ -431,6 +608,9 @@ Theme::registerRoutes(function (): void {
         'profile' => 'public.profile',
         'notifications' => 'public.notifications',
         'project-wizard' => 'public.system-wizard',
+        // NOTE: /wishlist is served by the ecommerce plugin's wishlist/{code?} route (registered
+        // first, so it wins). It is wrapped by the Blade chrome so it is navigable; a true SPA
+        // wishlist with server sync is Tier 2.5.
     ];
     foreach ($spaRoutes as $spaRoute => $name) {
         Route::get($spaRoute, function () {
@@ -456,7 +636,7 @@ Theme::registerRoutes(function (): void {
         $description = $seoMeta['seo_description'] ?? '';
         
         if (empty($description)) {
-            $desc = str_replace(['<br>', '<br/>', '<br />', '</p>'], ' ', $product->description);
+            $desc = str_replace(['<br>', '<br/>', '<br />', '</p>'], ' ', (string) $product->description);
             $desc = strip_tags($desc);
             $desc = preg_replace('/[\x{1F600}-\x{1F64F}\x{1F300}-\x{1F5FF}\x{1F680}-\x{1F6FF}\x{2600}-\x{26FF}\x{2700}-\x{27BF}\x{1F900}-\x{1F9FF}\x{1FA70}-\x{1FAFF}]/u', '', $desc);
             $desc = trim(preg_replace('/\s+/', ' ', $desc));
@@ -474,6 +654,8 @@ Theme::registerRoutes(function (): void {
         }
 
         // Add Schema.org JSON-LD for rich snippets
+        $ssrPrice = $product->front_sale_price ?: $product->price;
+        $product->loadMissing('categories.slugable');
         $schema = [
             '@context' => 'https://schema.org/',
             '@type' => 'Product',
@@ -484,7 +666,7 @@ Theme::registerRoutes(function (): void {
                 '@type' => 'Offer',
                 'url' => url()->current(),
                 'priceCurrency' => get_application_currency()->title ?? 'KWD',
-                'price' => $product->front_sale_price ?: $product->price,
+                'price' => $ssrPrice,
                 'itemCondition' => 'https://schema.org/NewCondition',
                 'availability' => $product->isOutOfStock() ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
             ]
@@ -492,8 +674,7 @@ Theme::registerRoutes(function (): void {
         Theme::asset()->container('header')->writeContent('schema-org-product', '<script type="application/ld+json">' . json_encode($schema, JSON_UNESCAPED_UNICODE) . '</script>');
 
         // Poor Man's SSR HTML
-        $price = $product->front_sale_price ?: $product->price;
-        $formattedPrice = format_price($price);
+        $formattedPrice = format_price($ssrPrice);
         
         $ssrHtml = '<div class="ssr-product-container" style="padding:20px; max-width:1200px; margin:0 auto; font-family:sans-serif;">';
         $ssrHtml .= '<div style="display:flex; flex-wrap:wrap; gap:20px;">';
@@ -501,7 +682,7 @@ Theme::registerRoutes(function (): void {
         $ssrHtml .= '<div style="flex:1; min-width:300px;">';
         $ssrHtml .= '<h1>'.htmlentities($product->name).'</h1>';
         $ssrHtml .= '<h2 style="color:#d32f2f; font-size:24px;">'.$formattedPrice.'</h2>';
-        $ssrHtml .= '<div class="product-description" style="margin-top:20px; line-height:1.6;">'.$product->description.'</div>';
+        $ssrHtml .= '<div class="product-description" style="margin-top:20px; line-height:1.6;">'.BaseHelper::clean($product->description).'</div>';
         
         // Category Links (Breadcrumb equivalent)
         if ($product->categories && $product->categories->count()) {
@@ -515,6 +696,7 @@ Theme::registerRoutes(function (): void {
         // Related Products Links
         $relatedProducts = \Botble\Ecommerce\Models\Product::where('status', \Botble\Base\Enums\BaseStatusEnum::PUBLISHED)
             ->where('id', '!=', $product->id)
+            ->where('is_variation', false)
             ->limit(4)->get(); // basic related fetch for SEO crawling
         if ($relatedProducts->count()) {
             $ssrHtml .= '<div style="margin-top:40px;"><strong>Related Products:</strong> <ul style="display:flex; gap:10px; list-style:none; padding:0;">';
@@ -589,39 +771,6 @@ Theme::registerRoutes(function (): void {
 
         return Theme::scope('page', ['ssrHtml' => $ssrHtml])->render();
     })->name('public.product-category');
-});
-
-Route::get('/fix-db-notifications', function () {
-    try {
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('ec_notifications', 'target_type')) {
-            \Illuminate\Support\Facades\Schema::table('ec_notifications', function (\Illuminate\Database\Schema\Blueprint $table) {
-                $table->string('target_type', 60)->default('none')->after('type');
-            });
-        }
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('ec_notifications', 'target_id')) {
-            \Illuminate\Support\Facades\Schema::table('ec_notifications', function (\Illuminate\Database\Schema\Blueprint $table) {
-                $table->unsignedBigInteger('target_id')->nullable()->after('target_type');
-            });
-        }
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('ec_notifications', 'custom_url')) {
-            \Illuminate\Support\Facades\Schema::table('ec_notifications', function (\Illuminate\Database\Schema\Blueprint $table) {
-                $table->string('custom_url', 255)->nullable()->after('target_id');
-            });
-        }
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('ec_notifications', 'status')) {
-            \Illuminate\Support\Facades\Schema::table('ec_notifications', function (\Illuminate\Database\Schema\Blueprint $table) {
-                $table->string('status', 60)->default('draft')->after('custom_url');
-            });
-        }
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('ec_notifications', 'scheduled_at')) {
-            \Illuminate\Support\Facades\Schema::table('ec_notifications', function (\Illuminate\Database\Schema\Blueprint $table) {
-                $table->timestamp('scheduled_at')->nullable()->after('status');
-            });
-        }
-        return 'success';
-    } catch (\Exception $e) {
-        return $e->getMessage();
-    }
 });
 
 Theme::routes();

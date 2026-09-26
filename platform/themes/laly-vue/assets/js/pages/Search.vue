@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <div class="nbar">
-      <button class="nbar-back" @click="$router.back()" style="margin-inline-end: 10px;"><i class="ti ti-arrow-right" :class="{ 'ti-arrow-left': !botbleData?.is_rtl }"></i></button>
+      <button class="nbar-back" @click="$router.back()" style="margin-inline-end: 10px;" :aria-label="__('back')"><i class="ti ti-arrow-right" :class="{ 'ti-arrow-left': !botbleData?.is_rtl }"></i></button>
       <div class="search-input-wrapper">
         <input 
           type="text" 
@@ -10,10 +10,10 @@
           :placeholder="__('search_placeholder') || 'ابحث عن المنتجات...'" 
           autofocus 
         />
-        <button v-if="query" @click="query = ''; store.searchResults = []" class="clear-btn" style="margin-inline-end: 10px;">
+        <button v-if="query" @click="query = ''; store.searchResults = []" class="clear-btn" style="margin-inline-end: 10px;" :aria-label="__('close')">
           <i class="ti ti-x"></i>
         </button>
-        <button class="search-btn" @click="doSearch">
+        <button class="search-btn" @click="doSearch" :aria-label="__('search')">
           <i class="ti ti-search"></i>
         </button>
       </div>
@@ -24,17 +24,24 @@
         <div class="spinner"></div>
       </div>
       
-      <div v-else-if="store.searchResults.length > 0" class="plist">
-        <ProductCard 
-          v-for="product in store.searchResults" 
-          :key="product.id" 
-          :product="product" 
-          @quick-view="openQuickView" 
-        />
+      <div v-else-if="store.searchResults.length > 0">
+        <div class="plist">
+          <ProductCard
+            v-for="product in store.searchResults"
+            :key="product.id"
+            :product="product"
+            @quick-view="openQuickView"
+          />
+        </div>
+        <div v-if="hasMore" class="load-more-wrap">
+          <button class="load-more-btn" :disabled="store.loadingMore" @click="loadMore">
+            {{ store.loadingMore ? __('loading') : __('load_more') }}
+          </button>
+        </div>
       </div>
-      
+
       <div v-else-if="query && !store.loading" class="empty-state">
-        <i class="ti ti-search" style="font-size: 40px; color: #ddd;"></i>
+        <i class="ti ti-search" style="font-size: 40px; color: var(--line);"></i>
         <p>{{ __('no_results') }}</p>
       </div>
       
@@ -48,7 +55,8 @@
 </template>
 
 <script setup>
-import { ref, watch, inject } from 'vue';
+import { __ } from '../utils/i18n';
+import { ref, watch, computed, inject } from 'vue';
 import { useRoute } from 'vue-router';
 import { useEcommerceStore } from '../stores/ecommerce';
 import ProductCard from '../components/ProductCard.vue';
@@ -57,7 +65,16 @@ const route = useRoute();
 const store = useEcommerceStore();
 const query = ref(route.query.q || '');
 const botbleData = window?.BotbleData || {};
-const __ = inject('__') || botbleData?.i18n || ((key) => key);
+
+const hasMore = computed(() => {
+    const meta = store.searchMeta;
+    return !!meta && meta.current_page < meta.last_page;
+});
+
+const loadMore = () => {
+    if (!hasMore.value || store.loadingMore) return;
+    store.searchProducts(query.value, { append: true, page: store.searchMeta.current_page + 1 });
+};
 
 const openQuickView = async (slug) => {
     store.currentProduct = null;
@@ -97,7 +114,7 @@ if (query.value) {
 .search-input-wrapper {
   display: flex;
   align-items: center;
-  background: #f3f5f9;
+  background: var(--surface-2);
   border-radius: 50px;
   padding: 4px 4px 4px 15px;
   flex: 1;
@@ -122,9 +139,9 @@ if (query.value) {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--primary, #0d7c81);
+  background: var(--primary-strong);
   border: none;
-  color: #fff;
+  color: var(--on-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -149,5 +166,24 @@ if (query.value) {
 }
 .empty-state i {
   color: var(--border2);
+}
+.load-more-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0 8px;
+}
+.load-more-btn {
+  min-width: 180px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: 1px solid var(--primary);
+  background: transparent;
+  color: var(--primary);
+  font-weight: 700;
+  cursor: pointer;
+}
+.load-more-btn:disabled {
+  opacity: .6;
+  cursor: default;
 }
 </style>

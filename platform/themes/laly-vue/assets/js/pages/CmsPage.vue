@@ -1,8 +1,8 @@
 <template>
   <div class="page">
     <div class="nbar">
-      <button class="nbar-back" @click="$router.back()"><i class="ti ti-arrow-right" :class="{ 'ti-arrow-left': !botbleData?.is_rtl }"></i></button>
-      <div class="nbar-title">{{ pageData ? pageData.name : __('loading') }}</div>
+      <button class="nbar-back" @click="$router.back()" :aria-label="__('back')"><i class="ti ti-arrow-right" :class="{ 'ti-arrow-left': !botbleData?.is_rtl }"></i></button>
+      <div class="nbar-title">{{ pageData ? pageData.name : (loading ? __('loading') : __('page_not_found')) }}</div>
     </div>
     
     <div class="scroll" style="padding: 16px;">
@@ -21,15 +21,14 @@
         </div>
       </div>
       
-      <div v-else class="empty-state" style="text-align: center; padding: 50px;">
-        <h2>الصفحة غير موجودة</h2>
-        <button class="btn btn-primary" @click="$router.push('/')">العودة للرئيسية</button>
-      </div>
+      <NotFound v-else />
     </div>
   </div>
 </template>
 
 <script setup>
+import NotFound from './NotFound.vue';
+import { __ } from '../utils/i18n';
 import { ref, onMounted, inject, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import api from '../services/api';
@@ -38,7 +37,6 @@ import PageBlocks from '../components/PageBlocks.vue';
 
 const route = useRoute();
 const botbleData = window?.BotbleData || {};
-const __ = inject('__') || botbleData?.i18n || ((key) => key);
 
 const pageData = ref(null);
 const pageBlocks = ref([]);
@@ -64,7 +62,7 @@ const fetchPage = async () => {
         const response = await api.get(`/pages/${slug}`);
         if (response.data && response.data.data) {
             pageData.value = response.data.data;
-            const SITE_NAME = window.themeOptions?.site_title || 'Laly Kuwait';
+            const SITE_NAME = window.BotbleData?.site_title || 'Laly Kuwait';
             document.title = `${pageData.value.name} - ${SITE_NAME}`;
             
             if (pageData.value.content) {
@@ -91,7 +89,7 @@ watch(() => route.path, () => {
 
 <style scoped>
 .cms-content {
-  background: #fff;
+  background: var(--surface);
   border-radius: 15px;
   padding: 30px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.02);
@@ -101,13 +99,13 @@ watch(() => route.path, () => {
   margin-bottom: 20px;
   font-size: 24px;
   color: var(--primary);
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--line);
   padding-bottom: 15px;
 }
 .page-body {
   font-size: 15px;
   line-height: 1.8;
-  color: #444;
+  color: var(--ink);
 }
 .page-body :deep(img) {
   max-width: 100%;
