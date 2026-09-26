@@ -6,7 +6,7 @@ return [
     'phone' => 'الهاتف',
     'email' => 'البريد الإلكتروني',
     'country' => 'البلد',
-    'state' => 'الولاية',
+    'state' => 'المحافظة',
     'city' => 'المدينة',
     'address' => 'العنوان',
     'company' => 'الشركة',
@@ -33,7 +33,7 @@ return [
     'shipping_company_name' => 'اسم شركة الشحن',
     'tracking_id' => 'رقم التتبع',
     'tracking_link' => 'رابط التتبع',
-    'select_state' => 'اختر الولاية...',
+    'select_state' => 'اختر المحافظة...',
     'select_city' => 'اختر المدينة...',
     'theme_options' => [
         'name' => 'التجارة الإلكترونية',

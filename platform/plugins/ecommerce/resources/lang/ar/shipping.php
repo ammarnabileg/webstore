@@ -17,7 +17,7 @@ return [
     'edit_shipping_method' => 'تعديل طريقة الشحن',
     'add_shipping_region' => 'إضافة منطقة شحن',
     'country' => 'البلد',
-    'state' => 'الولاية',
+    'state' => 'المحافظة',
     'city' => 'المدينة',
     'address' => 'العنوان',
     'phone' => 'الهاتف',
@@ -147,7 +147,7 @@ return [
             'tables' => [
                 'shipping_rule' => 'قاعدة الشحن',
                 'country' => 'البلد',
-                'state' => 'الولاية',
+                'state' => 'المحافظة',
                 'city' => 'المدينة',
                 'zip_code' => 'الرمز البريدي',
                 'adjustment_price' => 'سعر التعديل',
@@ -156,8 +156,8 @@ return [
             'forms' => [
                 'country' => 'البلد',
                 'country_placeholder' => 'البلد',
-                'state' => 'الولاية',
-                'state_placeholder' => 'الولاية',
+                'state' => 'المحافظة',
+                'state_placeholder' => 'المحافظة',
                 'city' => 'المدينة',
                 'city_placeholder' => 'المدينة',
                 'shipping_rule' => 'قاعدة الشحن',
