@@ -1,16 +1,17 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import axios from 'axios';
 import { useSketch, startDrag } from './useSketch';
+import { __ } from '../utils/i18n';
 
 // اشتراطات وزارة الداخلية للمنشآت التجارية — راجع النص الرسمي حسب نوع النشاط قبل الإطلاق، والقيم دي config
 const COMMERCIAL_TYPES = ['shop','office','warehouse'];
 const MOI_RETENTION_DAYS = 180;
-const MOI_NOTICE = 'تنويه: تشترط وزارة الداخلية على المنشآت التجارية الاحتفاظ بالتسجيل لمدة 6 أشهر.';
+const MOI_NOTICE = __('wiz_moi_notice');
 
 const TIERS = [
-  { tier:'basic', title:'الباقة الأساسية',  outcome:'تعرف عند وجود حركة، وتراجع التسجيلات متى شئت.' },
-  { tier:'pro',   title:'الباقة الاحترافية',  outcome:'تميّز الوجوه وأرقام السيارات بوضوح، نهارًا وليلًا.', badge:'الأكثر طلبًا' },
-  { tier:'prem',  title:'الباقة المميزة',  outcome:'تفاصيل دقيقة بالألوان حتى في الظلام، وأعلى جودة تخزين.' },
+  { tier:'basic', title:__('wiz_tier_basic_title'),  outcome:__('wiz_tier_basic_outcome') },
+  { tier:'pro',   title:__('wiz_tier_pro_title'),  outcome:__('wiz_tier_pro_outcome'), badge:__('wiz_tier_pro_badge') },
+  { tier:'prem',  title:__('wiz_tier_prem_title'),  outcome:__('wiz_tier_prem_outcome') },
 ];
 
 const ICONS = {
@@ -48,33 +49,35 @@ export function useWizard() {
         const submitted = ref(false);
         const phoneTouched = ref(false);
 
-        const stepNames = ["نوع المكان","تفاصيل المكان","احتياجك","الميزانية","الباقات والتواصل"];
+        const stepNames = [__('wiz_step_place'),__('wiz_step_place_details'),__('wiz_step_needs'),__('wiz_step_budget'),__('wiz_step_packages')];
 
         const placeTypes = [
-          {id:'apartment', label:'شقة',          icon:'apartment'},
-          {id:'villa',     label:'فيلا / بيت',    icon:'villa'},
-          {id:'shop',      label:'محل',          icon:'shop'},
-          {id:'office',    label:'مكتب / شركة',   icon:'office'},
-          {id:'warehouse', label:'مخزن / مصنع',   icon:'warehouse'},
-          {id:'compound',  label:'عمارة / مجمع', icon:'compound'},
+          {id:'apartment', label:__('wiz_place_apartment'), icon:'apartment'},
+          {id:'villa',     label:__('wiz_place_villa'),     icon:'villa'},
+          {id:'shop',      label:__('wiz_place_shop'),      icon:'shop'},
+          {id:'office',    label:__('wiz_place_office'),    icon:'office'},
+          {id:'warehouse', label:__('wiz_place_warehouse'), icon:'warehouse'},
+          {id:'compound',  label:__('wiz_place_compound'),  icon:'compound'},
         ];
 
-        const areaOpts      = [{label:'أقل من 100م²',mid:80},{label:'100–250م²',mid:175},{label:'250–500م²',mid:375},{label:'أكثر من 500م²',mid:650}];
-        const floorOpts     = [{label:'طابق واحد',v:1},{label:'طابقان',v:2},{label:'3 طوابق أو أكثر',v:3}];
+        // NOTE: option arrays are addressed by INDEX server-side (RecommendationService),
+        // so their order/length must never change — only the display label is translated.
+        const areaOpts      = [{label:__('wiz_area_0'),mid:80},{label:__('wiz_area_1'),mid:175},{label:__('wiz_area_2'),mid:375},{label:__('wiz_area_3'),mid:650}];
+        const floorOpts     = [{label:__('wiz_floor_1'),v:1},{label:__('wiz_floor_2'),v:2},{label:__('wiz_floor_3'),v:3}];
         const entranceOpts  = [{label:'1',v:1},{label:'2',v:2},{label:'3',v:3},{label:'4+',v:4}];
-        const conditionOpts = [{label:'قيد الإنشاء',factor:0.9},{label:'في مرحلة التشطيب',factor:1.0},{label:'جاهز ومُشطّب',factor:1.35}];
-        const deviceOpts    = [{label:'أقل من 10'},{label:'10–25'},{label:'أكثر من 25'}];
-        const recordOpts    = [{label:'أسبوع',days:7},{label:'أسبوعين',days:14},{label:'شهر',days:30},{label:'3 أشهر',days:90},{label:'6 أشهر',days:180}];
-        const budgetOpts    = [{label:'أقل من 200 د.ك'},{label:'200–500 د.ك'},{label:'500–1000 د.ك'},{label:'أكثر من 1000 د.ك'}];
-        const brandOpts     = [{label:'Hikvision'},{label:'Dahua'},{label:'Ubiquiti'},{label:'TP-Link'},{label:'انصحوني بالأنسب'}];
+        const conditionOpts = [{label:__('wiz_cond_0'),factor:0.9},{label:__('wiz_cond_1'),factor:1.0},{label:__('wiz_cond_2'),factor:1.35}];
+        const deviceOpts    = [{label:__('wiz_dev_0')},{label:__('wiz_dev_1')},{label:__('wiz_dev_2')}];
+        const recordOpts    = [{label:__('wiz_rec_0'),days:7},{label:__('wiz_rec_1'),days:14},{label:__('wiz_rec_2'),days:30},{label:__('wiz_rec_3'),days:90},{label:__('wiz_rec_4'),days:180}];
+        const budgetOpts    = [{label:__('wiz_budget_0')},{label:__('wiz_budget_1')},{label:__('wiz_budget_2')},{label:__('wiz_budget_3')}];
+        const brandOpts     = [{label:'Hikvision'},{label:'Dahua'},{label:'Ubiquiti'},{label:'TP-Link'},{label:__('wiz_brand_advise')}];
 
         const goals = [
-          {id:'entry',     label:'مراقبة المداخل والأبواب',   sub:'تعرف من دخل وخرج ومتى',      icon:'door'},
-          {id:'indoor',    label:'مراقبة داخلية',             sub:'الصالة، الكاشير، الممرات',      icon:'cam'},
-          {id:'perimeter', label:'تأمين المحيط الخارجي',      sub:'الحوش، الكراج، السور',         icon:'fence'},
-          {id:'wifi',      label:'واي فاي قوي يغطي كل المكان', sub:'دون مناطق ضعيفة',           icon:'wifi'},
-          {id:'intercom',  label:'إنتركم للباب',              sub:'ترى الزائر وترد عليه',       icon:'intercom'},
-          {id:'alarm',     label:'إنذار ضد السرقة',           sub:'تنبيه فوري عند أي حركة غريبة',   icon:'bell'},
+          {id:'entry',     label:__('wiz_goal_entry_label'),     sub:__('wiz_goal_entry_sub'),     icon:'door'},
+          {id:'indoor',    label:__('wiz_goal_indoor_label'),    sub:__('wiz_goal_indoor_sub'),    icon:'cam'},
+          {id:'perimeter', label:__('wiz_goal_perimeter_label'), sub:__('wiz_goal_perimeter_sub'), icon:'fence'},
+          {id:'wifi',      label:__('wiz_goal_wifi_label'),      sub:__('wiz_goal_wifi_sub'),      icon:'wifi'},
+          {id:'intercom',  label:__('wiz_goal_intercom_label'),  sub:__('wiz_goal_intercom_sub'),  icon:'intercom'},
+          {id:'alarm',     label:__('wiz_goal_alarm_label'),     sub:__('wiz_goal_alarm_sub'),     icon:'bell'},
         ];
 
         const a = reactive({
@@ -88,19 +91,19 @@ export function useWizard() {
     // ---- المخطط الاختياري: صورة + دبابيس {t, x%, y%} ----
     const plan = reactive({ img:null, pins:[], tool:'cam', err:'' });
     const pinTypes = [
-      {id:'cam',  label:'كاميرا',      icon:'cam'},
-      {id:'ap',   label:'أكسس',       icon:'wifi'},
-      {id:'net',  label:'نقطة نت',    icon:'net'},
-      {id:'tv',   label:'تلفزيون',    icon:'tv'},
-      {id:'rack', label:'الكبينة',    icon:'rack'},
-      {id:'note', label:'ملاحظة',     icon:'pin'},
+      {id:'cam',  label:__('wiz_pin_cam'),  icon:'cam'},
+      {id:'ap',   label:__('wiz_pin_ap'),   icon:'wifi'},
+      {id:'net',  label:__('wiz_pin_net'),  icon:'net'},
+      {id:'tv',   label:__('wiz_pin_tv'),   icon:'tv'},
+      {id:'rack', label:__('wiz_pin_rack'), icon:'rack'},
+      {id:'note', label:__('wiz_pin_note'), icon:'pin'},
     ];
     const pinIcon  = t => (pinTypes.find(x=>x.id===t)||{}).icon || 'pin';
     const pinLabel = t => (pinTypes.find(x=>x.id===t)||{}).label || '';
     function onPlanFile(e){
       const f = e.target.files && e.target.files[0];
       if(!f) return;
-      if(f.size > 8*1024*1024){ plan.err = 'حجم الصورة أكبر من 8 ميجابايت، صغّرها أولًا.'; e.target.value=''; return; }
+      if(f.size > 8*1024*1024){ plan.err = __('wiz_err_filesize'); e.target.value=''; return; }
       plan.err = '';
       const r = new FileReader();
       r.onload = ()=>{ plan.img = r.result; plan.pins = []; };
@@ -184,19 +187,19 @@ export function useWizard() {
           const cams = camTotal.value;
           if(cams>0){
             const ch = pickSize([8,16,32], cams);
-            add(`جهاز تسجيل NVR ${ch} قناة`, 1, catalog.value.nvr[ch][t]);
+            add(`${__('wiz_bom_nvr')} ${ch} ${__('wiz_bom_ch')}`, 1, catalog.value.nvr[ch][t]);
             // حجم التخزين = عدد الكاميرات × أيام الحفظ × جيجا/يوم حسب جودة الباقة
             const days = a.recordDays!==null ? recordOpts[a.recordDays].days : 14;
             const tbNeeded = (cams * days * catalog.value.camera[t].gbDay) / 1000;
             const maxDrive = catalog.value.hdd.sizes[catalog.value.hdd.sizes.length-1];
-            const recLabel = a.recordDays!==null ? recordOpts[a.recordDays].label : 'أسبوعين';
+            const recLabel = a.recordDays!==null ? recordOpts[a.recordDays].label : __('wiz_rec_1');
             if(tbNeeded <= maxDrive){
               const tb = pickSize(catalog.value.hdd.sizes, tbNeeded);
-              add(`قرص تخزين للمراقبة ${tb} تيرابايت (يكفي ${recLabel})`, 1, catalog.value.hdd.price[tb]);
+              add(`${__('wiz_bom_hdd')} ${tb} ${__('wiz_bom_tb')} (${__('wiz_bom_covers')} ${recLabel})`, 1, catalog.value.hdd.price[tb]);
             } else {
               // مدد التخزين الطويلة (اشتراط الوزارة مثلاً) محتاجة أكتر من هارد
               const n = Math.ceil(tbNeeded / maxDrive);
-              add(`قرص تخزين للمراقبة ${maxDrive} تيرابايت (يكفي ${recLabel})`, n, catalog.value.hdd.price[maxDrive]);
+              add(`${__('wiz_bom_hdd')} ${maxDrive} ${__('wiz_bom_tb')} (${__('wiz_bom_covers')} ${recLabel})`, n, catalog.value.hdd.price[maxDrive]);
             }
           }
 
@@ -204,7 +207,7 @@ export function useWizard() {
           const aps = apCount.value;
           if(cams + aps > 0){
             const ports = pickSize(catalog.value.poeSwitch.ports, cams + aps + 2);
-            add(`سويتش PoE ${ports} منفذ`, 1, catalog.value.poeSwitch.price[ports]);
+            add(`${__('wiz_bom_poe')} ${ports} ${__('wiz_bom_port')}`, 1, catalog.value.poeSwitch.price[ports]);
           }
           if(aps>0){
             add(catalog.value.ap[t].name, aps, catalog.value.ap[t].price);
@@ -231,7 +234,7 @@ export function useWizard() {
             const readyConduits = a.condition===2 && a.conduits==='yes';
             if(readyConduits) factor = 1.0;
             const install = Math.round(points * catalog.value.installPerPoint * factor);
-            items.push({name: readyConduits ? 'تركيب عبر التمديدات الجاهزة (تقديري)' : (a.condition===2 ? 'تركيب وتمديدات عبر مجارٍ خارجية (تقديري)' : 'تركيب وتمديدات (تقديري)'), qty:1});
+            items.push({name: readyConduits ? __('wiz_install_ready') : (a.condition===2 ? __('wiz_install_surface') : __('wiz_install_default')), qty:1});
             total += install;
           }
 
@@ -239,7 +242,7 @@ export function useWizard() {
             ...meta,
             items,
             total: Math.round(total),
-            foot: cams>0 ? 'تشمل المتابعة من الهاتف والإعداد الكامل.' : 'تشمل الإعداد والبرمجة الكاملة.',
+            foot: cams>0 ? __('wiz_foot_cams') : __('wiz_foot_nocams'),
           };
         }
 
@@ -251,35 +254,35 @@ export function useWizard() {
           if(pt) c.push(pt.label);
           if(a.area!==null) c.push(areaOpts[a.area].label);
           if(a.condition!==null) c.push(conditionOpts[a.condition].label);
-          if(camTotal.value>0) c.push(`${camTotal.value} كاميرا`);
-          if(apCount.value>0) c.push(`${apCount.value} أكسس بوينت`);
-          if(a.zoom) c.push('كاميرا زوم');
-          if(a.goals.includes('intercom')) c.push('إنتركم');
-          if(a.goals.includes('alarm')) c.push('إنذار');
+          if(camTotal.value>0) c.push(`${camTotal.value} ${__('wiz_chip_camera')}`);
+          if(apCount.value>0) c.push(`${apCount.value} ${__('wiz_chip_ap')}`);
+          if(a.zoom) c.push(__('wiz_chip_zoom'));
+          if(a.goals.includes('intercom')) c.push(__('wiz_chip_intercom'));
+          if(a.goals.includes('alarm')) c.push(__('wiz_chip_alarm'));
           return c;
         });
 
         const summary = computed(()=>{
           const s = [];
           const pt = placeTypes.find(p=>p.id===a.place);
-          if(pt) s.push({k:'المكان', v:pt.label});
-          if(a.area!==null) s.push({k:'المساحة', v:areaOpts[a.area].label});
-          if(a.condition!==null) s.push({k:'حالة المكان', v:conditionOpts[a.condition].label});
-          if(a.condition===2 && a.conduits!==null) s.push({k:'تمديدات جاهزة', v: a.conduits==='yes' ? 'موجودة' : a.conduits==='no' ? 'غير موجودة' : 'غير متأكد، تُؤكَّد في المعاينة'});
-          if(a.floors!==null) s.push({k:'الأدوار', v:floorOpts[a.floors].label});
-          if(a.entrances!==null) s.push({k:'المداخل', v:entranceOpts[a.entrances].label});
-          s.push({k:'الاحتياج', v:a.goals.map(g=>goals.find(x=>x.id===g).label).join('، ')});
-          if(wantsCams.value) s.push({k:'إنترنت ثابت', v:a.internet==='yes'?'موجود':'غير موجود'});
+          if(pt) s.push({k:__('wiz_sum_place'), v:pt.label});
+          if(a.area!==null) s.push({k:__('wiz_sum_area'), v:areaOpts[a.area].label});
+          if(a.condition!==null) s.push({k:__('wiz_sum_condition'), v:conditionOpts[a.condition].label});
+          if(a.condition===2 && a.conduits!==null) s.push({k:__('wiz_sum_conduits'), v: a.conduits==='yes' ? __('wiz_sum_conduits_yes') : a.conduits==='no' ? __('wiz_sum_conduits_no') : __('wiz_sum_conduits_unsure')});
+          if(a.floors!==null) s.push({k:__('wiz_sum_floors'), v:floorOpts[a.floors].label});
+          if(a.entrances!==null) s.push({k:__('wiz_sum_entrances'), v:entranceOpts[a.entrances].label});
+          s.push({k:__('wiz_sum_needs'), v:a.goals.map(g=>goals.find(x=>x.id===g).label).join('، ')});
+          if(wantsCams.value) s.push({k:__('wiz_sum_internet'), v:a.internet==='yes'?__('wiz_sum_present'):__('wiz_sum_absent')});
           if(sk.rooms.length || sk.pins.length){
             const flN = new Set(sk.rooms.map(r=>r.floor||'g').concat(sk.pins.map(p=>p.floor||'g'))).size;
-            s.push({k:'مخطط', v:`مرسوم: ${sk.rooms.length} منطقة و${sk.pins.length} علامة على ${flN} دور`});
-            if(sketchCams.value.in + sketchCams.value.out > 0) s.push({k:'كاميرات من الرسم', v:`${sketchCams.value.in} داخلي · ${sketchCams.value.out} خارجي`});
+            s.push({k:__('wiz_sum_plan'), v:`${__('wiz_sum_drawn')}: ${sk.rooms.length} ${__('wiz_sum_areas')} · ${sk.pins.length} ${__('wiz_sum_marks')} · ${flN} ${__('wiz_sum_floors_n')}`});
+            if(sketchCams.value.in + sketchCams.value.out > 0) s.push({k:__('wiz_sum_sketch_cams'), v:`${sketchCams.value.in} ${__('wiz_sum_indoor')} · ${sketchCams.value.out} ${__('wiz_sum_outdoor')}`});
             const w = sketchWiring.value;
-            if(w.nets + w.tvs > 0 || w.rack) s.push({k:'تمديدات من الرسم', v:`${w.nets} نت · ${w.tvs} تلفزيون${w.rack?' · كبينة رئيسية':''}`});
+            if(w.nets + w.tvs > 0 || w.rack) s.push({k:__('wiz_sum_sketch_wiring'), v:`${w.nets} ${__('wiz_sum_net')} · ${w.tvs} ${__('wiz_sum_tv')}${w.rack?' · '+__('wiz_sum_rack'):''}`});
           }
-          else if(plan.img) s.push({k:'مخطط', v: plan.pins.length ? `صورة مرفوعة + ${plan.pins.length} علامة` : 'صورة مرفوعة'});
-          if(a.budget!==null) s.push({k:'الميزانية', v:budgetOpts[a.budget].label});
-          if(a.brand!==null) s.push({k:'العلامة التجارية', v:brandOpts[a.brand].label});
+          else if(plan.img) s.push({k:__('wiz_sum_plan'), v: plan.pins.length ? `${__('wiz_sum_uploaded')} + ${plan.pins.length} ${__('wiz_sum_marks')}` : __('wiz_sum_uploaded')});
+          if(a.budget!==null) s.push({k:__('wiz_sum_budget'), v:budgetOpts[a.budget].label});
+          if(a.brand!==null) s.push({k:__('wiz_sum_brand'), v:brandOpts[a.brand].label});
           return s;
         });
 
@@ -303,9 +306,9 @@ export function useWizard() {
         const phoneValid = computed(()=> /^(?:\+?965|00965)?[124569]\d{7}$/.test(lead.phone.replace(/[\s-]/g,'')));
 
         const nextLabel = computed(()=>{
-          if(step.value===4) return 'اعرض الباقات';
-          if(step.value===5) return 'أرسل الطلب';
-          return 'متابعة';
+          if(step.value===4) return __('wiz_next_show_packages');
+          if(step.value===5) return __('wiz_next_submit');
+          return __('wiz_next_continue');
         });
 
         const isCommercial = computed(()=> COMMERCIAL_TYPES.includes(a.place));
@@ -350,12 +353,12 @@ export function useWizard() {
         const waLink = computed(()=>{
           const chosen = a.package && a.package!=='advise' ? packages.value.find(p=>p.tier===a.package) : null;
           const lines = [
-            'طلب نظام جديد 👇',
+            __('wiz_wa_new_request') + ' 👇',
             summary.value.map(s=>`${s.k}: ${s.v}`).join(' | '),
-            chosen ? `الباقة المختارة: ${chosen.title} (~${chosen.total} د.ك)` : 'الباقة: أحتاج إلى ترشيح في المعاينة',
-            (sk.rooms.length || sk.pins.length) ? `مرفق رسم للمكان (${sk.rooms.length} منطقة، ${sk.pins.length} علامة — كاميرات: ${sketchCams.value.in} داخلي/${sketchCams.value.out} خارجي)` : (plan.img ? 'مرفق صورة مخطط، تُرسل من الموقع' : ''),
-            lead.name ? `الاسم: ${lead.name}` : '',
-            lead.phone ? `الهاتف: ${lead.phone}` : '',
+            chosen ? `${__('wiz_wa_chosen')}: ${chosen.title} (~${chosen.total} ${__('wiz_kwd')})` : __('wiz_wa_advise'),
+            (sk.rooms.length || sk.pins.length) ? `${__('wiz_wa_sketch')} (${sk.rooms.length} ${__('wiz_sum_areas')}, ${sk.pins.length} ${__('wiz_sum_marks')} — ${__('wiz_chip_camera')}: ${sketchCams.value.in} ${__('wiz_sum_indoor')}/${sketchCams.value.out} ${__('wiz_sum_outdoor')})` : (plan.img ? __('wiz_wa_plan_img') : ''),
+            lead.name ? `${__('wiz_lead_name')}: ${lead.name}` : '',
+            lead.phone ? `${__('phone')}: ${lead.phone}` : '',
           ].filter(Boolean);
           return waNumber.value ? `https://wa.me/${waNumber.value}?text=${encodeURIComponent(lines.join('\n'))}` : '';
         });
@@ -417,13 +420,13 @@ export function useWizard() {
           track('submit', { package: a.package });
           window.scrollTo({ top: 0 });
         } else {
-          submitError.value = res.data?.message || 'تعذّر إرسال الطلب. حاول مرة أخرى.';
+          submitError.value = res.data?.message || __('wiz_err_submit');
         }
       } catch (e) {
         const errors = e.response?.data?.errors;
         submitError.value = e.response?.data?.message
           || (errors ? Object.values(errors).flat()[0] : '')
-          || 'تعذّر الاتصال بالخادم. تحقق من الإنترنت وحاول مرة أخرى.';
+          || __('wiz_err_network');
       } finally {
         submitting.value = false;
       }
