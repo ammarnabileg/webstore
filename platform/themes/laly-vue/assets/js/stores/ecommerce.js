@@ -11,6 +11,7 @@ export const useEcommerceStore = defineStore('ecommerce', {
         cartCount: 0,
         currentProduct: null,
         searchResults: [],
+        searchMeta: null,
         filters: { attributes: [], collections: [], tags: [] },
         wishlist: JSON.parse(localStorage.getItem('wishlist') || '[]'),
         compareList: JSON.parse(localStorage.getItem('compareList') || '[]'),
@@ -85,15 +86,22 @@ export const useEcommerceStore = defineStore('ecommerce', {
                 this.quickViewLoading = false;
             }
         },
-        async searchProducts(query) {
-            this.loading = true;
+        async searchProducts(query, { append = false, page = 1 } = {}) {
+            if (append) {
+                this.loadingMore = true;
+            } else {
+                this.loading = true;
+            }
             try {
-                const response = await api.get('/products', { params: { q: query } });
-                this.searchResults = response.data.data || [];
+                const response = await api.get('/products', { params: { q: query, per_page: 20, page } });
+                const items = response.data.data || [];
+                this.searchResults = append ? [...this.searchResults, ...items] : items;
+                this.searchMeta = response.data.meta || null;
             } catch (err) {
                 console.error('Error searching products:', err);
             } finally {
                 this.loading = false;
+                this.loadingMore = false;
             }
         },
         async fetchCart() {

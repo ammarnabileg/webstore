@@ -24,15 +24,22 @@
         <div class="spinner"></div>
       </div>
       
-      <div v-else-if="store.searchResults.length > 0" class="plist">
-        <ProductCard 
-          v-for="product in store.searchResults" 
-          :key="product.id" 
-          :product="product" 
-          @quick-view="openQuickView" 
-        />
+      <div v-else-if="store.searchResults.length > 0">
+        <div class="plist">
+          <ProductCard
+            v-for="product in store.searchResults"
+            :key="product.id"
+            :product="product"
+            @quick-view="openQuickView"
+          />
+        </div>
+        <div v-if="hasMore" class="load-more-wrap">
+          <button class="load-more-btn" :disabled="store.loadingMore" @click="loadMore">
+            {{ store.loadingMore ? __('loading') : __('load_more') }}
+          </button>
+        </div>
       </div>
-      
+
       <div v-else-if="query && !store.loading" class="empty-state">
         <i class="ti ti-search" style="font-size: 40px; color: var(--line);"></i>
         <p>{{ __('no_results') }}</p>
@@ -49,7 +56,7 @@
 
 <script setup>
 import { __ } from '../utils/i18n';
-import { ref, watch, inject } from 'vue';
+import { ref, watch, computed, inject } from 'vue';
 import { useRoute } from 'vue-router';
 import { useEcommerceStore } from '../stores/ecommerce';
 import ProductCard from '../components/ProductCard.vue';
@@ -58,6 +65,16 @@ const route = useRoute();
 const store = useEcommerceStore();
 const query = ref(route.query.q || '');
 const botbleData = window?.BotbleData || {};
+
+const hasMore = computed(() => {
+    const meta = store.searchMeta;
+    return !!meta && meta.current_page < meta.last_page;
+});
+
+const loadMore = () => {
+    if (!hasMore.value || store.loadingMore) return;
+    store.searchProducts(query.value, { append: true, page: store.searchMeta.current_page + 1 });
+};
 
 const openQuickView = async (slug) => {
     store.currentProduct = null;
@@ -149,5 +166,24 @@ if (query.value) {
 }
 .empty-state i {
   color: var(--border2);
+}
+.load-more-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0 8px;
+}
+.load-more-btn {
+  min-width: 180px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: 1px solid var(--primary);
+  background: transparent;
+  color: var(--primary);
+  font-weight: 700;
+  cursor: pointer;
+}
+.load-more-btn:disabled {
+  opacity: .6;
+  cursor: default;
 }
 </style>
