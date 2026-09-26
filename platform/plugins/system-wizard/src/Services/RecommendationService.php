@@ -32,8 +32,12 @@ class RecommendationService
         'prem' => 'الباقة المميزة',
     ];
 
-    /** Zone type inferred from the room label (spec rule 6). Unknown labels count as indoor. */
-    public const OUTDOOR_LABELS = ['حوش', 'حديقة', 'جراج', 'كراج', 'موقف', 'بلكونة', 'شرفة', 'ساحة'];
+    /**
+     * Outdoor room-type ids (spec rule 6). Rooms are sent as stable ids (see the SPA
+     * useSketch VOCAB), so zone classification never depends on display text — the label
+     * can be translated/reworded freely without moving the price. Unknown ids count as indoor.
+     */
+    public const OUTDOOR_LABELS = ['yard', 'garden', 'garage', 'parking', 'balcony', 'courtyard'];
 
     public function __construct(protected WizardCatalog $catalog)
     {

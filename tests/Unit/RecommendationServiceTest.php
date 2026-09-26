@@ -54,8 +54,8 @@ class RecommendationServiceTest extends TestCase
     {
         $sketch = [
             'rooms' => [
-                ['x' => 0, 'y' => 0, 'w' => 50, 'h' => 50, 'label' => 'صالة', 'floor' => 'g'],
-                ['x' => 50, 'y' => 0, 'w' => 50, 'h' => 50, 'label' => 'حوش', 'floor' => 'g'],
+                ['x' => 0, 'y' => 0, 'w' => 50, 'h' => 50, 'label' => 'hall', 'floor' => 'g'],
+                ['x' => 50, 'y' => 0, 'w' => 50, 'h' => 50, 'label' => 'yard', 'floor' => 'g'],
             ],
             'pins' => [
                 ['t' => 'cam', 'x' => 10, 'y' => 10, 'floor' => 'g'],  // indoor room

@@ -24,7 +24,7 @@
 
   <div class="label-chips" v-if="sk.sel!==null && sk.rooms[sk.sel]">
     <span style="font-size:12px;color:var(--muted);">سمِّ الغرفة:</span>
-    <button v-for="l in roomLabels" :key="l" class="lchip" :class="{out: zoneType(l)==='out'}" @click="labelRoom(l)">{{ l }}</button>
+    <button v-for="l in roomLabels" :key="l" class="lchip" :class="{out: zoneType(l)==='out'}" @click="labelRoom(l)">{{ roomLabel(l) }}</button>
   </div>
 
   <div class="sketch-stage" @pointerdown="stageDown" @click="sketchPlacePin">
@@ -32,7 +32,7 @@
          v-show="(r.floor||'g')===sk.floor"
          :style="{left:r.x+'%', top:r.y+'%', width:r.w+'%', height:r.h+'%'}"
          @pointerdown.stop="roomDown(i,$event)" @click.stop="roomClick(i,$event)">
-      <span class="lbl">{{ r.label }}</span>
+      <span class="lbl">{{ roomLabel(r.label) }}</span>
       <button class="x" @pointerdown.stop @click.stop="delRoom(i)" aria-label="احذف الغرفة">×</button>
       <span class="handle" @pointerdown.stop="resizeDown(i,$event)" aria-hidden="true"></span>
     </div>
@@ -65,6 +65,10 @@
 <script setup>
 // Plan box, "draw it yourself" tab: rooms and pins per floor (state in useSketch.js).
 import { inject } from 'vue';
+import { __ } from '../../utils/i18n';
+// Room labels are stable ids (e.g. 'hall','yard') so pricing/zone matching never
+// depends on display text; render them through i18n.
+const roomLabel = (id) => __('room_' + id);
 
 const { icon, livePkg, pinTypes, pinIcon, sk, roomLabels, zoneType, floorsAvail, floorCount, sketchCams, sketchWiring, skUndo, skClear, generateStarter, stageDown, roomDown, resizeDown, sketchPlacePin, roomClick, delRoom, delSkPin, skPinDrag, labelRoom } = inject('wizard');
 </script>

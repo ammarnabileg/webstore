@@ -54,7 +54,13 @@ class PublicSystemWizardController extends BaseController
             'sketch.rooms.*.y' => ['required', 'numeric', 'between:0,100'],
             'sketch.rooms.*.w' => ['required', 'numeric', 'between:0,100'],
             'sketch.rooms.*.h' => ['required', 'numeric', 'between:0,100'],
-            'sketch.rooms.*.label' => ['nullable', 'string', 'max:30'],
+            // Room labels are stable ids (not free text), so allowlist them. This also keeps the
+            // zone (indoor/outdoor) classification well-defined and blocks junk input.
+            'sketch.rooms.*.label' => ['nullable', Rule::in([
+                'hall', 'bedroom', 'kitchen', 'bathroom', 'entrance', 'corridor', 'office',
+                'storage', 'reception', 'meeting', 'room', 'stairs',
+                'yard', 'garden', 'garage', 'parking', 'balcony', 'courtyard',
+            ])],
             'sketch.rooms.*.floor' => ['nullable', Rule::in(['g', 'f1', 'f2', 'roof'])],
             'sketch.pins' => ['array', 'max:150'],
             'sketch.pins.*.t' => ['required', Rule::in(['cam', 'ap', 'net', 'tv', 'rack', 'note'])],

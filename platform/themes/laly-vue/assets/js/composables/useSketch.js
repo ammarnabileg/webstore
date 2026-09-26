@@ -29,19 +29,19 @@ export function useSketch(a, { floorOpts, entranceOpts, pinTypes }, needs) {
     const sk = reactive({ mode:'room', rooms:[], pins:[], sel:null, draft:null, hist:[], generated:false, dismiss:false, floor:'g' });
     // مفردات لكل نوع مكان — الاحترافية إن المكتب مايشوفش "غرفة نوم"
     const VOCAB = {
-      apartment: {in:['صالة','نوم','مطبخ','حمام','مدخل','ممر'], out:['بلكونة']},
-      villa:     {in:['صالة','نوم','مطبخ','حمام','مدخل','ممر'], out:['حوش','حديقة','جراج','موقف']},
-      compound:  {in:['صالة','نوم','مطبخ','حمام','مدخل','ممر'], out:['حوش','حديقة','جراج','موقف']},
-      shop:      {in:['صالة','مخزن','مكتب','حمام','مدخل'],      out:['موقف']},
-      office:    {in:['استقبال','مكتب','اجتماعات','ممر','حمام','مخزن'], out:['موقف']},
-      warehouse: {in:['مخزن','مكتب','حمام','مدخل'],             out:['ساحة','موقف']},
+      apartment: {in:['hall','bedroom','kitchen','bathroom','entrance','corridor'], out:['balcony']},
+      villa:     {in:['hall','bedroom','kitchen','bathroom','entrance','corridor'], out:['yard','garden','garage','parking']},
+      compound:  {in:['hall','bedroom','kitchen','bathroom','entrance','corridor'], out:['yard','garden','garage','parking']},
+      shop:      {in:['hall','storage','office','bathroom','entrance'],      out:['parking']},
+      office:    {in:['reception','office','meeting','corridor','bathroom','storage'], out:['parking']},
+      warehouse: {in:['storage','office','bathroom','entrance'],             out:['courtyard','parking']},
     };
     const roomLabels = computed(()=>{
       const v = VOCAB[a.place] || VOCAB.villa;
-      const extra = floorsAvail.value.length > 1 ? ['سلم'] : [];
+      const extra = floorsAvail.value.length > 1 ? ['stairs'] : [];
       return [...v.in, ...extra, ...v.out];
     });
-    const ZONE = {'صالة':'in','نوم':'in','مطبخ':'in','حمام':'in','مدخل':'in','ممر':'in','مكتب':'in','مخزن':'in','استقبال':'in','اجتماعات':'in','غرفة':'in','سلم':'in','حوش':'out','حديقة':'out','جراج':'out','موقف':'out','بلكونة':'out','ساحة':'out'};
+    const ZONE = {'hall':'in','bedroom':'in','kitchen':'in','bathroom':'in','entrance':'in','corridor':'in','office':'in','storage':'in','reception':'in','meeting':'in','room':'in','stairs':'in','yard':'out','garden':'out','garage':'out','parking':'out','balcony':'out','courtyard':'out'};
     const zoneType = l => ZONE[l] || 'in';
     // الأدوار المتاحة بتتولد من إجابة "عدد الأدوار" ونوع المكان — دور واحد = مفيش تابات ولا احتكاك
     const FLOOR_DEFS = [{id:'g',label:'الأرضي'},{id:'f1',label:'الأول'},{id:'f2',label:'الثاني'},{id:'roof',label:'السطح'}];
@@ -105,45 +105,45 @@ export function useSketch(a, { floorOpts, entranceOpts, pinTypes }, needs) {
       const t = a.place;
       const vNum = a.floors!==null ? floorOpts[a.floors].v : 1;
       if(t==='shop'){
-        R.push({x:4,y:6,w:92,h:50,label:'صالة',floor:'g'},{x:4,y:60,w:44,h:34,label:'مخزن',floor:'g'});
-        if(out) R.push({x:52,y:60,w:44,h:34,label:'موقف',floor:'g'});
+        R.push({x:4,y:6,w:92,h:50,label:'hall',floor:'g'},{x:4,y:60,w:44,h:34,label:'storage',floor:'g'});
+        if(out) R.push({x:52,y:60,w:44,h:34,label:'parking',floor:'g'});
       } else if(t==='office'){
-        R.push({x:4,y:6,w:40,h:28,label:'استقبال',floor:'g'},{x:48,y:6,w:48,h:28,label:'مكتب',floor:'g'},{x:48,y:38,w:48,h:26,label:'اجتماعات',floor:'g'},{x:4,y:38,w:40,h:26,label:'ممر',floor:'g'});
-        if(out) R.push({x:4,y:70,w:92,h:26,label:'موقف',floor:'g'});
+        R.push({x:4,y:6,w:40,h:28,label:'reception',floor:'g'},{x:48,y:6,w:48,h:28,label:'office',floor:'g'},{x:48,y:38,w:48,h:26,label:'meeting',floor:'g'},{x:4,y:38,w:40,h:26,label:'corridor',floor:'g'});
+        if(out) R.push({x:4,y:70,w:92,h:26,label:'parking',floor:'g'});
       } else if(t==='warehouse'){
-        R.push({x:4,y:6,w:92,h:56,label:'مخزن',floor:'g'},{x:4,y:66,w:28,h:28,label:'مكتب',floor:'g'});
-        if(out) R.push({x:36,y:66,w:60,h:28,label:'ساحة',floor:'g'});
+        R.push({x:4,y:6,w:92,h:56,label:'storage',floor:'g'},{x:4,y:66,w:28,h:28,label:'office',floor:'g'});
+        if(out) R.push({x:36,y:66,w:60,h:28,label:'courtyard',floor:'g'});
       } else if(t==='apartment'){
-        R.push({x:4,y:6,w:54,h:42,label:'صالة',floor:'g'},{x:62,y:6,w:34,h:26,label:'نوم',floor:'g'},{x:62,y:36,w:34,h:24,label:'مطبخ',floor:'g'},{x:4,y:52,w:28,h:22,label:'حمام',floor:'g'});
-        if(big) R.push({x:36,y:52,w:22,h:22,label:'نوم',floor:'g'});
-        if(out) R.push({x:62,y:64,w:34,h:16,label:'بلكونة',floor:'g'});
+        R.push({x:4,y:6,w:54,h:42,label:'hall',floor:'g'},{x:62,y:6,w:34,h:26,label:'bedroom',floor:'g'},{x:62,y:36,w:34,h:24,label:'kitchen',floor:'g'},{x:4,y:52,w:28,h:22,label:'bathroom',floor:'g'});
+        if(big) R.push({x:36,y:52,w:22,h:22,label:'bedroom',floor:'g'});
+        if(out) R.push({x:62,y:64,w:34,h:16,label:'balcony',floor:'g'});
       } else {
         const stair = vNum>=2; // سلم حقيقي بيتكرر في نفس المكان على كل الأدوار
         if(out){
           if(stair){
-            R.push({x:4,y:4,w:48,h:32,label:'صالة',floor:'g'},{x:56,y:4,w:10,h:26,label:'سلم',floor:'g'},{x:70,y:4,w:26,h:26,label:'نوم',floor:'g'},{x:70,y:34,w:26,h:22,label:'مطبخ',floor:'g'},{x:4,y:40,w:22,h:16,label:'حمام',floor:'g'});
-            if(big) R.push({x:30,y:40,w:22,h:16,label:'نوم',floor:'g'});
+            R.push({x:4,y:4,w:48,h:32,label:'hall',floor:'g'},{x:56,y:4,w:10,h:26,label:'stairs',floor:'g'},{x:70,y:4,w:26,h:26,label:'bedroom',floor:'g'},{x:70,y:34,w:26,h:22,label:'kitchen',floor:'g'},{x:4,y:40,w:22,h:16,label:'bathroom',floor:'g'});
+            if(big) R.push({x:30,y:40,w:22,h:16,label:'bedroom',floor:'g'});
           } else {
-            R.push({x:4,y:4,w:54,h:32,label:'صالة',floor:'g'},{x:62,y:4,w:34,h:24,label:'نوم',floor:'g'},{x:62,y:32,w:34,h:24,label:'مطبخ',floor:'g'},{x:4,y:40,w:24,h:16,label:'حمام',floor:'g'});
-            if(big) R.push({x:32,y:40,w:26,h:16,label:'نوم',floor:'g'});
+            R.push({x:4,y:4,w:54,h:32,label:'hall',floor:'g'},{x:62,y:4,w:34,h:24,label:'bedroom',floor:'g'},{x:62,y:32,w:34,h:24,label:'kitchen',floor:'g'},{x:4,y:40,w:24,h:16,label:'bathroom',floor:'g'});
+            if(big) R.push({x:32,y:40,w:26,h:16,label:'bedroom',floor:'g'});
           }
           if(ent>=2 || t==='villa'){
-            R.push({x:4,y:62,w:70,h:34,label: t==='compound' ? 'حديقة' : 'حوش',floor:'g'});
-            R.push({x:78,y:62,w:18,h:34,label:'جراج',floor:'g'});
+            R.push({x:4,y:62,w:70,h:34,label: t==='compound' ? 'garden' : 'yard',floor:'g'});
+            R.push({x:78,y:62,w:18,h:34,label:'garage',floor:'g'});
           } else {
-            R.push({x:4,y:62,w:92,h:34,label: t==='compound' ? 'حديقة' : 'حوش',floor:'g'});
+            R.push({x:4,y:62,w:92,h:34,label: t==='compound' ? 'garden' : 'yard',floor:'g'});
           }
         } else {
           if(stair){
-            R.push({x:4,y:6,w:48,h:42,label:'صالة',floor:'g'},{x:56,y:6,w:10,h:26,label:'سلم',floor:'g'},{x:70,y:6,w:26,h:26,label:'نوم',floor:'g'},{x:70,y:36,w:26,h:24,label:'مطبخ',floor:'g'},{x:4,y:52,w:26,h:20,label:'حمام',floor:'g'});
-            if(big) R.push({x:34,y:52,w:18,h:20,label:'نوم',floor:'g'});
+            R.push({x:4,y:6,w:48,h:42,label:'hall',floor:'g'},{x:56,y:6,w:10,h:26,label:'stairs',floor:'g'},{x:70,y:6,w:26,h:26,label:'bedroom',floor:'g'},{x:70,y:36,w:26,h:24,label:'kitchen',floor:'g'},{x:4,y:52,w:26,h:20,label:'bathroom',floor:'g'});
+            if(big) R.push({x:34,y:52,w:18,h:20,label:'bedroom',floor:'g'});
           } else {
-            R.push({x:4,y:6,w:54,h:42,label:'صالة',floor:'g'},{x:62,y:6,w:34,h:26,label:'نوم',floor:'g'},{x:62,y:36,w:34,h:24,label:'مطبخ',floor:'g'},{x:4,y:52,w:28,h:22,label:'حمام',floor:'g'});
-            if(big) R.push({x:36,y:52,w:22,h:22,label:'نوم',floor:'g'});
+            R.push({x:4,y:6,w:54,h:42,label:'hall',floor:'g'},{x:62,y:6,w:34,h:26,label:'bedroom',floor:'g'},{x:62,y:36,w:34,h:24,label:'kitchen',floor:'g'},{x:4,y:52,w:28,h:22,label:'bathroom',floor:'g'});
+            if(big) R.push({x:36,y:52,w:22,h:22,label:'bedroom',floor:'g'});
           }
         }
         if(stair){
-          R.push({x:56,y:4,w:10,h:26,label:'سلم',floor:'f1'},{x:4,y:4,w:48,h:40,label:'نوم',floor:'f1'},{x:70,y:4,w:26,h:40,label:'نوم',floor:'f1'},{x:4,y:50,w:26,h:20,label:'حمام',floor:'f1'},{x:34,y:50,w:62,h:20,label:'ممر',floor:'f1'});
+          R.push({x:56,y:4,w:10,h:26,label:'stairs',floor:'f1'},{x:4,y:4,w:48,h:40,label:'bedroom',floor:'f1'},{x:70,y:4,w:26,h:40,label:'bedroom',floor:'f1'},{x:4,y:50,w:26,h:20,label:'bathroom',floor:'f1'},{x:34,y:50,w:62,h:20,label:'corridor',floor:'f1'});
         }
       }
       sk.rooms.push(...R);
@@ -174,18 +174,18 @@ export function useSketch(a, { floorOpts, entranceOpts, pinTypes }, needs) {
         sk.pins.push({t:'ap', x:clampV(r.x+r.w-8-wave*10, r.x+4, r.x+r.w-4), y:clampV(r.y+r.h-8, r.y+4, r.y+r.h-4), floor:fl});
       }
       // اقتراحات التمديدات — دي الإضافة الوحيدة اللي بتحرك السعر عند التوليد، وبتظهر كبنود واضحة قابلة للمسح
-      const NETLBL = ['صالة','نوم','مكتب','استقبال','اجتماعات','مخزن'];
+      const NETLBL = ['hall','bedroom','office','reception','meeting','storage'];
       sk.rooms.forEach(r=>{
         if(sk.pins.length>=29) return;
         if(zoneType(r.label)==='in' && NETLBL.includes(r.label) && r.w*r.h>=450){
           sk.pins.push({t:'net', x:clampV(r.x+8, r.x+4, r.x+r.w-4), y:clampV(r.y+r.h-6, r.y+4, r.y+r.h-4), floor:r.floor||'g'});
         }
       });
-      const tvRoom = sk.rooms.filter(r=>['صالة','استقبال'].includes(r.label)).sort((ra,rb)=>rb.w*rb.h - ra.w*ra.h)[0];
+      const tvRoom = sk.rooms.filter(r=>['hall','reception'].includes(r.label)).sort((ra,rb)=>rb.w*rb.h - ra.w*ra.h)[0];
       if(tvRoom && sk.pins.length<30) sk.pins.push({t:'tv', x:tvRoom.x+tvRoom.w/2, y:clampV(tvRoom.y+6, tvRoom.y+4, tvRoom.y+tvRoom.h-4), floor:tvRoom.floor||'g'});
-      const RACKLBL = ['ممر','مدخل','مخزن'];
+      const RACKLBL = ['corridor','entrance','storage'];
       const rackRoom = sk.rooms.find(r=>(r.floor||'g')==='g' && RACKLBL.includes(r.label))
-                    || sk.rooms.find(r=>(r.floor||'g')==='g' && zoneType(r.label)==='in' && r.label!=='سلم')
+                    || sk.rooms.find(r=>(r.floor||'g')==='g' && zoneType(r.label)==='in' && r.label!=='stairs')
                     || sk.rooms.find(r=>RACKLBL.includes(r.label));
       if(rackRoom && sk.pins.length<30) sk.pins.push({t:'rack', x:clampV(rackRoom.x+rackRoom.w-8, rackRoom.x+4, rackRoom.x+rackRoom.w-4), y:clampV(rackRoom.y+8, rackRoom.y+4, rackRoom.y+rackRoom.h-4), floor:rackRoom.floor||'g'});
       sk.generated = true; sk.dismiss = false; sk.sel = null;
@@ -209,7 +209,7 @@ export function useSketch(a, { floorOpts, entranceOpts, pinTypes }, needs) {
         window.removeEventListener('pointerup', up);
         if(sk.draft && sk.draft.w>=6 && sk.draft.h>=6 && sk.rooms.length<20){
           snapPush();
-          sk.rooms.push({...sk.draft, label:'غرفة', floor: sk.floor});
+          sk.rooms.push({...sk.draft, label:'room', floor: sk.floor});
           sk.sel = sk.rooms.length-1;
         }
         sk.draft = null;
