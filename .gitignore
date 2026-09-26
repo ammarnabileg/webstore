@@ -77,3 +77,6 @@ storage/framework/maintenance.php
 /temp_*
 /*.sql
 node_modules/
+
+# e2e run artifacts
+/storage/e2e

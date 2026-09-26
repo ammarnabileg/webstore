@@ -1,0 +1,18 @@
+{
+  "placeholders": [
+    "\\bLorem\\b", "\\bTODO\\b", "Cyclone Offer", "Weekly Best Sellers", "Top Products", "Featured Products",
+    "Ad Banner", "\\bundefined\\b", "\\[object Object\\]", "\\bNaN\\b", "via\\.placeholder\\.com",
+    "Your App", "example\\.com", "ABC Corporation"
+  ],
+  "xss": [
+    "<svg/onload=window.__xss=1>",
+    "\"><img src=x onerror=window.__xss=1>",
+    "'><script>window.__xss=1</script>"
+  ],
+  "openRedirectParams": ["redirect", "next", "return_url", "redirect_to", "back", "ref", "url"],
+  "openRedirectTargets": ["//evil.example", "https://evil.example", "/\\\\evil.example", "http://evil.example/%2F.."],
+  "massAssignFields": {
+    "account": { "id": "1", "status": "locked", "is_vendor": "1", "credits": "99999", "email_verified_at": "2020-01-01 00:00:00", "confirmed_at": "2020-01-01 00:00:00", "super_user": "1" },
+    "address": { "customer_id": "__VICTIM_ID__", "is_default": "1", "id": "__VICTIM_ADDRESS_ID__" }
+  }
+}

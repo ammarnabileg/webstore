@@ -1,0 +1,665 @@
+{
+  "run": {
+    "ts": "2026-09-26T09:54:30.593Z",
+    "base": "http://127.0.0.1:8099",
+    "commit": "5cf937c1"
+  },
+  "summary": {
+    "critical": 0,
+    "high": 0,
+    "medium": 19,
+    "low": 21,
+    "info": 7
+  },
+  "findings": [
+    {
+      "id": "NO-SPA-CHROME-wishlist-ar",
+      "severity": "medium",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/wishlist",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "spa": false,
+        "hasApp": false,
+        "bladeChrome": false,
+        "homeLink": false,
+        "lang": "ar",
+        "dir": "rtl"
+      },
+      "recommendation": "Page should mount the SPA (view override with #app or spaRoutes entry)."
+    },
+    {
+      "id": "STRANDED-compare",
+      "severity": "medium",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/compare",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "spa": false,
+        "hasApp": false,
+        "bladeChrome": false,
+        "homeLink": false,
+        "lang": "ar",
+        "dir": "rtl"
+      },
+      "recommendation": "Render the theme chrome (header/tab bar) around Blade fallback pages."
+    },
+    {
+      "id": "STRANDED-order-tracking",
+      "severity": "medium",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/orders/tracking",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "spa": false,
+        "hasApp": false,
+        "bladeChrome": false,
+        "homeLink": false,
+        "lang": "ar",
+        "dir": "rtl"
+      },
+      "recommendation": "Render the theme chrome (header/tab bar) around Blade fallback pages."
+    },
+    {
+      "id": "STRANDED-password-reset",
+      "severity": "medium",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/password/reset",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "spa": false,
+        "hasApp": false,
+        "bladeChrome": false,
+        "homeLink": false,
+        "lang": "ar",
+        "dir": "rtl"
+      },
+      "recommendation": "Render the theme chrome (header/tab bar) around Blade fallback pages."
+    },
+    {
+      "id": "STRANDED-stores",
+      "severity": "medium",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/stores",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "spa": false,
+        "hasApp": false,
+        "bladeChrome": false,
+        "homeLink": false,
+        "lang": "ar",
+        "dir": "rtl"
+      },
+      "recommendation": "Render the theme chrome (header/tab bar) around Blade fallback pages."
+    },
+    {
+      "id": "STRANDED-acct-overview",
+      "severity": "medium",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/customer/overview",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "spa": false,
+        "hasApp": false,
+        "bladeChrome": false,
+        "homeLink": false,
+        "lang": "ar",
+        "dir": "rtl"
+      },
+      "recommendation": "Render the theme chrome (header/tab bar) around Blade fallback pages."
+    },
+    {
+      "id": "STRANDED-acct-edit",
+      "severity": "medium",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/customer/edit-account",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "spa": false,
+        "hasApp": false,
+        "bladeChrome": false,
+        "homeLink": false,
+        "lang": "ar",
+        "dir": "rtl"
+      },
+      "recommendation": "Render the theme chrome (header/tab bar) around Blade fallback pages."
+    },
+    {
+      "id": "STRANDED-acct-password",
+      "severity": "medium",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/customer/change-password",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "spa": false,
+        "hasApp": false,
+        "bladeChrome": false,
+        "homeLink": false,
+        "lang": "ar",
+        "dir": "rtl"
+      },
+      "recommendation": "Render the theme chrome (header/tab bar) around Blade fallback pages."
+    },
+    {
+      "id": "STRANDED-acct-address",
+      "severity": "medium",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/customer/address",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "spa": false,
+        "hasApp": false,
+        "bladeChrome": false,
+        "homeLink": false,
+        "lang": "ar",
+        "dir": "rtl"
+      },
+      "recommendation": "Render the theme chrome (header/tab bar) around Blade fallback pages."
+    },
+    {
+      "id": "STRANDED-acct-address-create",
+      "severity": "medium",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/customer/address/create",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "spa": false,
+        "hasApp": false,
+        "bladeChrome": false,
+        "homeLink": false,
+        "lang": "ar",
+        "dir": "rtl"
+      },
+      "recommendation": "Render the theme chrome (header/tab bar) around Blade fallback pages."
+    },
+    {
+      "id": "STRANDED-acct-orders",
+      "severity": "medium",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/customer/orders",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "spa": false,
+        "hasApp": false,
+        "bladeChrome": false,
+        "homeLink": false,
+        "lang": "ar",
+        "dir": "rtl"
+      },
+      "recommendation": "Render the theme chrome (header/tab bar) around Blade fallback pages."
+    },
+    {
+      "id": "STRANDED-acct-returns",
+      "severity": "medium",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/customer/order-returns",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "spa": false,
+        "hasApp": false,
+        "bladeChrome": false,
+        "homeLink": false,
+        "lang": "ar",
+        "dir": "rtl"
+      },
+      "recommendation": "Render the theme chrome (header/tab bar) around Blade fallback pages."
+    },
+    {
+      "id": "HTTP-acct-downloads-customer-ar",
+      "severity": "medium",
+      "category": "availability",
+      "url": "http://127.0.0.1:8099/customer/downloads",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "status": 404,
+        "expected": 200
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "STRANDED-acct-reviews",
+      "severity": "medium",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/customer/product-reviews",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "spa": false,
+        "hasApp": false,
+        "bladeChrome": false,
+        "homeLink": false,
+        "lang": "ar",
+        "dir": "rtl"
+      },
+      "recommendation": "Render the theme chrome (header/tab bar) around Blade fallback pages."
+    },
+    {
+      "id": "NO-SPA-CHROME-wishlist-en",
+      "severity": "medium",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/en/wishlist",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "spa": false,
+        "hasApp": false,
+        "bladeChrome": false,
+        "homeLink": false,
+        "lang": "en",
+        "dir": "ltr"
+      },
+      "recommendation": "Page should mount the SPA (view override with #app or spaRoutes entry)."
+    },
+    {
+      "id": "HTTP-acct-downloads-customer-en",
+      "severity": "medium",
+      "category": "availability",
+      "url": "http://127.0.0.1:8099/en/customer/downloads",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "status": 404,
+        "expected": 200
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "LOGOUT-IS-GET-LINK",
+      "severity": "medium",
+      "category": "security",
+      "url": "http://127.0.0.1:8099/profile",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "anchors": 1
+      },
+      "recommendation": "Post a form with CSRF token; reject cross-site GET on the logout route (Tier 1.6)."
+    },
+    {
+      "id": "CSRF-GET-LOGOUT",
+      "severity": "medium",
+      "category": "csrf",
+      "url": "/logout",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "status": 302
+      },
+      "recommendation": "Reject cross-site GET on logout (Sec-Fetch-Site/Referer check) and prefer POST + token."
+    },
+    {
+      "id": "CSRF-GET-CART-DESTROY",
+      "severity": "medium",
+      "category": "csrf",
+      "url": "/cart/destroy",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "status": 302
+      },
+      "recommendation": "Reject cross-site GET on state-changing routes."
+    },
+    {
+      "id": "PLACEHOLDER-home-ar",
+      "severity": "low",
+      "category": "content",
+      "url": "http://127.0.0.1:8099/",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "hits": [
+          "Weekly Best Sellers",
+          "Top Products"
+        ]
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "CONSOLE-ERROR-home-ar-mobile",
+      "severity": "low",
+      "category": "js",
+      "url": "http://127.0.0.1:8099/",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "errors": [
+          "Failed to load CMS homepage AxiosError: Request failed with status code 404\n    at nt (http://127.0.0.1:8099/themes/laly-vue/js/app.js?v=1790363869:2:536072)\n    at XMLHttpRequest.g (http://127.0.0.1:8099/themes/laly-vue/js/app.js?v=1790363869:2:543228)"
+        ]
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "PLACEHOLDER-profile-ar",
+      "severity": "low",
+      "category": "content",
+      "url": "http://127.0.0.1:8099/profile",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "hits": [
+          "example\\.com"
+        ]
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "PLACEHOLDER-home-en",
+      "severity": "low",
+      "category": "content",
+      "url": "http://127.0.0.1:8099/en/",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "hits": [
+          "Weekly Best Sellers",
+          "Top Products"
+        ]
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "CONSOLE-ERROR-home-en-mobile",
+      "severity": "low",
+      "category": "js",
+      "url": "http://127.0.0.1:8099/en/",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "errors": [
+          "Failed to load CMS homepage AxiosError: Request failed with status code 404\n    at nt (http://127.0.0.1:8099/themes/laly-vue/js/app.js?v=1790363869:2:536072)\n    at XMLHttpRequest.g (http://127.0.0.1:8099/themes/laly-vue/js/app.js?v=1790363869:2:543228)"
+        ]
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "PLACEHOLDER-profile-en",
+      "severity": "low",
+      "category": "content",
+      "url": "http://127.0.0.1:8099/en/profile",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "hits": [
+          "example\\.com"
+        ]
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "CART-ADD-NOOP-guest",
+      "severity": "low",
+      "category": "shop",
+      "url": "http://127.0.0.1:8099/product/cam",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "qtyShown": ""
+      },
+      "recommendation": "Add to cart produced no cart item."
+    },
+    {
+      "id": "ACTION-FAIL-filter-pick-guest",
+      "severity": "low",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/products",
+      "method": "GET",
+      "step": "filter-pick",
+      "evidence": {
+        "error": "locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.filter-label').first()\u001b[22m\n\u001b[2m    - locator resolved to <label data-v-75c14a56=\"\" class=\"filter-label\">…</label>\u001b[22m\n"
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "ACTION-FAIL-filter-apply-guest",
+      "severity": "low",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/products",
+      "method": "GET",
+      "step": "filter-apply",
+      "evidence": {
+        "error": "locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"تطبيق\"), .apply-btn, .filter-apply').first()\u001b[22m\n\u001b[2m    - locator resolved to <button data-v-75c14a56="
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "ACTION-FAIL-search-input-guest",
+      "severity": "low",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/search?q=cam",
+      "method": "GET",
+      "step": "search-input",
+      "evidence": {
+        "error": "locator.fill: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"search\"], .search-input, input[placeholder]').first()\u001b[22m\n\u001b[2m    - locator resolved to <input type=\"text\" pl"
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "ACTION-FAIL-search-clear-guest",
+      "severity": "low",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/search?q=cam",
+      "method": "GET",
+      "step": "search-clear",
+      "evidence": {
+        "error": "locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.clear-btn').first()\u001b[22m\n\u001b[2m    - locator resolved to <button class=\"clear-btn\" data-v-ba3a93f0=\"\" aria-label=\"إغلاق\">…"
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "ACTION-FAIL-live-search-guest",
+      "severity": "low",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/",
+      "method": "GET",
+      "step": "live-search",
+      "evidence": {
+        "error": "locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.dh-search input, .dh-search').first()\u001b[22m\n\u001b[2m    - locator resolved to <div class=\"dh-search\">…</div>\u001b[22m\n\u001b[2m  - att"
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "ACTION-FAIL-dark-toggle-guest",
+      "severity": "low",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/",
+      "method": "GET",
+      "step": "dark-toggle",
+      "evidence": {
+        "error": "locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.dh-dark-btn, .theme-toggle').first()\u001b[22m\n\u001b[2m    - locator resolved to <a title=\"تغيير المظهر\" href=\"javascript:void(0)"
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "NO-FORGOT-PASSWORD-LINK",
+      "severity": "low",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/login",
+      "method": "GET",
+      "step": "",
+      "evidence": {},
+      "recommendation": "Link to /password/reset from the login step (Tier 1.7)."
+    },
+    {
+      "id": "CART-ADD-NOOP-customer",
+      "severity": "low",
+      "category": "shop",
+      "url": "http://127.0.0.1:8099/product/cam",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "qtyShown": ""
+      },
+      "recommendation": "Add to cart produced no cart item."
+    },
+    {
+      "id": "ACTION-FAIL-filter-pick-customer",
+      "severity": "low",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/products",
+      "method": "GET",
+      "step": "filter-pick",
+      "evidence": {
+        "error": "locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.filter-label').first()\u001b[22m\n\u001b[2m    - locator resolved to <label data-v-75c14a56=\"\" class=\"filter-label\">…</label>\u001b[22m\n"
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "ACTION-FAIL-filter-apply-customer",
+      "severity": "low",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/products",
+      "method": "GET",
+      "step": "filter-apply",
+      "evidence": {
+        "error": "locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"تطبيق\"), .apply-btn, .filter-apply').first()\u001b[22m\n\u001b[2m    - locator resolved to <button data-v-75c14a56="
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "ACTION-FAIL-search-input-customer",
+      "severity": "low",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/search?q=cam",
+      "method": "GET",
+      "step": "search-input",
+      "evidence": {
+        "error": "locator.fill: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"search\"], .search-input, input[placeholder]').first()\u001b[22m\n\u001b[2m    - locator resolved to <input type=\"text\" pl"
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "ACTION-FAIL-search-clear-customer",
+      "severity": "low",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/search?q=cam",
+      "method": "GET",
+      "step": "search-clear",
+      "evidence": {
+        "error": "locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.clear-btn').first()\u001b[22m\n\u001b[2m    - locator resolved to <button class=\"clear-btn\" data-v-ba3a93f0=\"\" aria-label=\"إغلاق\">…"
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "ACTION-FAIL-live-search-customer",
+      "severity": "low",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/",
+      "method": "GET",
+      "step": "live-search",
+      "evidence": {
+        "error": "locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.dh-search input, .dh-search').first()\u001b[22m\n\u001b[2m    - locator resolved to <div class=\"dh-search\">…</div>\u001b[22m\n\u001b[2m  - att"
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "ACTION-FAIL-dark-toggle-customer",
+      "severity": "low",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/",
+      "method": "GET",
+      "step": "dark-toggle",
+      "evidence": {
+        "error": "locator.click: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.dh-dark-btn, .theme-toggle').first()\u001b[22m\n\u001b[2m    - locator resolved to <a title=\"تغيير المظهر\" href=\"javascript:void(0)"
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "ACTION-MISSING-cart-qty-plus",
+      "severity": "info",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/cart",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "selector": ".qty-btn:last-child"
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "ACTION-MISSING-cart-qty-minus",
+      "severity": "info",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/cart",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "selector": ".qty-btn:first-child"
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "ACTION-MISSING-cart-checkout-present",
+      "severity": "info",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/cart",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "selector": ".checkout-btn"
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "ACTION-MISSING-cart-remove",
+      "severity": "info",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/cart",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "selector": ".ci-remove"
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "ACTION-MISSING-filter-open",
+      "severity": "info",
+      "category": "ux",
+      "url": "http://127.0.0.1:8099/products",
+      "method": "GET",
+      "step": "",
+      "evidence": {
+        "selector": ".filter-btn"
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "RUNNER-CRASH-CHECKOUT",
+      "severity": "info",
+      "category": "runner",
+      "url": "",
+      "method": "GET",
+      "step": "checkout",
+      "evidence": {
+        "error": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button.payment-checkout-btn, button[type=\"submit\"]:has-text(\"إتمام\"), button[type=\"submit\"]:has-text(\"Place\"), #checkout-form button[type=\"submit\"]').first()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"submit\" data-"
+      },
+      "recommendation": ""
+    },
+    {
+      "id": "RATE-CART-ADD",
+      "severity": "info",
+      "category": "rate-limit",
+      "url": "/ajax/vue/cart/add",
+      "method": "POST",
+      "step": "",
+      "evidence": {
+        "count": 40
+      },
+      "recommendation": "Optional: add throttle:60,1 to the cart ajax routes."
+    }
+  ],
+  "visits": 96
+}
