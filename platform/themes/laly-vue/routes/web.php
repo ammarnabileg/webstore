@@ -65,6 +65,14 @@ Theme::registerRoutes(function (): void {
                 $filters['attributes'] = is_array($attrsInput) ? $attrsInput : explode(',', $attrsInput);
             }
 
+            // Price range (values are in the display currency; the repository converts to the base rate).
+            if ($request->filled('min_price') && is_numeric($request->input('min_price'))) {
+                $filters['min_price'] = max(0, (float) $request->input('min_price'));
+            }
+            if ($request->filled('max_price') && is_numeric($request->input('max_price'))) {
+                $filters['max_price'] = max(0, (float) $request->input('max_price'));
+            }
+
             // Use getProducts to properly apply the filters with default conditions
             $products = $productRepository->getProducts($params, $filters);
 

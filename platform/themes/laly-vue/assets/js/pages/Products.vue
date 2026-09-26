@@ -32,8 +32,22 @@
           </div>
         </div>
 
+        <div class="sort-bar">
+          <span class="sort-count" v-if="store.productsMeta">{{ store.productsMeta.total }} {{ __('products') }}</span>
+          <label class="sort-select">
+            <span>{{ __('sort_by') }}:</span>
+            <select v-model="sortBy" @change="applyFilters">
+              <option value="">{{ __('sort_default') }}</option>
+              <option value="newest">{{ __('sort_newest') }}</option>
+              <option value="price_asc">{{ __('sort_price_asc') }}</option>
+              <option value="price_desc">{{ __('sort_price_desc') }}</option>
+              <option value="popular">{{ __('sort_popular') }}</option>
+            </select>
+          </label>
+        </div>
+
         <div class="plist" :class="{ 'plist-list': viewMode === 'list' }">
-          <ProductCard 
+          <ProductCard
             v-for="product in store.products" 
             :key="product.id" 
             :product="product" 
@@ -109,6 +123,16 @@
           </div>
         </div>
 
+        <!-- Price Range -->
+        <div class="filter-section">
+          <h4>{{ __('price_range') }}</h4>
+          <div class="price-range-inputs">
+            <input type="number" min="0" inputmode="numeric" v-model="minPrice" :placeholder="__('min')" :aria-label="__('min')" />
+            <span class="price-dash">–</span>
+            <input type="number" min="0" inputmode="numeric" v-model="maxPrice" :placeholder="__('max')" :aria-label="__('max')" />
+          </div>
+        </div>
+
         <button class="apply-filters-btn" @click="applyFilters">
           {{ __('apply') || 'تطبيق الفلاتر' }}
         </button>
@@ -121,11 +145,12 @@
 <script setup>
 import { __ } from '../utils/i18n';
 import { onMounted, watch, ref, computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useEcommerceStore } from '../stores/ecommerce';
 import ProductCard from '../components/ProductCard.vue';
 
 const route = useRoute();
+const router = useRouter();
 const store = useEcommerceStore();
 const viewMode = ref('grid');
 const showFilters = ref(false);
@@ -133,8 +158,22 @@ const selectedCategories = ref([]);
 const selectedAttributes = ref([]);
 const selectedCollections = ref([]);
 const selectedTags = ref([]);
+const sortBy = ref('');
+const minPrice = ref('');
+const maxPrice = ref('');
 const initializing = ref(true);
 const botbleData = window?.BotbleData || {};
+
+// Seed sort/price from the URL so a shared/bookmarked link restores the view.
+const seedFromQuery = () => {
+    const allowedSorts = ['newest', 'price_asc', 'price_desc', 'popular'];
+    sortBy.value = allowedSorts.includes(route.query.sort) ? route.query.sort : '';
+    minPrice.value = route.query.min_price != null ? String(route.query.min_price) : '';
+    maxPrice.value = route.query.max_price != null ? String(route.query.max_price) : '';
+    if (route.query.tags) selectedTags.value = String(route.query.tags).split(',').map(Number).filter(Boolean);
+    if (route.query.collections) selectedCollections.value = String(route.query.collections).split(',').map(Number).filter(Boolean);
+    if (route.query.attributes) selectedAttributes.value = String(route.query.attributes).split(',').map(Number).filter(Boolean);
+};
 
 const getRouteCategoryIds = async () => {
     let catIds = [...selectedCategories.value];
@@ -199,8 +238,27 @@ const applyFilters = async () => {
     if (selectedTags.value.length > 0) {
         params.tags = selectedTags.value.join(',');
     }
-    
+    if (sortBy.value) {
+        params.sort = sortBy.value;
+    }
+    const min = parseFloat(minPrice.value);
+    const max = parseFloat(maxPrice.value);
+    if (!isNaN(min) && min >= 0) params.min_price = min;
+    if (!isNaN(max) && max >= 0) params.max_price = max;
+
     currentParams.value = params;
+
+    // Persist filter/sort state to the URL (without category, which is already in the path/query).
+    const query = { ...route.query };
+    for (const key of ['sort', 'min_price', 'max_price', 'tags', 'collections', 'attributes']) {
+        if (params[key] != null && params[key] !== '') {
+            query[key] = params[key];
+        } else {
+            delete query[key];
+        }
+    }
+    router.replace({ query }).catch(() => {});
+
     await store.fetchProducts(params);
     initializing.value = false;
 };
@@ -215,6 +273,7 @@ const refreshFilters = async () => {
 };
 
 onMounted(() => {
+    seedFromQuery();
     refreshFilters();
     applyFilters();
 });
@@ -235,6 +294,54 @@ watch(() => selectedCategories.value, () => {
 </script>
 
 <style scoped>
+.sort-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 1200px;
+  margin: 0 auto 14px auto;
+  flex-wrap: wrap;
+}
+.sort-count {
+  font-size: 13px;
+  color: var(--text2, var(--ink-2));
+}
+.sort-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text2, var(--ink-2));
+  margin-inline-start: auto;
+}
+.sort-select select {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.price-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.price-range-inputs input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+}
+.price-dash {
+  color: var(--text2, var(--ink-2));
+}
 .filter-btn {
   padding: 8px 16px;
   border-radius: 20px;
