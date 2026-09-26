@@ -1,7 +1,7 @@
 <template>
 <section>
-  <h1 class="q-title">لأي مكان هذا النظام؟</h1>
-  <p class="q-hint">اختر نوع المكان وسنتولى الباقي.</p>
+  <h1 class="q-title">{{ __('wiz_pt_title') }}</h1>
+  <p class="q-hint">{{ __('wiz_pt_hint') }}</p>
   <div class="grid">
     <button v-for="p in placeTypes" :key="p.id" class="opt"
             :class="{sel: a.place===p.id}" @click="a.place=p.id"
@@ -16,6 +16,7 @@
 <script setup>
 // Step 1: place type.
 import { inject } from 'vue';
+import { __ } from '../../utils/i18n';
 
 const { a, placeTypes, icon } = inject('wizard');
 </script>
