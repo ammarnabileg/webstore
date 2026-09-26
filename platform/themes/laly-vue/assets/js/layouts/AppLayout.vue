@@ -162,18 +162,7 @@
           </router-link>
         </div>
         
-      <footer class="desktop-footer">
-        <div class="container">
-          <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
-            <div>&copy; {{ currentYear }} {{ siteTitle }}. {{ __('all_rights_reserved') }}</div>
-            <div style="display: flex; gap: 20px;">
-              <router-link to="/">{{ __('home') }}</router-link>
-              <router-link to="/products">{{ __('products') }}</router-link>
-              <router-link to="/categories">{{ __('categories') }}</router-link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter class="desktop-footer" />
     </div>
   </div>
   </div>
@@ -191,6 +180,7 @@ import { onMounted, ref, watch } from 'vue';
 import api from '../services/api';
 import { useRouter, useRoute } from 'vue-router';
 import { useEcommerceStore } from '../stores/ecommerce';
+import SiteFooter from '../components/SiteFooter.vue';
 import MegaMenu from '../components/MegaMenu.vue';
 import ToastNotifications from '../components/ToastNotifications.vue';
 import QuickViewModal from '../components/QuickViewModal.vue';
@@ -207,8 +197,6 @@ const store = useEcommerceStore();
 const siteLogo = window.BotbleData?.logo || '';
 const siteName = window.BotbleData?.site_title || '';
 const topbarLogo = window.BotbleData?.topbarLogo || siteLogo;
-const siteTitle = window.BotbleData?.site_title || 'Laly Kuwait';
-const currentYear = new Date().getFullYear();
 const hotline = window.BotbleData?.hotline || '';
 const email = window.BotbleData?.email || '';
 const address = window.BotbleData?.address || '';

@@ -207,6 +207,11 @@ Theme::registerRoutes(function (): void {
             return response()->json(['data' => $items]);
         });
 
+        // Resolved, ordered homepage sections (Theme options → Homepage: Sections). Empty sections are omitted.
+        Route::get('home-sections', function () {
+            return response()->json(['data' => laly_vue_homepage_sections()]);
+        });
+
         // Get homepage collections
         Route::get('home-collections', function () {
             $data = [];

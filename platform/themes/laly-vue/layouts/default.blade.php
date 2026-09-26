@@ -13,35 +13,7 @@
         }
     }
     
-    $homeSliders = [];
-    if (is_plugin_active('simple-slider')) {
-        $slider = \Botble\SimpleSlider\Models\SimpleSlider::with(['sliderItems' => function($q) {
-            $q->where('status', 'published')->orderBy('order', 'ASC');
-        }])->where('key', 'home-slider')->first();
-        
-        if (!$slider) {
-            $slider = \Botble\SimpleSlider\Models\SimpleSlider::with(['sliderItems' => function($q) {
-                $q->where('status', 'published')->orderBy('order', 'ASC');
-            }])->where('status', 'published')->first();
-        }
-
-        if ($slider && $slider->sliderItems) {
-            foreach ($slider->sliderItems as $item) {
-                $img = RvMedia::getImageUrl($item->image);
-                $mobileImg = $item->getMetaData('mobile_image', true);
-                $mobileImg = $mobileImg ? RvMedia::getImageUrl($mobileImg) : $img;
-
-                $homeSliders[] = [
-                    'id' => $item->id,
-                    'title' => $item->title,
-                    'description' => $item->description,
-                    'link' => $item->link,
-                    'image' => $img,
-                    'mobile_image' => $mobileImg,
-                ];
-            }
-        }
-    }
+    $homeSliders = laly_vue_home_slides();
 
     $customer = auth('customer')->user();
     $customerData = $customer ? [
@@ -132,16 +104,8 @@
                     icon: @json(theme_option('intro_icon_3', 'ti ti-shield-check'))
                 }
             },
-            homeBanners: [
-                {
-                    image: @json(theme_option('home_banner_1_image') ? RvMedia::getImageUrl(theme_option('home_banner_1_image')) : ''),
-                    link: @json(theme_option('home_banner_1_link', ''))
-                },
-                {
-                    image: @json(theme_option('home_banner_2_image') ? RvMedia::getImageUrl(theme_option('home_banner_2_image')) : ''),
-                    link: @json(theme_option('home_banner_2_link', ''))
-                }
-            ],
+            homeBanners: @json(laly_vue_home_banners()),
+            footer: @json(laly_vue_footer_data()),
             socialLogins: @json($socialLogins)
         };
         (function() {

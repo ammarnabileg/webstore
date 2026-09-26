@@ -41,8 +41,8 @@ onMounted(async () => {
   const key = props.attributes.key || 'home-slider';
   
   // Use preloaded data if available
-  if (key === 'home-slider' && window?.BotbleData?.home_sliders?.length) {
-    slides.value = window.BotbleData.home_sliders;
+  if (key === 'home-slider' && window?.BotbleData?.homeSliders?.length) {
+    slides.value = window.BotbleData.homeSliders;
     loading.value = false;
     return;
   }

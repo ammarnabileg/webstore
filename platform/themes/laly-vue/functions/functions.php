@@ -7,6 +7,63 @@ register_page_template([
 
 
 require_once __DIR__ . '/bnpl-meta-boxes.php';
+require_once __DIR__ . '/homepage.php';
+
+/**
+ * Homepage/footer wiring. The parent theme's functions are not loaded for a child theme,
+ * so the slider responsive images, social links and copyright options are registered here.
+ */
+app()->booted(function (): void {
+    // The storefront ships its own cookie banner (components/CookieConsent.vue); the cookie-consent
+    // plugin's bar would show as a second, unstyled strip. Default it off for this theme unless the
+    // admin explicitly enabled it in Theme options → Cookie consent.
+    if (is_plugin_active('cookie-consent') && ! theme_option()->hasOption('cookie_consent_enable')) {
+        theme_option()->setOption('cookie_consent_enable', 'no');
+    }
+
+    \Botble\Theme\Supports\ThemeSupport::registerSocialLinks();
+    \Botble\Theme\Supports\ThemeSupport::registerSiteCopyright();
+
+    \Botble\Menu\Facades\Menu::addMenuLocation('footer-menu', __('Footer menu'));
+
+    if (is_plugin_active('simple-slider')) {
+        \Botble\SimpleSlider\Support\SimpleSliderSupport::registerResponsiveImageSizes();
+        // Optional CTA label on each slide; stored as slider-item metadata like mobile_image.
+        \Botble\SimpleSlider\Forms\SimpleSliderItemForm::extend(function (\Botble\SimpleSlider\Forms\SimpleSliderItemForm $form) {
+            $form->addAfter('link', 'button_text', 'text', [
+                'label' => __('Button text (optional)'),
+                'attr' => ['placeholder' => __('Shop now')],
+                'metadata' => true,
+            ]);
+
+            return $form;
+        }, 128);
+    }
+});
+
+// The resolved homepage is cached; bump the cache version whenever its inputs change.
+foreach ([BASE_ACTION_AFTER_CREATE_CONTENT, BASE_ACTION_AFTER_UPDATE_CONTENT, BASE_ACTION_AFTER_DELETE_CONTENT] as $action) {
+    add_action($action, function ($type, $request, $object): void {
+        $watched = [
+            \Botble\Ecommerce\Models\Product::class,
+            \Botble\Ecommerce\Models\ProductCategory::class,
+            \Botble\Ecommerce\Models\ProductCollection::class,
+            \Botble\Ecommerce\Models\FlashSale::class,
+            \Botble\Menu\Models\Menu::class,
+        ];
+        if (is_plugin_active('simple-slider')) {
+            $watched[] = \Botble\SimpleSlider\Models\SimpleSlider::class;
+            $watched[] = \Botble\SimpleSlider\Models\SimpleSliderItem::class;
+        }
+        foreach ($watched as $class) {
+            if ($object instanceof $class) {
+                laly_vue_home_cache_bump();
+
+                return;
+            }
+        }
+    }, 130, 3);
+}
 
 add_filter('theme_option_field_is_shared', function ($isShared, $key) {
     $translatable = [
