@@ -49,8 +49,8 @@
               <div class="info-left">
                 <h1 class="product-title">{{ product.name }}</h1>
                 <div class="product-price">
-                  <span class="current-price">{{ product.front_sale_price_format || product.price_format || product.price }}</span>
-                  <span class="old-price" v-if="product.is_on_sale">{{ product.price_format }}</span>
+                  <span class="current-price">{{ view.front_sale_price_format || view.price_format || view.price }}</span>
+                  <span class="old-price" v-if="view.is_on_sale">{{ view.price_format }}</span>
                 </div>
               </div>
               <button class="wishlist-btn" :class="{'active': store.wishlist.find(i => i.id === product.id)}" @click="store.toggleWishlist(product)">
@@ -66,11 +66,45 @@
               :acceptsDeema="product.accepts_deema"
             />
 
+            <!-- Variations -->
+            <div class="variation-groups" v-if="hasVariations">
+              <div class="variation-group" v-for="set in product.variation_info.attribute_sets" :key="set.id">
+                <div class="variation-label">
+                  {{ set.title }}
+                  <span class="variation-chosen" v-if="chosenValueTitle(set)">: {{ chosenValueTitle(set) }}</span>
+                </div>
+                <div class="variation-values" :class="'layout-' + set.display_layout">
+                  <button
+                    v-for="val in set.values"
+                    :key="val.id"
+                    type="button"
+                    class="variation-swatch"
+                    :class="{
+                      selected: selectedAttrs[set.id] === val.id,
+                      'is-color': set.display_layout === 'visual' && val.color,
+                      unavailable: !isValueAvailable(set.id, val.id)
+                    }"
+                    :style="(set.display_layout === 'visual' && val.color) ? { backgroundColor: val.color } : null"
+                    :title="val.title"
+                    :aria-label="val.title"
+                    :aria-pressed="selectedAttrs[set.id] === val.id"
+                    @click="selectAttr(set.id, val.id)"
+                  >
+                    <template v-if="set.display_layout === 'visual' && val.color">
+                      <i v-if="selectedAttrs[set.id] === val.id" class="ti ti-check"></i>
+                    </template>
+                    <template v-else>{{ val.title }}</template>
+                  </button>
+                </div>
+              </div>
+              <p class="variation-hint" v-if="!activeVariation">{{ __('please_select_options') }}</p>
+            </div>
+
             <!-- Stock & Meta -->
             <div class="product-meta">
-              <span class="stock-status" :class="{'in-stock': product.stock_status === 'in_stock' || !product.stock_status, 'out-of-stock': product.stock_status === 'out_of_stock', 'backorder': product.stock_status === 'on_backorder'}">
-                <i :class="product.stock_status === 'out_of_stock' ? 'ti ti-x' : (product.stock_status === 'on_backorder' ? 'ti ti-clock' : 'ti ti-check')"></i> 
-                {{ product.stock_status === 'out_of_stock' ? __('out_of_stock') : (product.stock_status === 'on_backorder' ? __('pre_order') : __('in_stock')) }}
+              <span class="stock-status" :class="{'in-stock': view.stock_status === 'in_stock' || !view.stock_status, 'out-of-stock': view.stock_status === 'out_of_stock', 'backorder': view.stock_status === 'on_backorder'}">
+                <i :class="view.stock_status === 'out_of_stock' ? 'ti ti-x' : (view.stock_status === 'on_backorder' ? 'ti ti-clock' : 'ti ti-check')"></i>
+                {{ view.stock_status === 'out_of_stock' ? __('out_of_stock') : (view.stock_status === 'on_backorder' ? __('pre_order') : __('in_stock')) }}
               </span>
               <span class="category" v-if="product.collections?.length">{{ product.collections[0].name }}</span>
             </div>
@@ -86,12 +120,13 @@
               </div>
               
               <div class="action-buttons">
-                <button class="btn-add-cart" @click="addToCart" :disabled="product.stock_status === 'out_of_stock'">
-                  <template v-if="product.stock_status === 'out_of_stock'">{{ __('out_of_stock') }}</template>
-                  <template v-else-if="product.stock_status === 'on_backorder'">{{ __('pre_order') }}</template>
+                <button class="btn-add-cart" @click="addToCart" :disabled="!canAddToCart">
+                  <template v-if="hasVariations && !activeVariation">{{ __('please_select_options') }}</template>
+                  <template v-else-if="view.stock_status === 'out_of_stock'">{{ __('out_of_stock') }}</template>
+                  <template v-else-if="view.stock_status === 'on_backorder'">{{ __('pre_order') }}</template>
                   <template v-else>{{ __('add_to_cart') }}</template>
                 </button>
-                <button class="btn-buy-now" @click="buyNow" :disabled="product.stock_status === 'out_of_stock'">
+                <button class="btn-buy-now" @click="buyNow" :disabled="!canAddToCart">
                   {{ __('buy_now') }}
                 </button>
               </div>
@@ -176,6 +211,74 @@ const activeImage = ref('');
 const relatedProducts = ref([]);
 const reviews = ref([]);
 
+// --- Variations ---
+// selectedAttrs maps an attribute-set id -> the chosen attribute (value) id.
+const selectedAttrs = ref({});
+
+const hasVariations = computed(() => !!(product.value?.has_variations && product.value?.variation_info?.attribute_sets?.length));
+
+// A variation whose attribute_ids exactly match the current selection across every set.
+const activeVariation = computed(() => {
+    if (!hasVariations.value) return null;
+    const sets = product.value.variation_info.attribute_sets;
+    if (sets.some(set => !selectedAttrs.value[set.id])) return null; // incomplete selection
+    const chosen = sets.map(set => selectedAttrs.value[set.id]).sort((a, b) => a - b);
+    return product.value.variation_info.variations.find(v => {
+        const ids = [...v.attribute_ids].sort((a, b) => a - b);
+        return ids.length === chosen.length && ids.every((id, i) => id === chosen[i]);
+    }) || null;
+});
+
+// The pricing/stock/image source the template binds to: the picked variation, else the parent product.
+const view = computed(() => activeVariation.value || product.value || {});
+
+const canAddToCart = computed(() => {
+    if (!product.value) return false;
+    if (hasVariations.value) return !!activeVariation.value && !activeVariation.value.is_out_of_stock;
+    return view.value.stock_status !== 'out_of_stock';
+});
+
+const initVariations = () => {
+    selectedAttrs.value = {};
+    if (!hasVariations.value) return;
+    const info = product.value.variation_info;
+    // Map each attribute (value) id to the set it belongs to, then preselect the defaults.
+    const attrToSet = {};
+    info.attribute_sets.forEach(set => set.values.forEach(v => { attrToSet[v.id] = set.id; }));
+    (info.default_attribute_ids || []).forEach(attrId => {
+        const setId = attrToSet[attrId];
+        if (setId) selectedAttrs.value[setId] = attrId;
+    });
+};
+
+const selectAttr = (setId, valId) => {
+    selectedAttrs.value = { ...selectedAttrs.value, [setId]: valId };
+};
+
+const chosenValueTitle = (set) => {
+    const id = selectedAttrs.value[set.id];
+    const val = set.values.find(v => v.id === id);
+    return val ? val.title : '';
+};
+
+// A value is available if, combined with the current selections in the OTHER sets,
+// at least one variation exists.
+const isValueAvailable = (setId, valId) => {
+    if (!hasVariations.value) return true;
+    const info = product.value.variation_info;
+    const otherSelected = Object.entries(selectedAttrs.value)
+        .filter(([sid]) => Number(sid) !== Number(setId))
+        .map(([, aid]) => aid);
+    return info.variations.some(v =>
+        v.attribute_ids.includes(valId) && otherSelected.every(aid => v.attribute_ids.includes(aid))
+    );
+};
+
+// Swap the main image to the selected variation's image when it has one.
+watch(activeVariation, (v) => {
+    if (v && v.image) activeImage.value = v.image;
+});
+
 const allImages = computed(() => {
     if (!product.value) return [];
     let images = [];
@@ -212,7 +315,8 @@ const fetchProduct = () => {
     if (route.params.slug) {
         store.fetchProductBySlug(route.params.slug).then(() => {
             activeImage.value = store.currentProduct?.image || '';
-            
+            initVariations();
+
             const SITE_NAME = window.BotbleData?.site_title || 'Laly Kuwait';
             if (store.currentProduct?.name) {
                 document.title = `${store.currentProduct.name} - ${SITE_NAME}`;
@@ -224,30 +328,103 @@ const fetchProduct = () => {
     }
 };
 
+// For a variable product the variation's own product id is what the cart expects.
+const cartProductId = () => (activeVariation.value ? activeVariation.value.id : product.value?.id);
+
 const addToCart = async () => {
-    if (product.value) {
-        const success = await store.addToCart(product.value.id, qty.value);
-        if (success) {
-            store.notify(__('added_to_cart') || 'تمت الإضافة للسلة بنجاح!', 'success');
-        } else {
-            store.notify(__('add_to_cart_error') || 'حدث خطأ.', 'error');
-        }
+    if (!product.value) return;
+    if (hasVariations.value && !activeVariation.value) {
+        store.notify(__('please_select_options') || 'يرجى اختيار الخيارات.', 'error');
+        return;
+    }
+    const success = await store.addToCart(cartProductId(), qty.value);
+    if (success) {
+        store.notify(__('added_to_cart') || 'تمت الإضافة للسلة بنجاح!', 'success');
+    } else {
+        store.notify(__('add_to_cart_error') || 'حدث خطأ.', 'error');
     }
 };
 
 const buyNow = async () => {
-    if (product.value) {
-        const success = await store.addToCart(product.value.id, qty.value);
-        if (success) {
-            window.location.href = botbleData?.checkoutUrl || '/checkout';
-        } else {
-            store.notify(__('add_to_cart_error') || 'حدث خطأ.', 'error');
-        }
+    if (!product.value) return;
+    if (hasVariations.value && !activeVariation.value) {
+        store.notify(__('please_select_options') || 'يرجى اختيار الخيارات.', 'error');
+        return;
+    }
+    const success = await store.addToCart(cartProductId(), qty.value);
+    if (success) {
+        window.location.href = botbleData?.checkoutUrl || '/checkout';
+    } else {
+        store.notify(__('add_to_cart_error') || 'حدث خطأ.', 'error');
     }
 };
 </script>
 
 <style scoped>
+/* Variations */
+.variation-groups {
+  margin: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.variation-label {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.variation-chosen {
+  color: var(--text2);
+  font-weight: 500;
+}
+.variation-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.variation-swatch {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--border2, var(--line));
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color .15s, box-shadow .15s;
+}
+.variation-swatch.is-color {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 16px;
+}
+.variation-swatch.selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary);
+}
+.variation-swatch.unavailable {
+  opacity: .4;
+  text-decoration: line-through;
+}
+.variation-swatch.is-color.unavailable {
+  text-decoration: none;
+}
+.variation-hint {
+  color: var(--sale, #d93a3a);
+  font-size: 13px;
+  font-weight: 600;
+  margin: 4px 0 0;
+}
+
 /* Base Styles */
 .suha-page {
   background-color: var(--surface);

@@ -100,8 +100,12 @@ Theme::registerRoutes(function (): void {
                 return response()->json(['message' => 'Product not found'], 404);
             }
 
+            $variationInfo = laly_vue_variation_info($product);
+
             return response()->json([
                 'data' => laly_vue_product_card($product) + [
+                    'has_variations' => $variationInfo !== null,
+                    'variation_info' => $variationInfo,
                     'images' => array_map(function ($img) {
                         return RvMedia::getImageUrl($img, null, false, RvMedia::getDefaultImage());
                     }, is_array($product->images) ? $product->images : []),
