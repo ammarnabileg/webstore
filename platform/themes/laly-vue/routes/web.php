@@ -389,6 +389,42 @@ Theme::registerRoutes(function (): void {
             ]);
         });
 
+        // Server-backed wishlist for the SPA. Guests use the wishlist cart instance,
+        // logged-in customers use their persisted wishlist, so the heart state matches
+        // the server /wishlist page and syncs across devices for signed-in users.
+        Route::get('wishlist', function (ProductInterface $productRepository) {
+            $params = ['paginate' => ['per_page' => 100, 'current_paged' => 1], 'with' => ['slugable', 'productLabels', 'metadata']];
+
+            if (auth('customer')->check()) {
+                $products = $productRepository->getProductsWishlist(auth('customer')->id(), $params);
+            } else {
+                $itemIds = Cart::instance('wishlist')->content()->pluck('id')->unique()->all();
+                $products = $itemIds ? $productRepository->getProductsByIds($itemIds, $params) : collect();
+            }
+
+            $data = [];
+            foreach ($products as $product) {
+                $data[] = laly_vue_product_card($product);
+            }
+
+            return response()->json(['data' => $data]);
+        });
+
+        // Toggle: adds when absent, removes when present (mirrors the stock wishlist service).
+        Route::post('wishlist/{id}', function (int $id) {
+            $product = \Botble\Ecommerce\Models\Product::query()->find($id);
+            if (!$product || $product->status != \Botble\Base\Enums\BaseStatusEnum::PUBLISHED) {
+                return response()->json(['error' => true, 'message' => 'Product not found'], 404);
+            }
+
+            $added = app(\Botble\Ecommerce\Services\ProductWishlistService::class)->handle($product);
+            $count = auth('customer')->check()
+                ? auth('customer')->user()->wishlist()->count()
+                : Cart::instance('wishlist')->count();
+
+            return response()->json(['error' => false, 'data' => ['added' => $added, 'count' => $count]]);
+        });
+
         Route::post('cart/add', function (Request $request) {
             $validated = $request->validate([
                 'id' => ['required', 'integer', 'min:1'],

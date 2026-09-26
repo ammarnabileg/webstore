@@ -31,12 +31,17 @@
 
 <script setup>
 import { __ } from '../utils/i18n';
-import { inject } from 'vue';
+import { inject, onMounted } from 'vue';
 import { useEcommerceStore } from '../stores/ecommerce';
 import ProductCard from '../components/ProductCard.vue';
 
 const store = useEcommerceStore();
 const botbleData = window?.BotbleData || {};
+
+// Reconcile the wishlist with the server (and migrate any local-only items) on open.
+onMounted(() => {
+    store.fetchWishlist();
+});
 </script>
 
 <style scoped>

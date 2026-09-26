@@ -147,7 +147,8 @@ export const useEcommerceStore = defineStore('ecommerce', {
                 return false;
             }
         },
-        toggleWishlist(product) {
+        async toggleWishlist(product) {
+            // Optimistic local update (keeps the heart responsive and works offline).
             const index = this.wishlist.findIndex(item => item.id === product.id);
             if (index > -1) {
                 this.wishlist.splice(index, 1);
@@ -155,6 +156,34 @@ export const useEcommerceStore = defineStore('ecommerce', {
                 this.wishlist.push(product);
             }
             localStorage.setItem('wishlist', JSON.stringify(this.wishlist));
+            // Persist to the server (server-side toggle) so it survives reloads and,
+            // for signed-in customers, syncs across devices.
+            try {
+                await api.post(`/wishlist/${product.id}`);
+            } catch (err) {
+                console.error('Error syncing wishlist:', err);
+            }
+        },
+        async fetchWishlist() {
+            try {
+                const response = await api.get('/wishlist');
+                const serverItems = response.data.data || [];
+                const serverIds = new Set(serverItems.map(i => i.id));
+                // One-time migration: push any localStorage-only items up to the server.
+                const localOnly = this.wishlist.filter(i => !serverIds.has(i.id));
+                for (const item of localOnly) {
+                    try { await api.post(`/wishlist/${item.id}`); } catch (e) { /* keep going */ }
+                }
+                if (localOnly.length) {
+                    const merged = await api.get('/wishlist');
+                    this.wishlist = merged.data.data || serverItems;
+                } else {
+                    this.wishlist = serverItems;
+                }
+                localStorage.setItem('wishlist', JSON.stringify(this.wishlist));
+            } catch (err) {
+                console.error('Error fetching wishlist:', err);
+            }
         },
         toggleCompare(product) {
             const index = this.compareList.findIndex(item => item.id === product.id);
