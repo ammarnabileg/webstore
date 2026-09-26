@@ -825,5 +825,14 @@
     "Your wishlist list is empty": "قائمة رغباتك فارغة",
     "Zip code": "الرمز البريدي",
     "Zipcode": "الرمز البريدي",
-    "✅ Purchased :time": "✅ تم الشراء :time"
+    "✅ Purchased :time": "✅ تم الشراء :time",
+    "Failed to authenticate with klickpay gateway.": "تعذّر الاتصال ببوابة الدفع. يرجى المحاولة مرة أخرى.",
+    "Invalid order.": "طلب غير صالح.",
+    "Payment could not be verified. Please contact us.": "تعذّر التحقق من الدفع. يرجى التواصل معنا.",
+    "Payment failed or cancelled!": "فشل الدفع أو تم إلغاؤه!",
+    "Payment failed or cancelled.": "فشل الدفع أو تم إلغاؤه.",
+    "Payment failed or invalid order.": "فشل الدفع أو الطلب غير صالح.",
+    "Payment processed successfully.": "تمت معالجة الدفع بنجاح.",
+    "Payment was cancelled or failed.": "تم إلغاء الدفع أو فشل.",
+    "Your payment is being confirmed. You will be notified once it is approved.": "جارٍ تأكيد الدفع. سيتم إشعارك بمجرد الموافقة عليه."
 }

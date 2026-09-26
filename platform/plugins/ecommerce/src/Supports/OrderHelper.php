@@ -361,7 +361,7 @@ class OrderHelper
 
                     return [
                         'success' => false,
-                        'message' => __('Minimum order quantity of product :product is :quantity, you need to buy more :more to place an order! ', [
+                        'message' => __('Minimum order quantity of product :product is :quantity, you need to buy more :more to place an order!', [
                             'product' => BaseHelper::clean($product->original_product->name),
                             'quantity' => $product->minimum_order_quantity,
                             'more' => $product->minimum_order_quantity - $item['qty'],
@@ -375,7 +375,7 @@ class OrderHelper
 
                     return [
                         'success' => false,
-                        'message' => __('Maximum order quantity of product :product is :quantity! ', [
+                        'message' => __('Maximum order quantity of product :product is :quantity!', [
                             'product' => $product->original_product->name,
                             'quantity' => $product->maximum_order_quantity,
                         ]),
