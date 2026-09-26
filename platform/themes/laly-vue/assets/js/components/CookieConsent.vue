@@ -22,16 +22,15 @@ const botbleData = window?.BotbleData || {};
 const isVisible = ref(false);
 
 onMounted(() => {
-  // Show mostly on mobile, but it can work on desktop too if desired.
-  // The user requested for mobile version.
-  if (window.innerWidth <= 768) {
-    const hasAccepted = localStorage.getItem('cookiesAccepted_v1');
-    if (!hasAccepted) {
-      // Delay showing it slightly for better UX
-      setTimeout(() => {
-        isVisible.value = true;
-      }, 1500);
-    }
+  // This is the store's only cookie banner (the cookie-consent plugin bar is off for this
+  // theme), so it must show on every viewport until accepted.
+  let hasAccepted = null;
+  try { hasAccepted = localStorage.getItem('cookiesAccepted_v1'); } catch (e) { /* storage blocked: show it */ }
+  if (!hasAccepted) {
+    // Delay showing it slightly for better UX
+    setTimeout(() => {
+      isVisible.value = true;
+    }, 1500);
   }
 });
 
