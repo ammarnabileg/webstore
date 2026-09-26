@@ -57,10 +57,18 @@ class WhatsAppAuthController extends Controller
         Cache::put("wa_magic_{$token}", $phone, now()->addMinutes(self::OTP_TTL_MINUTES));
         $link = route('whatsapp.magic.login', ['token' => $token]);
 
-        $message = "مرحباً بك في موقعنا 👋\n\n";
-        $message .= "للدخول لحسابك، يمكنك استخدام الكود السري التالي:\n*{$otp}*\n\n";
-        $message .= "أو يمكنك الدخول فوراً بالضغط على الرابط السحري:\n{$link}\n\n";
-        $message .= "_صالح لمدة 15 دقيقة._";
+        $storeName = $this->storeName();
+        if (app()->getLocale() === 'en') {
+            $message = "Welcome to {$storeName} 👋\n\n";
+            $message .= "Use this one-time code to sign in:\n*{$otp}*\n\n";
+            $message .= "Or sign in instantly with this link:\n{$link}\n\n";
+            $message .= "_Valid for " . self::OTP_TTL_MINUTES . " minutes._";
+        } else {
+            $message = "مرحباً بك في {$storeName} 👋\n\n";
+            $message .= "للدخول لحسابك، يمكنك استخدام الكود السري التالي:\n*{$otp}*\n\n";
+            $message .= "أو يمكنك الدخول فوراً بالضغط على الرابط السحري:\n{$link}\n\n";
+            $message .= "_صالح لمدة " . self::OTP_TTL_MINUTES . " دقيقة._";
+        }
 
         $sent = $this->evolutionApi->sendMessage($phone, $message);
 
@@ -130,8 +138,12 @@ class WhatsAppAuthController extends Controller
         Cache::put("wa_magic_{$token}", $phone, now()->addMinutes(15));
 
         $link = route('whatsapp.magic.login', ['token' => $token]);
-        $message = "مرحباً،\nانقر على الرابط التالي لتسجيل الدخول السريع:\n{$link}\n\nهذا الرابط صالح لمدة 15 دقيقة.";
-        
+        if (app()->getLocale() === 'en') {
+            $message = "Hello,\nClick the link below to sign in quickly:\n{$link}\n\nThis link is valid for 15 minutes.";
+        } else {
+            $message = "مرحباً،\nانقر على الرابط التالي لتسجيل الدخول السريع:\n{$link}\n\nهذا الرابط صالح لمدة 15 دقيقة.";
+        }
+
         $sent = $this->evolutionApi->sendMessage($phone, $message);
 
         if ($sent) {
@@ -238,6 +250,14 @@ class WhatsAppAuthController extends Controller
     private function needsOnboarding(Customer $customer): bool
     {
         return $customer->profile_completed_at === null;
+    }
+
+    /** Store name for outbound WhatsApp copy: the admin-set site title, not a hardcoded brand. */
+    private function storeName(): string
+    {
+        $name = function_exists('theme_option') ? theme_option('site_title') : null;
+
+        return $name ?: config('app.name', 'المتجر');
     }
 
     /** OTP / magic-link login must honour the same locked-account gate as password login. */

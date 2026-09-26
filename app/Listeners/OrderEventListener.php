@@ -45,8 +45,12 @@ class OrderEventListener implements ShouldQueue
             callback: function () use ($order, $phone): void {
                 $orderCode = $order->code;
                 $amount = format_price($order->amount);
+                // Use the admin-set store title, not a hardcoded brand. Message stays Arabic:
+                // this runs in a queued listener (no reliable request locale) and confirmations
+                // only go to Kuwaiti numbers, so Arabic is the right default for this market.
+                $storeName = (function_exists('theme_option') ? theme_option('site_title') : null) ?: config('app.name', 'متجرنا');
 
-                $message = "شكراً لك على طلبك من Laly Kuwait!\n\n";
+                $message = "شكراً لك على طلبك من {$storeName}!\n\n";
                 $message .= "🛒 رقم الطلب: *{$orderCode}*\n";
                 $message .= "💰 الإجمالي: *{$amount}*\n\n";
                 $message .= "سنقوم بتجهيز طلبك بأسرع وقت. يمكنك تتبع طلبك عبر حسابك في الموقع.";
