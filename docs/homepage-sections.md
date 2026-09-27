@@ -16,7 +16,8 @@ components/home/HomeSections.vue – renders each section by type (registry), in
 
 * `homepage_id` (CMS page as homepage) still takes precedence: when it is set and published the
   page is built from shortcodes exactly as before, and the section list is not used.
-* When the section list is empty the default layout is used
+* Until the list is saved the default layout is used, and the admin list opens pre-filled with
+  those same rows, so what the admin sees is what the storefront shows. The default layout is
   (slider → features → categories → flash sale → best sellers → banners → numbers → wizard CTA →
   featured → latest → brands).
 * A section that resolves to no data (no featured categories, no products, expired flash sale,

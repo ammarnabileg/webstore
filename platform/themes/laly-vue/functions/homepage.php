@@ -87,6 +87,28 @@ if (! function_exists('laly_vue_homepage_default_sections')) {
     }
 }
 
+if (! function_exists('laly_vue_homepage_default_sections_repeater')) {
+    /**
+     * The default sections in the repeater's stored format, so Theme options → Homepage: Sections
+     * opens pre-filled with exactly what the storefront shows instead of an empty list
+     * (adding one row to an empty list would otherwise silently replace all eleven defaults).
+     */
+    function laly_vue_homepage_default_sections_repeater(): string
+    {
+        $keys = ['type', 'enabled', 'order', 'title', 'subtitle', 'source', 'category_id', 'collection_id', 'limit', 'layout'];
+        $rows = [];
+        foreach (laly_vue_homepage_default_sections() as $section) {
+            $section += ['enabled' => '1', 'source' => 'featured', 'limit' => 8, 'layout' => 'grid'];
+            $rows[] = array_map(
+                fn (string $key) => ['key' => $key, 'value' => isset($section[$key]) ? (string) $section[$key] : ''],
+                $keys
+            );
+        }
+
+        return json_encode($rows, JSON_UNESCAPED_UNICODE);
+    }
+}
+
 if (! function_exists('laly_vue_homepage_sections_config')) {
     /**
      * Enabled sections from Theme options, normalised and sorted by "order".

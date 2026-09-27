@@ -317,7 +317,7 @@ app('events')->listen(\Botble\Theme\Events\RenderingThemeOptionSettings::class, 
     theme_option()
         ->setSection([
             'title' => 'Homepage: Sections',
-            'desc' => 'Build the homepage from ordered sections. Each row is one section; "Order" decides the position (1 = top). Sections with no data are hidden automatically. Leave the list empty to use the default layout. Switch the admin language to translate titles.',
+            'desc' => 'Build the homepage from ordered sections. Each row is one section; "Order" decides the position (1 = top). Sections with no data are hidden automatically. The list starts with the default layout; edit, disable or reorder rows and save. Switch the admin language to translate titles.',
             'id' => 'opt-text-subsection-homepage-sections',
             'subsection' => true,
             'icon' => 'ti ti-layout-list',
@@ -329,7 +329,8 @@ app('events')->listen(\Botble\Theme\Events\RenderingThemeOptionSettings::class, 
                     'label' => 'Sections',
                     'attributes' => [
                         'name' => 'homepage_sections',
-                        'value' => null,
+                        // Shown only while nothing is saved; a saved list always wins (ThemeOption::renderField).
+                        'value' => laly_vue_homepage_default_sections_repeater(),
                         'fields' => [
                             $select('type', 'Section type', [
                                 'products' => 'Products',
