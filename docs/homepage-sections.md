@@ -23,7 +23,7 @@ components/home/HomeSections.vue – renders each section by type (registry), in
 * A section that resolves to no data (no featured categories, no products, expired flash sale,
   no slider **and** hero fallback disabled…) is omitted entirely: no title, no empty grid.
 * The resolved payload is cached for 5 minutes per language/currency. The cache key includes the
-  section config, so saving Theme options applies immediately; saving a product, category,
+  section config and every Theme option, so saving Theme options applies immediately; saving a product, category,
   collection, flash sale, slider or menu bumps the cache version.
 
 ## Section types and sources
@@ -38,7 +38,7 @@ components/home/HomeSections.vue – renders each section by type (registry), in
 | `flash_sale` | First active flash sale with products, with a live countdown | enabled, order, title, subtitle, limit |
 | `products` | Product grid/row from a **source** | enabled, order, title, subtitle, source, category, collection, limit, layout |
 | `stats` | Dark "numbers" band (up to 4 value/label pairs from *Homepage: Numbers*; numeric values count up when scrolled into view) | enabled, order |
-| `brands` | Scrolling strip of published brands (Ecommerce → Brands: logo or name, sorted by order; needs at least 2 brands) | enabled, order, title, limit |
+| `brands` | Scrolling strip of published brands (Ecommerce → Brands: logo or name, sorted by order; needs at least 2 brands). Each brand opens `/products?brands=<id>`. Shows at least 12 brands when available; *limit* only raises that. | enabled, order, title, limit |
 
 Product sources: `featured` (products marked Featured), `latest`, `best_selling`
 (quantity sold in finished, non-cancelled orders — `ec_order_product` joined to `ec_orders`;

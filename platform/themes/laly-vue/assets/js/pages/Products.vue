@@ -158,6 +158,8 @@ const selectedCategories = ref([]);
 const selectedAttributes = ref([]);
 const selectedCollections = ref([]);
 const selectedTags = ref([]);
+// Set only from the URL (?brands=<id>, the homepage brands strip); there is no brand picker in the drawer.
+const selectedBrands = ref([]);
 const sortBy = ref('');
 const minPrice = ref('');
 const maxPrice = ref('');
@@ -173,6 +175,7 @@ const seedFromQuery = () => {
     if (route.query.tags) selectedTags.value = String(route.query.tags).split(',').map(Number).filter(Boolean);
     if (route.query.collections) selectedCollections.value = String(route.query.collections).split(',').map(Number).filter(Boolean);
     if (route.query.attributes) selectedAttributes.value = String(route.query.attributes).split(',').map(Number).filter(Boolean);
+    selectedBrands.value = route.query.brands ? String(route.query.brands).split(',').map(Number).filter(Boolean) : [];
 };
 
 const getRouteCategoryIds = async () => {
@@ -238,6 +241,9 @@ const applyFilters = async () => {
     if (selectedTags.value.length > 0) {
         params.tags = selectedTags.value.join(',');
     }
+    if (selectedBrands.value.length > 0) {
+        params.brands = selectedBrands.value.join(',');
+    }
     if (sortBy.value) {
         params.sort = sortBy.value;
     }
@@ -250,7 +256,7 @@ const applyFilters = async () => {
 
     // Persist filter/sort state to the URL (without category, which is already in the path/query).
     const query = { ...route.query };
-    for (const key of ['sort', 'min_price', 'max_price', 'tags', 'collections', 'attributes']) {
+    for (const key of ['sort', 'min_price', 'max_price', 'tags', 'collections', 'attributes', 'brands']) {
         if (params[key] != null && params[key] !== '') {
             query[key] = params[key];
         } else {
@@ -278,8 +284,9 @@ onMounted(() => {
     applyFilters();
 });
 
-watch(() => [route.params.slug, route.query.category], () => {
-    // Clear selection when navigating to a different category
+watch(() => [route.params.slug, route.query.category, route.query.brands], () => {
+    // Clear selection when navigating to a different category (the brand comes from the URL)
+    selectedBrands.value = route.query.brands ? String(route.query.brands).split(',').map(Number).filter(Boolean) : [];
     selectedCategories.value = [];
     selectedAttributes.value = [];
     refreshFilters();

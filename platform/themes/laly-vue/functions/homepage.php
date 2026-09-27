@@ -629,9 +629,12 @@ if (! function_exists('laly_vue_homepage_sections')) {
     {
         $config = laly_vue_homepage_sections_config();
         $currency = function_exists('get_application_currency_id') ? get_application_currency_id() : '';
-        $optionsHash = md5(json_encode($config) . theme_option('home_features') . theme_option('hero_title')
-            . theme_option('hero_stats') . theme_option('home_stats') . theme_option('hero_tag')
-            . theme_option('home_banner_1_title') . theme_option('home_banner_2_title'));
+        // Every option of this theme goes into the key, so any Theme options save (banner text,
+        // wizard title, numbers…) shows at once. Settings are already loaded in memory: no extra query.
+        $prefix = 'theme-' . \Botble\Theme\Facades\Theme::getThemeName() . '-';
+        $themeOptions = array_filter(setting()->all(), fn ($key) => str_starts_with((string) $key, $prefix), ARRAY_FILTER_USE_KEY);
+        ksort($themeOptions);
+        $optionsHash = md5(json_encode($config) . json_encode($themeOptions));
         $key = implode(':', ['laly_vue_home', laly_vue_home_cache_version(), app()->getLocale(), $currency, $optionsHash]);
 
         return Cache::remember($key, LALY_VUE_HOME_CACHE_TTL, function () use ($config) {
@@ -705,16 +708,22 @@ if (! function_exists('laly_vue_footer_data')) {
             'payment_logos' => collect(is_array($payment) ? $payment : [])->filter()->map(fn ($img) => RvMedia::getImageUrl($img))->values()->all(),
             'payment_link' => (string) theme_option('payment_methods_link', ''),
             'whatsapp' => preg_replace('/\D+/', '', (string) theme_option('whatsapp_number', '')),
-            'categories' => ProductCategory::query()
-                ->wherePublished()
-                ->where(fn ($q) => $q->whereNull('parent_id')->orWhere('parent_id', 0))
-                ->with('slugable')
-                ->orderBy('order')
-                ->limit(6)
-                ->get()
-                ->map(fn ($c) => ['name' => html_entity_decode($c->name), 'slug' => $c->slug])
-                ->values()
-                ->all(),
+            // Rendered into every page (BotbleData.footer): cached, and refreshed with the homepage
+            // cache version, which bumps whenever a category is saved.
+            'categories' => Cache::remember(
+                'laly_vue_footer_cats:' . laly_vue_home_cache_version() . ':' . app()->getLocale(),
+                LALY_VUE_HOME_CACHE_TTL,
+                fn () => ProductCategory::query()
+                    ->wherePublished()
+                    ->where(fn ($q) => $q->whereNull('parent_id')->orWhere('parent_id', 0))
+                    ->with('slugable')
+                    ->orderBy('order')
+                    ->limit(6)
+                    ->get()
+                    ->map(fn ($c) => ['name' => html_entity_decode($c->name), 'slug' => $c->slug])
+                    ->values()
+                    ->all()
+            ),
         ];
     }
 }

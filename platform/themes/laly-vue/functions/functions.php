@@ -345,6 +345,8 @@ if (! function_exists('laly_vue_product_card')) {
             'price_format' => format_price($product->price),
             'front_sale_price' => $salePrice,
             'front_sale_price_format' => format_price($salePrice),
+            // Formatted in the visitor's currency, like the prices above ("save X" chip on the card).
+            'savings_format' => ($finalPrice > 0 && $finalPrice < $price) ? format_price($price - $finalPrice) : null,
             // front_sale_price is always the final price; it is a discount only when lower than price.
             'is_on_sale' => $finalPrice > 0 && $finalPrice < $price,
             'is_out_of_stock' => $isOutOfStock,

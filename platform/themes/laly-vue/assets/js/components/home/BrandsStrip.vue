@@ -3,7 +3,7 @@
     <div class="brands-l">{{ section.title || __('trusted_brands') }}</div>
     <div class="marquee" :style="{ '--n': items.length }">
       <div class="mrow" v-for="copy in 2" :key="copy" :aria-hidden="copy === 2">
-        <router-link v-for="b in items" :key="copy + '-' + b.id" :to="`/brands/${b.slug}`" class="brand" :title="b.name">
+        <router-link v-for="b in items" :key="copy + '-' + b.id" :to="{ path: '/products', query: { brands: b.id } }" class="brand" :title="b.name">
           <img v-if="b.logo" loading="lazy" :src="b.logo" :alt="b.name">
           <span v-else>{{ b.name }}</span>
         </router-link>

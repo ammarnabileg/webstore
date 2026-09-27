@@ -110,6 +110,8 @@ const discountPercent = computed(() => {
   return Math.round((1 - final / price) * 100);
 });
 const savings = computed(() => {
+  // Server-formatted in the visitor's currency; the raw numbers below are base-currency only (fallback).
+  if (props.product.savings_format) return props.product.savings_format;
   const { price, final } = priceNumbers.value;
   if (!props.product.is_on_sale || final >= price) return '';
   const diff = price - final;

@@ -38,8 +38,9 @@ Theme::registerRoutes(function (): void {
                 $filters['categories'] = is_array($categoryInput) ? $categoryInput : explode(',', $categoryInput);
             }
 
-            // Collection / tag filters (ids, comma-separated or array). collection_id is used by shortcodes.
-            foreach (['collections' => 'collections', 'collection_id' => 'collections', 'tags' => 'tags'] as $input => $filterKey) {
+            // Collection / tag / brand filters (ids, comma-separated or array). collection_id is used by shortcodes;
+            // brands comes from the homepage brands strip (/products?brands=<id>).
+            foreach (['collections' => 'collections', 'collection_id' => 'collections', 'tags' => 'tags', 'brands' => 'brands'] as $input => $filterKey) {
                 if ($request->filled($input)) {
                     $value = $request->input($input);
                     $ids = array_values(array_filter(array_map('intval', is_array($value) ? $value : explode(',', (string) $value))));
