@@ -212,47 +212,6 @@ Theme::registerRoutes(function (): void {
             return response()->json(['data' => laly_vue_homepage_sections()]);
         });
 
-        // Get homepage collections
-        Route::get('home-collections', function () {
-            $data = [];
-            
-            $formatProduct = fn ($product) => laly_vue_product_card($product);
-
-            $baseQuery = \Botble\Ecommerce\Models\Product::query()
-                ->where('status', 'published')
-                ->where('is_variation', false)
-                ->with(['slugable', 'productLabels', 'metadata']);
-
-            $featured = (clone $baseQuery)->where('is_featured', 1)->orderByDesc('created_at')->limit(8)->get();
-            $data['featured_products'] = $featured->map($formatProduct);
-
-            $topRated = (clone $baseQuery)->orderByDesc('views')->limit(8)->get();
-            $data['top_products'] = $topRated->map($formatProduct);
-
-            $trending = (clone $baseQuery)->orderByDesc('created_at')->limit(8)->get();
-            $data['weekly_best_sellers'] = $trending->map($formatProduct);
-
-            // Flash Sales
-            $flashSales = \Botble\Ecommerce\Models\FlashSale::query()
-                ->where('status', 'published')
-                ->where('end_date', '>', now())
-                ->with(['products' => function ($query) {
-                    $query->where('status', 'published')->where('is_variation', false)->with(['slugable', 'productLabels', 'metadata']);
-                }])
-                ->get();
-                
-            $data['flash_sales'] = $flashSales->map(function($fs) use ($formatProduct) {
-                return [
-                    'id' => $fs->id,
-                    'name' => $fs->name,
-                    'end_date' => $fs->end_date,
-                    'products' => $fs->products->map($formatProduct)
-                ];
-            });
-
-            return response()->json(['data' => $data]);
-        });
-
         // Get homepage content
         Route::get('homepage', function () {
             $homepageId = theme_option('homepage_id');
