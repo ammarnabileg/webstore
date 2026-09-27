@@ -5,11 +5,13 @@
       <img :src="product.image || botbleData?.placeholderImage" :alt="product.name" loading="lazy" />
 
       <div class="pcard-tags">
-        <span v-if="product.is_on_sale" class="tag tag-sale">{{ __('sale') || 'خصم' }}</span>
+        <span v-if="product.is_on_sale && savings" class="tag tag-save"><i class="ti ti-tag"></i> {{ __('save_amount') }} {{ savings }}</span>
+        <span v-else-if="product.is_on_sale" class="tag tag-sale">{{ __('sale') || 'خصم' }}</span>
         <span v-for="label in product.labels || []" :key="label.id" class="tag" :style="{ backgroundColor: label.color }">
           {{ label.name }}
         </span>
       </div>
+      <span v-if="discountPercent" class="pcard-off"><bdi dir="ltr">-{{ discountPercent }}%</bdi></span>
 
       <!-- Wishlist is always visible (no hover on touch devices) -->
       <button
@@ -98,6 +100,22 @@ const stockText = computed(() =>
   : (__('in_stock') || 'متوفر')
 );
 
+const priceNumbers = computed(() => ({
+  price: parseFloat(props.product.price || 0),
+  final: parseFloat(props.product.front_sale_price || props.product.price || 0),
+}));
+const discountPercent = computed(() => {
+  const { price, final } = priceNumbers.value;
+  if (!props.product.is_on_sale || !price || final >= price) return 0;
+  return Math.round((1 - final / price) * 100);
+});
+const savings = computed(() => {
+  const { price, final } = priceNumbers.value;
+  if (!props.product.is_on_sale || final >= price) return '';
+  const diff = price - final;
+  return Number.isInteger(diff) ? String(diff) : diff.toFixed(3);
+});
+
 const installment = computed(() => {
   const base = parseFloat(props.product.front_sale_price || props.product.price || 0);
   return (base / 4).toFixed(3);
@@ -141,7 +159,9 @@ const addToCart = async () => {
 .pcard-media {
   position: relative;
   aspect-ratio: 1 / 1;
-  background: var(--surface-2, var(--surface2));
+  margin: 8px 8px 0;
+  border-radius: 13px;
+  background: linear-gradient(150deg, var(--bg), var(--surface-2, var(--surface2)));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -181,6 +201,24 @@ const addToCart = async () => {
 }
 .tag-sale {
   background: var(--sale, var(--danger));
+}
+.tag-save {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--success);
+  border-radius: 8px;
+  box-shadow: 0 6px 14px -6px rgba(20, 38, 44, .35);
+}
+.pcard-off {
+  position: absolute;
+  top: 10px;
+  inset-inline-end: 50px;
+  z-index: 2;
+  background: var(--deep);
+  color: var(--sand);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 5px 9px;
+  border-radius: 8px;
 }
 
 .pcard-wish {
@@ -308,9 +346,9 @@ const addToCart = async () => {
   margin-top: 2px;
 }
 .pcard-price .now {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 800;
-  color: var(--primary-strong);
+  color: var(--ink);
   letter-spacing: -.2px;
 }
 .pcard-price .was {
@@ -365,6 +403,41 @@ const addToCart = async () => {
 }
 .pcard-add .ti { font-size: 17px; }
 .pcard-add:hover { filter: brightness(1.08); }
+/* Pointer devices: soft button that fills on card hover (touch keeps the solid button). */
+@media (hover: hover) {
+  .pcard-add { background: var(--primary-soft, var(--primary-light)); color: var(--primary-strong); }
+  .pcard:hover .pcard-add { background: var(--primary-strong); color: var(--on-primary, #fff); filter: none; }
+}
+/* Phone: compact app card (mockup "index_1"): 4:3 media, rating/stock above the name,
+   small chips, soft add button; the heart moves to the image's bottom corner to free the top row. */
+@media (max-width: 767px) {
+  .pcard { border-radius: 15px; }
+  .pcard:hover, .pcard:focus-visible { transform: none; box-shadow: none; }
+  .pcard-media { aspect-ratio: 7 / 5; margin: 8px 8px 0; border-radius: 11px; }
+  .pcard-media > img { padding: 10px; }
+  .pcard-tags { top: 7px; inset-inline-start: 7px; gap: 4px; }
+  .tag { font-size: 8.5px; font-weight: 900; padding: 3px 6px; border-radius: 7px; }
+  .tag .ti { font-size: 9px; }
+  .pcard-off { top: 7px; inset-inline-end: 7px; font-size: 9.5px; font-weight: 900; padding: 3px 7px; border-radius: 7px; }
+  .pcard-wish { top: auto; bottom: 7px; inset-inline-end: 7px; width: 28px; height: 28px; font-size: 14px; }
+  .pcard-body { gap: 6px; padding: 8px 8px 10px; }
+  .pcard-meta { order: -1; font-size: 10px; }
+  .pcard-rating .ti { font-size: 11px; color: var(--sand); }
+  .pcard-stock { font-size: 9px; font-weight: 800; }
+  .pcard-stock i { width: 5px; height: 5px; box-shadow: none !important; }
+  .pcard-name { font-size: 11.5px; min-height: calc(11.5px * 1.45 * 2); }
+  .pcard-price { gap: 6px; margin-top: 0; }
+  .pcard-price .now { font-size: 14.5px; font-weight: 900; }
+  .pcard-price .was { font-size: 10px; }
+  .pcard-bnpl { border-radius: 9px; padding: 5px 7px; background: #f0f5fc; border: 1px solid #dfe9f6; }
+  :root[data-theme="dark"] .pcard-bnpl { background: var(--surface-2); border-color: var(--line); }
+  .bnpl-text { font-size: 8.5px; }
+  .bnpl-text b { font-size: 10px; }
+  .bnpl-brand { font-size: 8.5px; background: #1e2b3e; color: #fff; }
+  .pcard-add { height: 33px; border-radius: 9px; font-size: 11px; font-weight: 900; gap: 6px; background: var(--primary-soft); color: var(--primary-strong); }
+  .pcard-add .ti { font-size: 14px; }
+  .pcard-add:active { background: var(--primary-strong); color: var(--on-primary, #fff); }
+}
 .pcard-add:active { transform: scale(.97); }
 .pcard-add:disabled {
   background: var(--surface-2, var(--surface2));

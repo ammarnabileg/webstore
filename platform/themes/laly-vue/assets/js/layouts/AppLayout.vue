@@ -116,7 +116,8 @@
 
       <div class="desktop-layout">
         <!-- Desktop Sidebar (Hidden on Mobile) -->
-        <aside class="desktop-sidebar-fixed">
+        <!-- The homepage has its own category tiles and a full-bleed hero, so the rail is hidden there. -->
+        <aside class="desktop-sidebar-fixed" v-if="!isHomeRoute">
           <MegaMenu :is-collapsed="isSidebarCollapsed" @toggle="toggleSidebar" @hover="handleSidebarHover" />
         </aside>
 
@@ -129,43 +130,43 @@
         </router-view>
 
         <!-- Bottom Navigation (Hidden on Desktop) -->
-        <div class="tabbar">
-          <router-link to="/" class="tb-item" active-class="active">
-            <i class="ti ti-home"></i>
+        <!-- Four tabs (mockup "index_1"); search and notifications live in the home header. -->
+        <nav class="tabbar" :aria-label="__('menu')">
+          <router-link to="/" class="tb-item" exact-active-class="active">
+            <span class="tb-ind"></span><i class="ti ti-home"></i>
             <span>{{ __('home') }}</span>
           </router-link>
           <router-link to="/categories" class="tb-item" active-class="active">
-            <i class="ti ti-category"></i>
+            <span class="tb-ind"></span><i class="ti ti-layout-grid"></i>
             <span>{{ __('categories') }}</span>
           </router-link>
-          <router-link to="/search" class="tb-item" active-class="active">
-            <i class="ti ti-search"></i>
-            <span>{{ __('search') }}</span>
-          </router-link>
-          <router-link to="/notifications" class="tb-item" active-class="active">
-            <div class="tb-badge">
-              <i class="ti ti-bell"></i>
-              <div class="tb-badge-dot" v-if="hasNewNotifications"></div>
-            </div>
-            <span>{{ __('notifications') || 'الإشعارات' }}</span>
-          </router-link>
           <router-link to="/cart" class="tb-item" active-class="active">
+            <span class="tb-ind"></span>
             <div class="tb-badge">
               <i class="ti ti-shopping-cart"></i>
-              <div class="tb-badge-dot" v-if="store.cartCount"></div>
+              <span class="tb-count" v-if="store.cartCount">{{ store.cartCount }}</span>
             </div>
             <span>{{ __('cart') }}</span>
           </router-link>
           <router-link to="/profile" class="tb-item" active-class="active">
-            <i class="ti ti-user"></i>
+            <span class="tb-ind"></span><i class="ti ti-user"></i>
             <span>{{ __('profile') }}</span>
           </router-link>
-        </div>
+        </nav>
         
       <SiteFooter class="desktop-footer" />
     </div>
   </div>
   </div>
+  <a
+    v-if="whatsapp"
+    class="wa-float"
+    :href="`https://wa.me/${whatsapp}`"
+    target="_blank"
+    rel="noopener"
+    :aria-label="__('whatsapp_chat')"
+    :title="__('whatsapp_chat')"
+  ><i class="ti ti-brand-whatsapp"></i></a>
   <ToastNotifications />
   <QuickViewModal />
   <MobileSplashScreen @finished="handleSplashFinished" />
@@ -176,7 +177,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, provide, ref, watch } from 'vue';
 import api from '../services/api';
 import { useRouter, useRoute } from 'vue-router';
 import { useEcommerceStore } from '../stores/ecommerce';
@@ -200,6 +201,7 @@ const topbarLogo = window.BotbleData?.topbarLogo || siteLogo;
 const hotline = window.BotbleData?.hotline || '';
 const email = window.BotbleData?.email || '';
 const address = window.BotbleData?.address || '';
+const whatsapp = window.BotbleData?.footer?.whatsapp || '';
 const siteLanguages = window.BotbleData?.languages || [];
 const isRtl = window.BotbleData?.is_rtl !== false;
 
@@ -219,6 +221,7 @@ const toggleDarkMode = () => {
 const isSidebarCollapsed = ref(true);
 const userToggled = ref(false);
 const hasNewNotifications = ref(false);
+provide('hasNewNotifications', hasNewNotifications);
 const showOnboarding = ref(false);
 const appReady = ref(false);
 
@@ -265,6 +268,8 @@ watch(() => route.path, (newPath) => {
         hasNewNotifications.value = false;
     }
 });
+
+const isHomeRoute = computed(() => route.path.replace(/\/+$/, '') === '' || route.name === 'Home');
 
 const checkRoute = () => {
     if (userToggled.value) return; // Keep user preference

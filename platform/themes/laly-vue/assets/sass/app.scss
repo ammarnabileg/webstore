@@ -40,6 +40,17 @@
   --success: #1a7a50;
   --warn: #b7791f;
   --stars: #f2a52b;
+  /* Deep navy-teal + gold accents (homepage redesign) */
+  --deep: #0b333b;
+  --deep-2: #0e4652;
+  --on-deep: #b9d3d8;
+  --sand: #e9b84c;
+  --sand-strong: #c9992f;
+  --sand-soft: #fbf3de;
+  --on-sand: #26200d;
+  --glow: #4dd0e1;
+  --shadow-card: 0 1px 2px rgba(20, 38, 44, .05), 0 14px 34px -24px rgba(20, 38, 44, .35);
+  --ease: cubic-bezier(.22, .75, .25, 1);
 
   --radius-sm: 8px;
   --radius: 12px;
@@ -95,6 +106,10 @@
   --glass-bg: rgba(12, 23, 27, 0.88);
   --glass-bg-solid: rgba(12, 23, 27, 0.97);
   --glow-primary: 0 0 15px rgba(76, 185, 212, 0.35);
+  --deep: #071e24;
+  --deep-2: #0b333b;
+  --sand-soft: #2b2510;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, .3), 0 14px 34px -24px rgba(0, 0, 0, .7);
 }
 
 body {
@@ -268,6 +283,40 @@ a {
   border-radius: 50%;
   background: var(--danger);
   border: 1.5px solid #fff;
+}
+
+/* Tab bar — mockup "index_1": four equal tabs, top indicator, numeric cart badge */
+.tabbar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  height: calc(60px + env(safe-area-inset-bottom, 0px));
+  background: var(--surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-top: 1px solid var(--line);
+}
+.tb-item {
+  position: relative;
+  justify-content: center;
+  height: 60px;
+  padding: 0;
+  min-width: 0;
+  text-decoration: none;
+}
+.tb-item i { font-size: 22px; color: var(--ink-3, #8aa0a6); }
+.tb-item span { font-size: 10.5px; font-weight: 800; color: var(--ink-3, #8aa0a6); }
+.tb-ind {
+  position: absolute; top: 0; width: 0; height: 3px; border-radius: 0 0 4px 4px;
+  background: var(--primary-strong); transition: width .22s var(--ease);
+}
+.tb-item.active .tb-ind, .tb-item.router-link-active .tb-ind { width: 26px; }
+.tb-item.active i, .tb-item.active span,
+.tb-item.router-link-active i, .tb-item.router-link-active span { color: var(--primary-strong); }
+.tb-count {
+  position: absolute; top: -5px; inset-inline-start: 12px;
+  min-width: 16px; height: 16px; padding: 0 4px; border-radius: 99px;
+  background: var(--sale); color: #fff !important; font-size: 9px !important; font-weight: 900 !important;
+  display: flex; align-items: center; justify-content: center; line-height: 1;
 }
 
 /* Toast */
@@ -728,8 +777,42 @@ a {
 
 /* Section block */
 .sblock {
-  padding: 16px 16px 0;
+  padding: 20px 14px 0;
 }
+
+/* Floating WhatsApp button (Theme options → Store contact → WhatsApp number) */
+.wa-float {
+  position: fixed;
+  bottom: 84px;
+  /* Always bottom-left, whatever the writing direction: the tab bar / titles sit on the start side. */
+  left: 16px;
+  z-index: 90;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #22b96a;
+  color: #fff;
+  font-size: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-shadow: 0 14px 30px -10px rgba(34, 185, 106, .7);
+  transition: transform .25s var(--ease);
+}
+.wa-float:hover { transform: scale(1.1); color: #fff; }
+.wa-float::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid #22b96a;
+  animation: wa-ping 2.4s ease-out infinite;
+}
+@keyframes wa-ping { 0% { transform: scale(1); opacity: .8 } 80% { transform: scale(1.65); opacity: 0 } 100% { opacity: 0 } }
+@media (max-width: 767px) { .wa-float { width: 46px; height: 46px; bottom: 76px; left: 12px; font-size: 24px; } }
+@media (min-width: 768px) { .wa-float { bottom: 24px; left: 24px; width: 54px; height: 54px; } }
+@media (prefers-reduced-motion: reduce) { .wa-float::after { animation: none; } }
 
 /* Home Hero */
 .home-hero {
@@ -997,7 +1080,7 @@ a {
 
 /* Products */
 .home-prods {
-  padding: 16px 16px 0;
+  padding: 20px 14px 0;
 }
 
 .prods-grid {
@@ -1180,14 +1263,20 @@ a {
   .home-cats,
   .home-prods,
   .home-banners,
+  .home-stats,
   .plist,
   .filters-bar,
   .profile-wrap,
   .search-bar,
   .s-history {
-    max-width: 1200px;
+    max-width: 1240px;
     margin-left: auto;
     margin-right: auto;
+  }
+  .sblock,
+  .home-prods {
+    padding-left: 26px;
+    padding-right: 26px;
   }
 }
 
@@ -1292,9 +1381,9 @@ a {
 
   /* Top Bar */
   .site-topbar {
-    background: var(--primary-strong);
-    color: var(--on-primary);
-    font-size: 13px;
+    background: var(--deep);
+    color: var(--on-deep);
+    font-size: 12.5px;
     display: none;
   }
 

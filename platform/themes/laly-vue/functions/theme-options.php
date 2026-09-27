@@ -211,6 +211,27 @@ app()->booted(function () {
             ],
         ])
         ->setField([
+            'id' => 'home_banner_1_title',
+            'section_id' => 'opt-text-subsection-home-banners',
+            'type' => 'text',
+            'label' => 'Banner 1 Title (optional — turns the banner into a promo card)',
+            'attributes' => ['name' => 'home_banner_1_title', 'value' => '', 'options' => ['class' => 'form-control']],
+        ])
+        ->setField([
+            'id' => 'home_banner_1_text',
+            'section_id' => 'opt-text-subsection-home-banners',
+            'type' => 'text',
+            'label' => 'Banner 1 Text',
+            'attributes' => ['name' => 'home_banner_1_text', 'value' => '', 'options' => ['class' => 'form-control']],
+        ])
+        ->setField([
+            'id' => 'home_banner_1_button',
+            'section_id' => 'opt-text-subsection-home-banners',
+            'type' => 'text',
+            'label' => 'Banner 1 Button text',
+            'attributes' => ['name' => 'home_banner_1_button', 'value' => '', 'options' => ['class' => 'form-control']],
+        ])
+        ->setField([
             'id' => 'home_banner_2_image',
             'section_id' => 'opt-text-subsection-home-banners',
             'type' => 'mediaImage',
@@ -233,6 +254,27 @@ app()->booted(function () {
                     'placeholder' => '/products',
                 ],
             ],
+        ])
+        ->setField([
+            'id' => 'home_banner_2_title',
+            'section_id' => 'opt-text-subsection-home-banners',
+            'type' => 'text',
+            'label' => 'Banner 2 Title (optional — turns the banner into a promo card)',
+            'attributes' => ['name' => 'home_banner_2_title', 'value' => '', 'options' => ['class' => 'form-control']],
+        ])
+        ->setField([
+            'id' => 'home_banner_2_text',
+            'section_id' => 'opt-text-subsection-home-banners',
+            'type' => 'text',
+            'label' => 'Banner 2 Text',
+            'attributes' => ['name' => 'home_banner_2_text', 'value' => '', 'options' => ['class' => 'form-control']],
+        ])
+        ->setField([
+            'id' => 'home_banner_2_button',
+            'section_id' => 'opt-text-subsection-home-banners',
+            'type' => 'text',
+            'label' => 'Banner 2 Button text',
+            'attributes' => ['name' => 'home_banner_2_button', 'value' => '', 'options' => ['class' => 'form-control']],
         ]);
 });
 
@@ -297,6 +339,8 @@ app('events')->listen(\Botble\Theme\Events\RenderingThemeOptionSettings::class, 
                                 'banners' => 'Banners',
                                 'flash_sale' => 'Flash sale',
                                 'wizard_cta' => 'System wizard call-to-action',
+                                'stats' => 'Numbers band (Homepage: Numbers)',
+                                'brands' => 'Brands strip (Ecommerce → Brands)',
                             ]),
                             $select('enabled', 'Enabled', ['1' => 'Yes', '0' => 'No']),
                             $number('order', 'Order (1 = top)', 1),
@@ -319,15 +363,28 @@ app('events')->listen(\Botble\Theme\Events\RenderingThemeOptionSettings::class, 
             ],
         ])
         ->setSection([
-            'title' => 'Homepage: Hero fallback',
-            'desc' => 'Shown only when the "home-slider" has no published items. Add a slider (Simple Sliders → key: home-slider) to replace it.',
+            'title' => 'Homepage: Hero',
+            'desc' => 'The tag line and the small numbers appear on every slide of the "home-slider". The title/description/button fields are the fallback shown only when the slider has no published items.',
             'id' => 'opt-text-subsection-homepage-hero',
             'subsection' => true,
             'icon' => 'ti ti-photo',
             'priority' => 2,
             'fields' => [
-                ['id' => 'hero_fallback_enabled'] + $select('hero_fallback_enabled', 'Show hero fallback', $yesNo),
-                ['id' => 'hero_tag'] + $text('hero_tag', 'Small tag line', 'Weekly offers'),
+                ['id' => 'hero_tag'] + $text('hero_tag', 'Tag line (above the slide title)', 'Kuwaiti tech & security store'),
+                [
+                    'id' => 'hero_stats',
+                    'type' => 'repeater',
+                    'label' => 'Hero numbers (max 3, e.g. +15,000 / customers trust us)',
+                    'attributes' => [
+                        'name' => 'hero_stats',
+                        'value' => null,
+                        'fields' => [
+                            $text('value', 'Value', '+15,000'),
+                            $text('label', 'Label', 'customers trust us'),
+                        ],
+                    ],
+                ],
+                ['id' => 'hero_fallback_enabled'] + $select('hero_fallback_enabled', 'Show hero fallback when there is no slider', $yesNo),
                 ['id' => 'hero_title'] + $text('hero_title', 'Title', 'The latest tech at the best prices'),
                 ['id' => 'hero_description'] + $text('hero_description', 'Description'),
                 ['id' => 'hero_button_text'] + $text('hero_button_text', 'Button text', 'Shop now'),
@@ -374,6 +431,29 @@ app('events')->listen(\Botble\Theme\Events\RenderingThemeOptionSettings::class, 
             ],
         ])
         ->setSection([
+            'title' => 'Homepage: Numbers',
+            'desc' => 'The dark "numbers" band (Homepage: Sections → Numbers band). Values are shown as typed; a plain number counts up when scrolled into view.',
+            'id' => 'opt-text-subsection-homepage-stats',
+            'subsection' => true,
+            'icon' => 'ti ti-chart-bar',
+            'priority' => 5,
+            'fields' => [
+                [
+                    'id' => 'home_stats',
+                    'type' => 'repeater',
+                    'label' => 'Numbers (max 4)',
+                    'attributes' => [
+                        'name' => 'home_stats',
+                        'value' => null,
+                        'fields' => [
+                            $text('value', 'Value', '+15000'),
+                            $text('label', 'Label', 'happy customers'),
+                        ],
+                    ],
+                ],
+            ],
+        ])
+        ->setSection([
             'title' => 'Store contact',
             'desc' => 'Shown in the top bar and footer.',
             'id' => 'opt-text-subsection-store-contact',
@@ -381,6 +461,7 @@ app('events')->listen(\Botble\Theme\Events\RenderingThemeOptionSettings::class, 
             'icon' => 'ti ti-phone',
             'fields' => [
                 ['id' => 'hotline'] + $text('hotline', 'Hotline / phone', '+965 ...'),
+                ['id' => 'whatsapp_number'] + $text('whatsapp_number', 'WhatsApp number (floating button; digits with country code)', '96599001234', 'Leave empty to hide the floating WhatsApp button.'),
                 ['id' => 'email'] + $text('email', 'Email', 'info@example.com'),
                 ['id' => 'address'] + $text('address', 'Address', 'Kuwait City'),
             ],

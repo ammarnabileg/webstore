@@ -69,6 +69,7 @@
             languages: @json($languages),
             homeSliders: @json($homeSliders),
             hotline: @json(theme_option('hotline')),
+            wizardEnabled: @json(is_plugin_active('system-wizard')),
             address: @json(theme_option('address')),
             email: @json(theme_option('email')),
             customer: @json($customerData),

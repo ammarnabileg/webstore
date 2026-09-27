@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-const LALY_VUE_HOME_TYPES = ['slider', 'features', 'wizard_cta', 'categories', 'banners', 'flash_sale', 'products'];
+const LALY_VUE_HOME_TYPES = ['slider', 'features', 'wizard_cta', 'categories', 'banners', 'flash_sale', 'products', 'stats', 'brands'];
 const LALY_VUE_HOME_SOURCES = ['featured', 'latest', 'best_selling', 'category', 'collection'];
 const LALY_VUE_HOME_LAYOUTS = ['grid', 'scroll'];
 const LALY_VUE_HOME_CACHE_TTL = 300;
@@ -74,13 +74,15 @@ if (! function_exists('laly_vue_homepage_default_sections')) {
         return [
             ['type' => 'slider', 'order' => 1],
             ['type' => 'features', 'order' => 2],
-            ['type' => 'wizard_cta', 'order' => 3],
-            ['type' => 'categories', 'order' => 4, 'limit' => 12],
-            ['type' => 'banners', 'order' => 5],
-            ['type' => 'flash_sale', 'order' => 6, 'limit' => 4],
-            ['type' => 'products', 'source' => 'featured', 'order' => 7, 'limit' => 8],
-            ['type' => 'products', 'source' => 'best_selling', 'order' => 8, 'limit' => 8],
-            ['type' => 'products', 'source' => 'latest', 'order' => 9, 'limit' => 8],
+            ['type' => 'categories', 'order' => 3, 'limit' => 12],
+            ['type' => 'flash_sale', 'order' => 4, 'limit' => 4],
+            ['type' => 'products', 'source' => 'best_selling', 'order' => 5, 'limit' => 8, 'layout' => 'scroll'],
+            ['type' => 'banners', 'order' => 6],
+            ['type' => 'stats', 'order' => 7],
+            ['type' => 'wizard_cta', 'order' => 8],
+            ['type' => 'products', 'source' => 'featured', 'order' => 9, 'limit' => 8],
+            ['type' => 'products', 'source' => 'latest', 'order' => 10, 'limit' => 8, 'layout' => 'scroll'],
+            ['type' => 'brands', 'order' => 11],
         ];
     }
 }
@@ -332,6 +334,11 @@ if (! function_exists('laly_vue_home_banners')) {
                 'image' => RvMedia::getImageUrl($image),
                 'link' => $link,
                 'internal' => laly_vue_is_internal_url($link),
+                // Optional copy: with a title the banner renders as a promo card (text + image),
+                // without it the image stays a plain full-width banner.
+                'title' => trim((string) theme_option('home_banner_' . $i . '_title', '')),
+                'text' => trim((string) theme_option('home_banner_' . $i . '_text', '')),
+                'button_text' => trim((string) theme_option('home_banner_' . $i . '_button', '')),
             ];
         }
 
@@ -373,14 +380,70 @@ if (! function_exists('laly_vue_home_features')) {
     }
 }
 
+if (! function_exists('laly_vue_home_stat_rows')) {
+    /**
+     * Rows of a "value + label" repeater (hero_stats / home_stats), blank rows dropped.
+     */
+    function laly_vue_home_stat_rows(string $option): array
+    {
+        $items = [];
+        foreach (laly_vue_repeater_rows(theme_option($option)) as $row) {
+            $value = trim((string) Arr::get($row, 'value', ''));
+            $label = trim((string) Arr::get($row, 'label', ''));
+            if ($value === '' || $label === '') {
+                continue;
+            }
+            $items[] = ['value' => $value, 'label' => $label];
+        }
+
+        return $items;
+    }
+}
+
 // ---- Section resolvers: return the section with `data`, or null when there is nothing to show.
+
+if (! function_exists('laly_vue_home_resolve_stats')) {
+    function laly_vue_home_resolve_stats(array $section): ?array
+    {
+        $items = laly_vue_home_stat_rows('home_stats');
+
+        return $items ? $section + ['data' => ['items' => $items]] : null;
+    }
+}
+
+if (! function_exists('laly_vue_home_resolve_brands')) {
+    function laly_vue_home_resolve_brands(array $section): ?array
+    {
+        $brands = \Botble\Ecommerce\Models\Brand::query()
+            ->wherePublished()
+            ->with('slugable')
+            ->orderBy('order')
+            ->limit(max($section['limit'], 12))
+            ->get();
+
+        if ($brands->count() < 2) {
+            return null;
+        }
+
+        return $section + ['data' => ['items' => $brands->map(fn ($b) => [
+            'id' => $b->id,
+            'name' => html_entity_decode($b->name),
+            'slug' => $b->slug,
+            'logo' => $b->logo ? RvMedia::getImageUrl($b->logo) : null,
+        ])->values()->all()]];
+    }
+}
 
 if (! function_exists('laly_vue_home_resolve_slider')) {
     function laly_vue_home_resolve_slider(array $section): ?array
     {
         $slides = laly_vue_home_slides();
         if ($slides) {
-            return $section + ['data' => ['slides' => $slides]];
+            return $section + ['data' => [
+                'slides' => $slides,
+                'eyebrow' => trim((string) theme_option('hero_tag', '')),
+                'stats' => laly_vue_home_stat_rows('hero_stats'),
+            ]];
         }
 
         // Static hero fallback, only when no slider is configured and the admin left it enabled.
@@ -544,7 +607,10 @@ if (! function_exists('laly_vue_homepage_sections')) {
     {
         $config = laly_vue_homepage_sections_config();
         $currency = function_exists('get_application_currency_id') ? get_application_currency_id() : '';
-        $key = implode(':', ['laly_vue_home', laly_vue_home_cache_version(), app()->getLocale(), $currency, md5(json_encode($config) . theme_option('home_features') . theme_option('hero_title'))]);
+        $optionsHash = md5(json_encode($config) . theme_option('home_features') . theme_option('hero_title')
+            . theme_option('hero_stats') . theme_option('home_stats') . theme_option('hero_tag')
+            . theme_option('home_banner_1_title') . theme_option('home_banner_2_title'));
+        $key = implode(':', ['laly_vue_home', laly_vue_home_cache_version(), app()->getLocale(), $currency, $optionsHash]);
 
         return Cache::remember($key, LALY_VUE_HOME_CACHE_TTL, function () use ($config) {
             $sections = [];
@@ -616,6 +682,17 @@ if (! function_exists('laly_vue_footer_data')) {
             'copyright' => ThemeSupport::getSiteCopyright(),
             'payment_logos' => collect(is_array($payment) ? $payment : [])->filter()->map(fn ($img) => RvMedia::getImageUrl($img))->values()->all(),
             'payment_link' => (string) theme_option('payment_methods_link', ''),
+            'whatsapp' => preg_replace('/\D+/', '', (string) theme_option('whatsapp_number', '')),
+            'categories' => ProductCategory::query()
+                ->wherePublished()
+                ->where(fn ($q) => $q->whereNull('parent_id')->orWhere('parent_id', 0))
+                ->with('slugable')
+                ->orderBy('order')
+                ->limit(6)
+                ->get()
+                ->map(fn ($c) => ['name' => html_entity_decode($c->name), 'slug' => $c->slug])
+                ->values()
+                ->all(),
         ];
     }
 }

@@ -20,6 +20,8 @@ import CategoriesRow from './CategoriesRow.vue';
 import HomeBanners from './HomeBanners.vue';
 import FlashSaleSection from './FlashSaleSection.vue';
 import ProductsSection from './ProductsSection.vue';
+import StatsBand from './StatsBand.vue';
+import BrandsStrip from './BrandsStrip.vue';
 
 defineProps({
   sections: { type: Array, default: () => [] }
@@ -35,5 +37,7 @@ const registry = {
   banners: HomeBanners,
   flash_sale: FlashSaleSection,
   products: ProductsSection,
+  stats: StatsBand,
+  brands: BrandsStrip,
 };
 </script>

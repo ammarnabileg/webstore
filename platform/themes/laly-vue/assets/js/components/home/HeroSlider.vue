@@ -1,160 +1,193 @@
 <template>
-  <div class="hero-slider-wrapper" v-if="slides.length">
-    <div class="hero-scroll-container" ref="container" @scroll="onScroll">
-      <div
-        class="hero-slide"
-        v-for="slide in slides"
-        :key="slide.id"
-        :class="{ clickable: !!slide.link }"
-        role="link"
-        :tabindex="slide.link ? 0 : -1"
-        @click="open(slide)"
-        @keydown.enter="open(slide)"
-      >
-        <picture>
-          <source :srcset="slide.image" media="(min-width: 768px)" />
-          <img loading="lazy" :src="slide.mobile_image || slide.image" :alt="slide.title || ''" class="hero-img" />
-        </picture>
-        <div class="hero-caption" v-if="slide.title || slide.description || slide.button_text">
-          <h2 v-if="slide.title">{{ slide.title }}</h2>
-          <p v-if="slide.description">{{ slide.description }}</p>
-          <span class="hero-btn" v-if="slide.button_text && slide.link">{{ slide.button_text }}</span>
+  <section class="hero" v-if="slides.length" @mouseenter="pause = true" @mouseleave="pause = false">
+    <div class="hero-grid">
+      <div class="hero-copy-wrap">
+        <transition name="hero-fade" mode="out-in">
+          <div class="hero-copy" :key="slide.id">
+            <span class="hero-eyebrow" v-if="eyebrow"><span class="hero-dotp"></span>{{ eyebrow }}</span>
+            <h1 class="hero-title" v-if="slide.title">{{ slide.title }}</h1>
+            <p class="hero-sub" v-if="slide.description">{{ slide.description }}</p>
+            <div class="hero-ctas">
+              <component
+                :is="slide.link ? (slide.internal ? 'router-link' : 'a') : 'span'"
+                v-bind="slide.link ? (slide.internal ? { to: toRouterPath(slide.link) } : { href: slide.link, target: '_blank', rel: 'noopener' }) : {}"
+                class="hero-btn hero-btn-gold"
+              >
+                {{ slide.button_text || __('shop_now') }}
+                <i class="ti ti-arrow-left hero-btn-arrow" aria-hidden="true"></i>
+              </component>
+              <router-link v-if="wizardEnabled" to="/project-wizard" class="hero-btn hero-btn-ghost">{{ __('book_install') }}</router-link>
+            </div>
+            <div class="hero-stats" v-if="stats.length">
+              <div class="hero-stat" v-for="s in stats" :key="s.label">
+                <b>{{ s.value }}</b>
+                <span>{{ s.label }}</span>
+              </div>
+            </div>
+          </div>
+        </transition>
+        <div class="hero-dots" v-if="slides.length > 1">
+          <button
+            v-for="(s, index) in slides"
+            :key="'dot-' + s.id"
+            type="button"
+            class="hero-dot"
+            :class="{ on: current === index }"
+            :aria-label="String(index + 1)"
+            @click="goTo(index)"
+          ></button>
         </div>
       </div>
+
+      <div class="hero-scene">
+        <transition name="hero-img" mode="out-in">
+          <picture :key="'img-' + slide.id" class="hero-frame" :class="{ clickable: !!slide.link }" @click="open(slide)">
+            <source :srcset="slide.image" media="(min-width: 768px)" />
+            <img :src="slide.mobile_image || slide.image" :alt="slide.title || ''" class="hero-img" :loading="current === 0 ? 'eager' : 'lazy'" />
+          </picture>
+        </transition>
+      </div>
     </div>
-    <div class="hero-pagination" v-if="slides.length > 1">
-      <button
-        v-for="(slide, index) in slides"
-        :key="'dot-' + slide.id"
-        type="button"
-        class="hero-dot"
-        :class="{ active: current === index }"
-        :aria-label="String(index + 1)"
-        @click="goTo(index)"
-      ></button>
-    </div>
-  </div>
+    <svg class="hero-wave" viewBox="0 0 720 80" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 46C140 12 300 68 470 42 580 26 660 36 720 30L720 80 0 80Z" fill="currentColor"/>
+    </svg>
+  </section>
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+// Copy-led hero: slide title/description/button come from Simple Sliders (home-slider);
+// the tag line and the small numbers from Theme options → Homepage: Hero.
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { __ } from '../../utils/i18n';
 import { toRouterPath } from '../../utils/links';
 
 const props = defineProps({ section: { type: Object, required: true } });
 const router = useRouter();
 const slides = computed(() => props.section.data?.slides || []);
-const container = ref(null);
+const eyebrow = computed(() => props.section.data?.eyebrow || '');
+const stats = computed(() => (props.section.data?.stats || []).slice(0, 3));
+const wizardEnabled = !!(window.BotbleData?.wizardEnabled ?? true);
 const current = ref(0);
+const pause = ref(false);
+const slide = computed(() => slides.value[current.value] || slides.value[0]);
 let timer = null;
 
-const open = (slide) => {
-  if (!slide.link) return;
-  if (slide.internal) {
-    router.push(toRouterPath(slide.link));
-  } else {
-    window.open(slide.link, '_blank', 'noopener');
-  }
+const open = (s) => {
+  if (!s.link) return;
+  if (s.internal) router.push(toRouterPath(s.link));
+  else window.open(s.link, '_blank', 'noopener');
 };
-
-const onScroll = () => {
-  const el = container.value;
-  if (!el) return;
-  const index = Math.round(Math.abs(el.scrollLeft) / el.clientWidth);
-  if (index !== current.value && index < slides.value.length) current.value = index;
-};
-
-const goTo = (index) => {
-  const el = container.value;
-  if (!el || !el.children[index]) return;
-  current.value = index;
-  el.scrollTo({ left: el.children[index].offsetLeft, behavior: 'smooth' });
-  restart();
-};
-
+const goTo = (index) => { current.value = index; restart(); };
 const start = () => {
   if (slides.value.length < 2) return;
-  timer = setInterval(() => goTo((current.value + 1) % slides.value.length), 6000);
+  timer = setInterval(() => { if (!pause.value) current.value = (current.value + 1) % slides.value.length; }, 6500);
 };
 const restart = () => { clearInterval(timer); start(); };
-
+watch(slides, () => { current.value = 0; restart(); });
 onMounted(start);
 onUnmounted(() => clearInterval(timer));
 </script>
 
 <style scoped>
-.hero-slider-wrapper { position: relative; }
-.hero-scroll-container {
-  display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  gap: 16px;
-  padding: 0 16px;
-  margin-top: 14px;
-}
-.hero-scroll-container::-webkit-scrollbar { display: none; }
-.hero-slide {
+.hero {
   position: relative;
-  flex: 0 0 calc(100% - 24px);
-  scroll-snap-align: center;
-  border-radius: var(--r20, 20px);
   overflow: hidden;
-}
-.hero-slide.clickable { cursor: pointer; }
-.hero-img { width: 100%; height: auto; display: block; }
-.hero-caption {
-  position: absolute;
-  inset-inline-start: 0;
-  bottom: 0;
-  max-width: 80%;
-  padding: 16px;
   color: #fff;
-  text-shadow: 0 1px 3px rgba(0,0,0,.5);
-  background: linear-gradient(to top, rgba(0,0,0,.55), transparent);
-  border-start-end-radius: 12px;
+  padding: 28px 16px 64px;
+  background:
+    radial-gradient(900px 420px at 85% -10%, #12525f 0%, transparent 55%),
+    linear-gradient(160deg, #0a2a31 0%, var(--deep) 46%, var(--deep-2) 100%);
 }
-.hero-caption h2 { font-size: 18px; font-weight: 800; margin: 0 0 4px; }
-.hero-caption p { font-size: 12px; margin: 0 0 8px; opacity: .95; }
+.hero-grid { display: grid; gap: 22px; max-width: 1240px; margin: 0 auto; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14);
+  color: #cfe8ec; font-size: 12px; font-weight: 700; padding: 6px 13px; border-radius: 999px;
+}
+.hero-dotp { width: 7px; height: 7px; border-radius: 50%; background: var(--glow); animation: hero-blink 1.8s ease-in-out infinite; }
+@keyframes hero-blink { 0%, 100% { opacity: 1 } 50% { opacity: .25 } }
+.hero-title { font-size: 30px; font-weight: 800; line-height: 1.2; margin: 14px 0 6px; color: #fff; }
+.hero-sub { color: #b9d3d8; font-size: 14.5px; line-height: 1.65; max-width: 460px; margin: 0 0 20px; }
+.hero-ctas { display: flex; gap: 10px; flex-wrap: wrap; }
 .hero-btn {
-  display: inline-block;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: var(--primary-strong);
-  color: var(--on-primary);
-  font-size: 12px;
-  font-weight: 700;
-  text-shadow: none;
+  display: inline-flex; align-items: center; gap: 8px;
+  font-weight: 800; font-size: 14px; padding: 12px 20px; border-radius: 11px;
+  text-decoration: none; transition: background .18s, transform .18s, box-shadow .25s;
 }
-.hero-pagination {
-  position: absolute;
-  bottom: 12px;
-  left: 0;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  z-index: 10;
+.hero-btn:active { transform: scale(.97); }
+.hero-btn-gold { background: var(--sand); color: var(--on-sand); }
+.hero-btn-gold:hover { background: var(--sand-strong); box-shadow: 0 10px 24px -12px rgba(233,184,76,.65); }
+.hero-btn-ghost { background: transparent; border: 1.6px solid rgba(255,255,255,.55); color: #fff; }
+.hero-btn-ghost:hover { background: rgba(255,255,255,.1); border-color: #fff; }
+.hero-btn-arrow { transition: transform .25s var(--ease); }
+.hero-btn-gold:hover .hero-btn-arrow { transform: translateX(-4px); }
+[dir="ltr"] .hero-btn-arrow { transform: scaleX(-1); }
+[dir="ltr"] .hero-btn-gold:hover .hero-btn-arrow { transform: scaleX(-1) translateX(-4px); }
+.hero-stats { display: flex; gap: 22px; margin-top: 26px; flex-wrap: wrap; }
+.hero-stat b { display: block; font-size: 19px; font-weight: 800; color: var(--glow); line-height: 1.1; }
+.hero-stat span { font-size: 11.5px; color: #9fbdc3; }
+.hero-dots { display: flex; align-items: center; gap: 9px; margin-top: 22px; }
+.hero-dot { width: 9px; height: 9px; padding: 0; border: 0; border-radius: 999px; background: rgba(255,255,255,.28); cursor: pointer; transition: all .25s; }
+.hero-dot.on { width: 26px; background: var(--sand); }
+.hero-scene { position: relative; }
+.hero-frame {
+  display: block; border-radius: 22px; overflow: hidden;
+  box-shadow: 0 30px 50px -28px rgba(0,0,0,.6);
+  border: 1px solid rgba(255,255,255,.12);
 }
-.hero-dot {
-  width: 8px;
-  height: 8px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: rgba(255,255,255,.5);
-  cursor: pointer;
-  transition: all .3s ease;
+.hero-frame.clickable { cursor: pointer; }
+.hero-img { width: 100%; height: auto; display: block; aspect-ratio: 16 / 9; object-fit: cover; }
+.hero-wave { position: absolute; bottom: -1px; left: 0; width: 100%; height: 44px; color: var(--bg); }
+.hero-fade-enter-active { transition: opacity .5s ease, transform .5s var(--ease); }
+.hero-fade-leave-active { transition: opacity .25s ease, transform .25s ease; }
+.hero-fade-enter-from { opacity: 0; transform: translateY(18px); }
+.hero-fade-leave-to { opacity: 0; transform: translateY(-12px); }
+.hero-img-enter-active { transition: opacity .6s ease, transform .6s var(--ease); }
+.hero-img-leave-active { transition: opacity .25s ease; }
+.hero-img-enter-from { opacity: 0; transform: scale(.97); }
+.hero-img-leave-to { opacity: 0; }
+/* Phone: compact app-style card (mockup "index_1"): copy on the start side, the slide image
+   fading in from the end side, no stats / wave (the numbers band carries them further down). */
+@media (max-width: 767px) {
+  .hero {
+    margin: 12px 14px 0; border-radius: 20px; padding: 20px 18px 18px; min-height: 196px;
+    background: linear-gradient(140deg, var(--deep), var(--deep-2) 58%, #12545f);
+  }
+  .hero::after {
+    content: ''; position: absolute; inset-inline-end: -46px; top: -46px; width: 150px; height: 150px;
+    border-radius: 50%; background: radial-gradient(circle, rgba(233,184,76,.28), transparent 70%); pointer-events: none;
+  }
+  .hero-grid { display: block; }
+  .hero-copy-wrap { position: relative; z-index: 1; max-width: 72%; }
+  .hero-eyebrow {
+    background: rgba(233,184,76,.16); border-color: rgba(233,184,76,.4); color: var(--sand);
+    font-size: 10px; font-weight: 800; padding: 4px 10px; gap: 6px;
+  }
+  .hero-dotp { background: var(--sand); width: 6px; height: 6px; }
+  .hero-title { font-size: 21px; font-weight: 900; line-height: 1.45; margin: 10px 0 4px; }
+  .hero-sub { font-size: 12px; line-height: 1.6; margin: 0 0 14px; color: #b9d2d7; }
+  .hero-ctas { gap: 8px; }
+  .hero-btn { font-size: 12px; padding: 0 12px; height: 38px; border-radius: 12px; gap: 6px; }
+  .hero-btn-ghost { border-width: 1.3px; }
+  .hero-stats { display: none; }
+  .hero-dots { margin-top: 12px; gap: 5px; }
+  .hero-dot { width: 6px; height: 6px; }
+  .hero-dot.on { width: 16px; }
+  .hero-scene { position: absolute; inset-block: 0; inset-inline-end: 0; width: 40%; }
+  .hero-frame { height: 100%; border: 0; border-radius: 0; box-shadow: none; }
+  .hero-img { height: 100%; aspect-ratio: auto; opacity: .55; }
+  [dir="rtl"] .hero-frame { -webkit-mask-image: linear-gradient(to right, #000 10%, transparent 95%); mask-image: linear-gradient(to right, #000 10%, transparent 95%); }
+  [dir="ltr"] .hero-frame { -webkit-mask-image: linear-gradient(to left, #000 10%, transparent 95%); mask-image: linear-gradient(to left, #000 10%, transparent 95%); }
+  .hero-wave { display: none; }
 }
-.hero-dot.active { width: 24px; border-radius: 4px; background: var(--surface); }
 @media (min-width: 992px) {
-  .hero-scroll-container { padding: 0; gap: 0; margin-top: 0; }
-  .hero-slide { flex-basis: 100%; border-radius: 0; }
-  .hero-caption { padding: 40px 60px; max-width: 55%; }
-  .hero-caption h2 { font-size: 36px; }
-  .hero-caption p { font-size: 16px; margin-bottom: 14px; }
-  .hero-btn { font-size: 14px; padding: 10px 22px; }
-  .hero-pagination { bottom: 25px; }
+  .hero { padding: 64px 26px 110px; }
+  .hero-grid { grid-template-columns: 1fr 1.08fr; gap: 40px; align-items: center; }
+  .hero-title { font-size: clamp(34px, 4.2vw, 52px); letter-spacing: -.5px; margin: 18px 0 8px; }
+  .hero-sub { font-size: 16px; margin-bottom: 26px; }
+  .hero-btn { padding: 13px 24px; font-size: 15px; }
+  .hero-stat b { font-size: 22px; }
+  .hero-wave { height: 72px; }
 }
 </style>

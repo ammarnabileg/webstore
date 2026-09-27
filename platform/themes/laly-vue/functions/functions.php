@@ -49,6 +49,7 @@ foreach ([BASE_ACTION_AFTER_CREATE_CONTENT, BASE_ACTION_AFTER_UPDATE_CONTENT, BA
             \Botble\Ecommerce\Models\ProductCategory::class,
             \Botble\Ecommerce\Models\ProductCollection::class,
             \Botble\Ecommerce\Models\FlashSale::class,
+            \Botble\Ecommerce\Models\Brand::class,
             \Botble\Menu\Models\Menu::class,
         ];
         if (is_plugin_active('simple-slider')) {
