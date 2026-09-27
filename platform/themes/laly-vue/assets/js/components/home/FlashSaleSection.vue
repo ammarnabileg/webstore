@@ -68,36 +68,36 @@ onUnmounted(() => clearInterval(timer));
 
 <style scoped>
 .deals {
-  background: linear-gradient(150deg, #fff9ec, #fdf3da 60%, #fbedc9);
-  border: 1px solid #f0dfae;
+  background: linear-gradient(150deg, #f4fafc, var(--primary-soft));
+  border: 1px solid var(--line);
   border-radius: 22px;
   padding: 18px 14px;
   position: relative;
   overflow: hidden;
 }
-:root[data-theme="dark"] .deals { background: linear-gradient(150deg, #2b2510, #221d0c); border-color: #4a3d16; }
+:root[data-theme="dark"] .deals { background: linear-gradient(150deg, var(--surface), var(--primary-soft)); border-color: var(--line); }
 .deals::before {
   content: ""; position: absolute; inset-inline-end: -70px; top: -70px; width: 230px; height: 230px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(233,184,76,.35), transparent 65%); pointer-events: none;
+  background: radial-gradient(circle, rgba(33,147,176,.18), transparent 65%); pointer-events: none;
 }
 .deals-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; position: relative; }
 .deals-title { display: flex; align-items: center; gap: 12px; }
 .flame {
   width: 44px; height: 44px; border-radius: 14px; flex: none;
-  background: var(--sand); color: var(--on-sand); display: grid; place-items: center; font-size: 22px;
+  background: var(--primary-strong); color: #fff; display: grid; place-items: center; font-size: 22px;
   animation: flame-pulse 2.2s ease-in-out infinite;
 }
-@keyframes flame-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(233,184,76,.55) } 55% { box-shadow: 0 0 0 14px rgba(233,184,76,0) } }
+@keyframes flame-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(33,147,176,.45) } 55% { box-shadow: 0 0 0 14px rgba(33,147,176,0) } }
 .deals-title h2 { font-size: 20px; font-weight: 800; margin: 0; color: var(--ink); }
-.deals-sub { font-size: 12.5px; color: #8a7434; font-weight: 700; }
+.deals-sub { font-size: 12.5px; color: var(--primary-strong); font-weight: 700; }
 .count { display: flex; align-items: center; gap: 6px; direction: ltr; }
 .cd {
   background: var(--deep); color: #fff; border-radius: 12px; min-width: 50px; padding: 7px 6px; text-align: center;
-  box-shadow: 0 10px 22px -14px rgba(11,51,59,.7);
+  box-shadow: 0 10px 22px -14px rgba(23,115,138,.5);
 }
 .cd .v { display: block; font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
-.cd .l { font-size: 10px; color: #9fbdc3; font-weight: 700; }
-.csep { font-size: 20px; font-weight: 800; color: var(--sand-strong); }
+.cd .l { font-size: 10px; color: var(--on-deep); font-weight: 700; }
+.csep { font-size: 20px; font-weight: 800; color: var(--primary); }
 .deals-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; position: relative; }
 .cdchip { display: none; }
 /* Phone: plain section with a compact countdown chip and a swipeable row of cards (mockup "index_1"). */

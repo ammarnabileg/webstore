@@ -41,14 +41,16 @@
   --warn: #b7791f;
   --stars: #f2a52b;
   /* Deep navy-teal + gold accents (homepage redesign) */
-  --deep: #0b333b;
-  --deep-2: #0e4652;
-  --on-deep: #b9d3d8;
-  --sand: #e9b84c;
-  --sand-strong: #c9992f;
-  --sand-soft: #fbf3de;
-  --on-sand: #26200d;
-  --glow: #4dd0e1;
+  /* Dark bands (hero, numbers, footer) use the site's own blues, not the mockups' navy/gold.
+     --sand is the call-to-action on those bands: white with brand-blue text. */
+  --deep: #17738a;             /* = --primary-strong */
+  --deep-2: #197a92;           /* a touch lighter than --primary-strong; small white text stays >= 4.5:1 */
+  --on-deep: #f0f9fb;          /* secondary text on the bands (>= 4.5:1 on both stops) */
+  --sand: #ffffff;
+  --sand-strong: #e3f3f7;
+  --sand-soft: #e3f3f7;
+  --on-sand: #17738a;
+  --glow: #ffffff;
   --shadow-card: 0 1px 2px rgba(20, 38, 44, .05), 0 14px 34px -24px rgba(20, 38, 44, .35);
   --ease: cubic-bezier(.22, .75, .25, 1);
 
@@ -106,9 +108,9 @@
   --glass-bg: rgba(12, 23, 27, 0.88);
   --glass-bg-solid: rgba(12, 23, 27, 0.97);
   --glow-primary: 0 0 15px rgba(76, 185, 212, 0.35);
-  --deep: #071e24;
-  --deep-2: #0b333b;
-  --sand-soft: #2b2510;
+  --deep: #155e70;
+  --deep-2: #12323b;
+  --sand-soft: #12323b;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, .3), 0 14px 34px -24px rgba(0, 0, 0, .7);
 }
 

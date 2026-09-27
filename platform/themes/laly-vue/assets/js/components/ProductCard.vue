@@ -422,18 +422,17 @@ const addToCart = async () => {
   .pcard-wish { top: auto; bottom: 7px; inset-inline-end: 7px; width: 28px; height: 28px; font-size: 14px; }
   .pcard-body { gap: 6px; padding: 8px 8px 10px; }
   .pcard-meta { order: -1; font-size: 10px; }
-  .pcard-rating .ti { font-size: 11px; color: var(--sand); }
+  .pcard-rating .ti { font-size: 11px; color: var(--stars); }
   .pcard-stock { font-size: 9px; font-weight: 800; }
   .pcard-stock i { width: 5px; height: 5px; box-shadow: none !important; }
   .pcard-name { font-size: 11.5px; min-height: calc(11.5px * 1.45 * 2); }
   .pcard-price { gap: 6px; margin-top: 0; }
   .pcard-price .now { font-size: 14.5px; font-weight: 900; }
   .pcard-price .was { font-size: 10px; }
-  .pcard-bnpl { border-radius: 9px; padding: 5px 7px; background: #f0f5fc; border: 1px solid #dfe9f6; }
-  :root[data-theme="dark"] .pcard-bnpl { background: var(--surface-2); border-color: var(--line); }
+  .pcard-bnpl { border-radius: 9px; padding: 5px 7px; }
   .bnpl-text { font-size: 8.5px; }
   .bnpl-text b { font-size: 10px; }
-  .bnpl-brand { font-size: 8.5px; background: #1e2b3e; color: #fff; }
+  .bnpl-brand { font-size: 8.5px; }
   .pcard-add { height: 33px; border-radius: 9px; font-size: 11px; font-weight: 900; gap: 6px; background: var(--primary-soft); color: var(--primary-strong); }
   .pcard-add .ti { font-size: 14px; }
   .pcard-add:active { background: var(--primary-strong); color: var(--on-primary, #fff); }

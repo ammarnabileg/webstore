@@ -26,7 +26,7 @@ const items = computed(() => props.section.data?.items || []);
 .marquee { display: flex; width: max-content; gap: 56px; direction: ltr; animation: brands-mq calc(var(--n, 8) * 3.2s) linear infinite; }
 .brands:hover .marquee { animation-play-state: paused; }
 .mrow { display: flex; gap: 56px; align-items: center; }
-.brand { font-size: 19px; font-weight: 700; color: #b7c4c9; white-space: nowrap; text-decoration: none; transition: color .2s, filter .2s; display: flex; align-items: center; }
+.brand { font-size: 19px; font-weight: 700; color: var(--ink-2); opacity: .55; white-space: nowrap; text-decoration: none; transition: color .2s, filter .2s; display: flex; align-items: center; }
 .brand img { height: 28px; width: auto; max-width: 120px; object-fit: contain; filter: grayscale(1); opacity: .65; transition: filter .2s, opacity .2s; }
 .brand:hover { color: var(--primary-strong); }
 .brand:hover img { filter: none; opacity: 1; }
@@ -39,7 +39,7 @@ const items = computed(() => props.section.data?.items || []);
   .mrow { flex-wrap: wrap; justify-content: center; gap: 8px; }
   .mrow[aria-hidden="true"] { display: none; }
   .brand {
-    font-size: 11px; font-weight: 800; color: #9fb3b8; background: var(--surface);
+    font-size: 11px; font-weight: 800; color: var(--ink-2); background: var(--surface);
     border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px;
   }
   .brand img { height: 16px; max-width: 70px; }

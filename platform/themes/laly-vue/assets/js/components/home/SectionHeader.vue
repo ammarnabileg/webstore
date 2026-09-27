@@ -32,7 +32,7 @@ defineProps({
   display: inline-flex; align-items: center; gap: 8px;
   color: var(--primary-strong); font-size: 12.5px; font-weight: 800; letter-spacing: .3px; margin-bottom: 6px;
 }
-.sec-kicker::before { content: ""; width: 22px; height: 3px; border-radius: 3px; background: var(--sand); }
+.sec-kicker::before { content: ""; width: 22px; height: 3px; border-radius: 3px; background: var(--primary); }
 .sec-head .sec-title { margin: 0; font-size: 21px; font-weight: 800; line-height: 1.2; letter-spacing: -.3px; color: var(--ink); }
 .sec-more {
   flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;

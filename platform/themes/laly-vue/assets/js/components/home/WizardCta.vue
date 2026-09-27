@@ -41,7 +41,7 @@ defineProps({ section: { type: Object, required: true } });
 .install::before { content: ""; position: absolute; inset-inline-end: -60px; top: -60px; width: 200px; height: 200px; border-radius: 50%; background: var(--primary-soft); pointer-events: none; }
 .install-copy { position: relative; }
 .install-kicker { display: inline-flex; align-items: center; gap: 8px; color: var(--primary-strong); font-size: 12.5px; font-weight: 800; margin-bottom: 6px; }
-.install-kicker::before { content: ""; width: 22px; height: 3px; border-radius: 3px; background: var(--sand); }
+.install-kicker::before { content: ""; width: 22px; height: 3px; border-radius: 3px; background: var(--primary); }
 .install h3 { font-size: 20px; font-weight: 800; line-height: 1.35; margin: 0; color: var(--ink); }
 .install p { color: var(--ink-2); font-size: 13.5px; margin: 10px 0 18px; max-width: 480px; line-height: 1.65; }
 .install-points { display: flex; gap: 12px 18px; flex-wrap: wrap; margin-bottom: 20px; }
@@ -61,8 +61,8 @@ defineProps({ section: { type: Object, required: true } });
 }
 .tools-badge {
   position: absolute; bottom: 6%; inset-inline-start: 8%; width: 58px; height: 58px; border-radius: 18px;
-  background: var(--sand); color: var(--on-sand); display: grid; place-items: center; font-size: 26px;
-  box-shadow: 0 16px 30px -14px rgba(201,153,47,.7); animation: bob 4.5s ease-in-out infinite;
+  background: var(--primary-strong); color: #fff; display: grid; place-items: center; font-size: 26px;
+  box-shadow: 0 16px 30px -14px rgba(23,115,138,.55); animation: bob 4.5s ease-in-out infinite;
 }
 @keyframes bob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-13px) } }
 .install-bic { display: none; }
@@ -72,10 +72,10 @@ defineProps({ section: { type: Object, required: true } });
     display: flex; align-items: center; gap: 13px; flex-wrap: wrap; padding: 15px; border-radius: 18px; border: 0;
     background: linear-gradient(135deg, var(--deep), var(--deep-2)); color: #fff;
   }
-  .install::before { background: radial-gradient(circle, rgba(233,184,76,.2), transparent 70%); }
+  .install::before { background: radial-gradient(circle, rgba(255,255,255,.14), transparent 70%); }
   .install-bic {
     display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; flex: none;
-    background: rgba(233,184,76,.16); color: var(--sand); font-size: 22px; position: relative;
+    background: rgba(255,255,255,.16); color: var(--sand); font-size: 22px; position: relative;
   }
   .install-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   .install-kicker, .install-points { display: none; }

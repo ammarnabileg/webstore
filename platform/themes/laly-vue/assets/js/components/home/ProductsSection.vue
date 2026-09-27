@@ -83,9 +83,9 @@ const scrollTrack = () => {
   .prods-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; padding: 0; }
 }
 @media (min-width: 768px) {
-  .prods-track { grid-auto-columns: 238px; gap: 14px; scrollbar-width: thin; scrollbar-color: #c9d6d9 transparent; }
+  .prods-track { grid-auto-columns: 238px; gap: 14px; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
   .prods-track::-webkit-scrollbar { display: block; height: 6px; }
-  .prods-track::-webkit-scrollbar-thumb { background: #c9d6d9; border-radius: 99px; }
+  .prods-track::-webkit-scrollbar-thumb { background: var(--line); border-radius: 99px; }
   .track-next { display: flex; }
 }
 </style>

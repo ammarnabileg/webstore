@@ -64,12 +64,12 @@ onUnmounted(() => { observer?.disconnect(); cancelAnimationFrame(raf); });
 }
 .stats::after {
   content: ""; position: absolute; inset-inline-start: -80px; bottom: -120px; width: 280px; height: 280px;
-  border-radius: 50%; border: 38px solid rgba(77,208,225,.08); pointer-events: none;
+  border-radius: 50%; border: 38px solid rgba(255,255,255,.08); pointer-events: none;
 }
 .stat { text-align: center; position: relative; }
 .stat-n { font-size: 28px; font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; direction: ltr; }
 .stat-n em { font-style: normal; color: var(--sand); }
-.stat-l { font-size: 12.5px; color: #a9c6cc; margin-top: 4px; font-weight: 700; }
+.stat-l { font-size: 12.5px; color: var(--on-deep); margin-top: 4px; font-weight: 700; }
 @media (min-width: 992px) {
   .stats { grid-template-columns: repeat(4, 1fr); padding: 44px 34px; gap: 22px; }
   .stat + .stat::before { content: ""; position: absolute; inset-inline-start: 0; top: 12%; height: 76%; width: 1px; background: rgba(255,255,255,.12); }

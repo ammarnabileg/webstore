@@ -96,19 +96,19 @@ onUnmounted(() => clearInterval(timer));
   color: #fff;
   padding: 28px 16px 64px;
   background:
-    radial-gradient(900px 420px at 85% -10%, #12525f 0%, transparent 55%),
-    linear-gradient(160deg, #0a2a31 0%, var(--deep) 46%, var(--deep-2) 100%);
+    radial-gradient(900px 420px at 85% -10%, rgba(255,255,255,.10) 0%, transparent 55%),
+    linear-gradient(160deg, var(--deep) 0%, var(--deep) 40%, var(--deep-2) 100%);
 }
 .hero-grid { display: grid; gap: 22px; max-width: 1240px; margin: 0 auto; }
 .hero-eyebrow {
   display: inline-flex; align-items: center; gap: 8px;
   background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14);
-  color: #cfe8ec; font-size: 12px; font-weight: 700; padding: 6px 13px; border-radius: 999px;
+  color: #fff; font-size: 12px; font-weight: 700; padding: 6px 13px; border-radius: 999px;
 }
 .hero-dotp { width: 7px; height: 7px; border-radius: 50%; background: var(--glow); animation: hero-blink 1.8s ease-in-out infinite; }
 @keyframes hero-blink { 0%, 100% { opacity: 1 } 50% { opacity: .25 } }
 .hero-title { font-size: 30px; font-weight: 800; line-height: 1.2; margin: 14px 0 6px; color: #fff; }
-.hero-sub { color: #b9d3d8; font-size: 14.5px; line-height: 1.65; max-width: 460px; margin: 0 0 20px; }
+.hero-sub { color: var(--on-deep); font-size: 14.5px; line-height: 1.65; max-width: 460px; margin: 0 0 20px; }
 .hero-ctas { display: flex; gap: 10px; flex-wrap: wrap; }
 .hero-btn {
   display: inline-flex; align-items: center; gap: 8px;
@@ -117,7 +117,7 @@ onUnmounted(() => clearInterval(timer));
 }
 .hero-btn:active { transform: scale(.97); }
 .hero-btn-gold { background: var(--sand); color: var(--on-sand); }
-.hero-btn-gold:hover { background: var(--sand-strong); box-shadow: 0 10px 24px -12px rgba(233,184,76,.65); }
+.hero-btn-gold:hover { background: var(--sand-strong); box-shadow: 0 10px 24px -12px rgba(0,0,0,.25); }
 .hero-btn-ghost { background: transparent; border: 1.6px solid rgba(255,255,255,.55); color: #fff; }
 .hero-btn-ghost:hover { background: rgba(255,255,255,.1); border-color: #fff; }
 .hero-btn-arrow { transition: transform .25s var(--ease); }
@@ -126,7 +126,7 @@ onUnmounted(() => clearInterval(timer));
 [dir="ltr"] .hero-btn-gold:hover .hero-btn-arrow { transform: scaleX(-1) translateX(-4px); }
 .hero-stats { display: flex; gap: 22px; margin-top: 26px; flex-wrap: wrap; }
 .hero-stat b { display: block; font-size: 19px; font-weight: 800; color: var(--glow); line-height: 1.1; }
-.hero-stat span { font-size: 11.5px; color: #9fbdc3; }
+.hero-stat span { font-size: 11.5px; color: var(--on-deep); }
 .hero-dots { display: flex; align-items: center; gap: 9px; margin-top: 22px; }
 .hero-dot { width: 9px; height: 9px; padding: 0; border: 0; border-radius: 999px; background: rgba(255,255,255,.28); cursor: pointer; transition: all .25s; }
 .hero-dot.on { width: 26px; background: var(--sand); }
@@ -152,21 +152,21 @@ onUnmounted(() => clearInterval(timer));
 @media (max-width: 767px) {
   .hero {
     margin: 12px 14px 0; border-radius: 20px; padding: 20px 18px 18px; min-height: 196px;
-    background: linear-gradient(140deg, var(--deep), var(--deep-2) 58%, #12545f);
+    background: linear-gradient(140deg, var(--deep), var(--deep-2));
   }
   .hero::after {
     content: ''; position: absolute; inset-inline-end: -46px; top: -46px; width: 150px; height: 150px;
-    border-radius: 50%; background: radial-gradient(circle, rgba(233,184,76,.28), transparent 70%); pointer-events: none;
+    border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.16), transparent 70%); pointer-events: none;
   }
   .hero-grid { display: block; }
   .hero-copy-wrap { position: relative; z-index: 1; max-width: 72%; }
   .hero-eyebrow {
-    background: rgba(233,184,76,.16); border-color: rgba(233,184,76,.4); color: var(--sand);
+    background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.3); color: #fff;
     font-size: 10px; font-weight: 800; padding: 4px 10px; gap: 6px;
   }
   .hero-dotp { background: var(--sand); width: 6px; height: 6px; }
   .hero-title { font-size: 21px; font-weight: 900; line-height: 1.45; margin: 10px 0 4px; }
-  .hero-sub { font-size: 12px; line-height: 1.6; margin: 0 0 14px; color: #b9d2d7; }
+  .hero-sub { font-size: 12px; line-height: 1.6; margin: 0 0 14px; color: var(--on-deep); }
   .hero-ctas { gap: 8px; }
   .hero-btn { font-size: 12px; padding: 0 12px; height: 38px; border-radius: 12px; gap: 6px; }
   .hero-btn-ghost { border-width: 1.3px; }

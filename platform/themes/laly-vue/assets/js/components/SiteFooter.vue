@@ -106,7 +106,7 @@ const copyright = computed(() => footer.copyright
   gap: 26px;
 }
 .sf-logo { height: 34px; max-width: 150px; object-fit: contain; margin-bottom: 10px; filter: brightness(0) invert(1); }
-.sf-about-text { margin: 0 0 12px; line-height: 1.9; max-width: 300px; }
+.sf-about-text { margin: 0 0 12px; line-height: 1.9; max-width: 300px; color: var(--on-deep) !important; }
 .sf-social { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
 .sf-social a {
   display: inline-flex; align-items: center; justify-content: center;

@@ -100,10 +100,10 @@ const openQuickView = (slug) => {
 }
 .home-hbtn {
   position: relative; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
-  color: #dcebee; font-size: 21px; text-decoration: none;
+  color: #fff; font-size: 21px; text-decoration: none;
 }
 .home-hbtn:active { background: rgba(255,255,255,.12); }
-.home-dot { position: absolute; top: 9px; inset-inline-end: 10px; width: 8px; height: 8px; border-radius: 50%; background: var(--sand); box-shadow: 0 0 0 2px var(--deep); }
+.home-dot { position: absolute; top: 9px; inset-inline-end: 10px; width: 8px; height: 8px; border-radius: 50%; background: var(--sale); box-shadow: 0 0 0 2px var(--deep); }
 .home-search {
   display: flex; align-items: center; gap: 9px; margin: 12px 14px 0; height: 46px; padding-inline: 13px;
   background: var(--surface); border: 1.5px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-card);
