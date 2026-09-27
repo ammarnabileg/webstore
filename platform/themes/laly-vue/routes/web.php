@@ -583,6 +583,25 @@ Theme::registerRoutes(function (): void {
         })->name($name);
     }
 
+    // The ecommerce plugin registers its Blade product listing at the "product listing page slug"
+    // (Theme options) under the same name, public.products. When that slug is not "products" the two
+    // routes share one name and `route:cache` fails ("Another route has already been assigned name
+    // [public.products]"). The plugin adds its route inside ThemeRoutingBeforeEvent, after this file
+    // is loaded, so take over that path from a later listener of the same event (same group, same
+    // language prefix): the plugin's route is replaced by a redirect to the SPA listing.
+    app('events')->listen(\Botble\Theme\Events\ThemeRoutingBeforeEvent::class, function (): void {
+        $listingSlug = trim((string) \Botble\Ecommerce\Facades\EcommerceHelper::getPageSlug('product_listing'), '/');
+        if ($listingSlug === '' || $listingSlug === 'products') {
+            return;
+        }
+        Route::get($listingSlug, function (Request $request) use ($listingSlug) {
+            $target = preg_replace('#/' . preg_quote($listingSlug, '#') . '$#', '/products', $request->url());
+            $query = $request->getQueryString();
+
+            return redirect()->to($target . ($query ? '?' . $query : ''), 301);
+        })->name('public.products.listing-redirect');
+    });
+
     // SEO-Optimized SPA Route for Single Product
     Route::get('product/{slug}', function (string $slug, ProductInterface $productRepository) {
         $slugModel = SlugHelper::getSlug($slug, SlugHelper::getPrefix(\Botble\Ecommerce\Models\Product::class), \Botble\Ecommerce\Models\Product::class);
