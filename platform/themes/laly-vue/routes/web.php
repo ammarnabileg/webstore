@@ -573,6 +573,8 @@ Theme::registerRoutes(function (): void {
         'profile' => 'public.profile',
         'notifications' => 'public.notifications',
         'project-wizard' => 'public.system-wizard',
+        // SPA page (pages/OrderTracking.vue); without this a refresh or a shared link returned 404.
+        'order-tracking' => 'public.spa.order-tracking',
         // NOTE: /wishlist is served by the ecommerce plugin's wishlist/{code?} route (registered
         // first, so it wins). It is wrapped by the Blade chrome so it is navigable; a true SPA
         // wishlist with server sync is Tier 2.5.
@@ -589,7 +591,12 @@ Theme::registerRoutes(function (): void {
     // [public.products]"). The plugin adds its route inside ThemeRoutingBeforeEvent, after this file
     // is loaded, so take over that path from a later listener of the same event (same group, same
     // language prefix): the plugin's route is replaced by a redirect to the SPA listing.
+    // The event also fires when plugins are not loaded (e.g. `package:discover` during composer install,
+    // before the database is reachable), so bail out unless the ecommerce plugin is really there.
     app('events')->listen(\Botble\Theme\Events\ThemeRoutingBeforeEvent::class, function (): void {
+        if (! class_exists(\Botble\Ecommerce\Facades\EcommerceHelper::class) || ! is_plugin_active('ecommerce')) {
+            return;
+        }
         $listingSlug = trim((string) \Botble\Ecommerce\Facades\EcommerceHelper::getPageSlug('product_listing'), '/');
         if ($listingSlug === '' || $listingSlug === 'products') {
             return;

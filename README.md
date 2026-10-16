@@ -5,12 +5,22 @@ Laravel 12 + Botble CMS (ecommerce) store for brilliant-kw.com, with the Vue sto
 
 ## Deploy
 
+Production runs from Plesk Git (manual deploy). The whole deploy is `deploy.sh` in the repo root;
+the Plesk "Additional deployment actions" box holds one line:
+
 ```bash
-composer install --no-dev --optimize-autoloader
-php artisan migrate --force
-php artisan config:cache && php artisan route:cache && php artisan view:cache
-npm ci && npm run prod --theme=laly-vue
+bash /var/www/vhosts/brilliant-kw.com/httpdocs/deploy.sh
 ```
+
+It installs PHP dependencies without dev packages, migrates, publishes the Botble assets
+(`public/vendor/core` is not in git: jQuery, admin, checkout and payment JS) and the theme assets,
+then rebuilds the config/route/view caches. It never runs `artisan down`, takes the site out of
+maintenance mode if an older deploy left it there, and falls back to no cache if a cache step
+fails. Each run is logged to `storage/logs/deploy-YYYY-MM-DD.log`. Override the binaries with
+`PHP_BIN=... COMPOSER_PHAR=... bash deploy.sh` on another host.
+
+The theme bundle (`platform/themes/laly-vue/public/js/app.js`) is built and committed, so the
+server does not need Node. After a deploy, purge the Cloudflare cache.
 
 Production `.env` must have `APP_DEBUG=false`, a unique `APP_KEY`, `QUEUE_CONNECTION=database`,
 and `TRUSTED_PROXIES` set to the CDN / load balancer ranges when the site sits behind one.
